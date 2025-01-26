@@ -176,17 +176,22 @@ class MintosBot:
                 substatus = update['substatus'].replace('_', ' ').title()
                 message += f"Sub-status: {substatus}\n"
 
-        # Add recovery information
+        # Add recovery information with rounded Euro amounts
         if any(key in update for key in ['recoveredAmount', 'remainingAmount', 'expectedRecoveryTo', 'expectedRecoveryFrom']):
             message += "\n💰 Recovery Information:\n"
             if update.get('recoveredAmount'):
-                message += f"• Recovered: {update['recoveredAmount']}%\n"
+                amount = round(float(update['recoveredAmount']))
+                message += f"• Recovered: €{amount:,}\n"
             if update.get('remainingAmount'):
-                message += f"• Remaining: {update['remainingAmount']}%\n"
+                amount = round(float(update['remainingAmount']))
+                message += f"• Remaining: €{amount:,}\n"
             if update.get('expectedRecoveryFrom') and update.get('expectedRecoveryTo'):
-                message += f"• Expected Recovery: {update['expectedRecoveryFrom']}% - {update['expectedRecoveryTo']}%\n"
+                from_amount = round(float(update['expectedRecoveryFrom']))
+                to_amount = round(float(update['expectedRecoveryTo']))
+                message += f"• Expected Recovery: €{from_amount:,} - €{to_amount:,}\n"
             elif update.get('expectedRecoveryTo'):
-                message += f"• Expected Recovery: Up to {update['expectedRecoveryTo']}%\n"
+                percentage = round(float(update['expectedRecoveryTo']))
+                message += f"• Expected Recovery: Up to {percentage}%\n"
 
         # Add recovery timeline
         if any(key in update for key in ['expectedRecoveryYearFrom', 'expectedRecoveryYearTo']):
@@ -201,10 +206,12 @@ class MintosBot:
 
         # Add description
         if 'description' in update:
-            # Clean up HTML tags if present in description
-            description = update['description'].replace('<p>', '').replace('</p>', '\n').strip()
+            # Clean up HTML tags and entities
+            description = update['description']
             description = description.replace('\u003C', '<').replace('\u003E', '>')  # Handle escaped HTML
             description = description.replace('&#39;', "'")  # Handle apostrophes
+            description = description.replace('&euro;', '€')  # Handle euro symbol
+            description = description.replace('<p>', '').replace('</p>', '\n').strip()
             message += f"\n📝 Details:\n{description}\n"
 
         # Add Mintos link with company ID if available
