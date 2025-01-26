@@ -4,10 +4,11 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 from telegram.error import TelegramError
 import time
 from .logger import setup_logger
-from .config import TELEGRAM_TOKEN, UPDATE_INTERVAL
+from .config import TELEGRAM_TOKEN
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
+import datetime
 
 logger = setup_logger(__name__)
 
@@ -280,13 +281,13 @@ class MintosBot:
             chat_id = update.effective_chat.id
             cached_updates = self.data_manager.load_previous_updates()
             today = time.strftime("%Y-%m-%d")
-            
+
             today_updates = []
             for company_update in cached_updates:
                 if "items" in company_update:
                     lender_id = company_update.get('lender_id')
                     company_name = self.data_manager.get_company_name(lender_id)
-                    
+
                     for year_data in company_update["items"]:
                         for item in year_data.get("items", []):
                             if item.get('date') == today:
@@ -297,31 +298,57 @@ class MintosBot:
                                     **item
                                 }
                                 today_updates.append(update_with_company)
-            
+
             if not today_updates:
                 await self.send_message(chat_id, "No updates found for today in the cached data.")
                 return
-                
+
             await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
             for update in today_updates:
                 message = self.format_update_message(update)
                 await self.send_message(chat_id, message)
-                
+
         except Exception as e:
             logger.error(f"Error in today_command: {e}", exc_info=True)
             await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.")
 
+    async def should_check_updates(self):
+        """Determine if updates should be checked based on current time"""
+        now = datetime.datetime.now()
+
+        # Check if it's a working day (Monday = 0, Sunday = 6)
+        if now.weekday() >= 5:  # Saturday or Sunday
+            logger.debug(f"Skipping update check - weekend day ({now.strftime('%A')})")
+            return False
+
+        # Check if current hour is 4 PM, 5 PM or 6 PM
+        should_check = now.hour in [16, 17, 18]
+        if not should_check:
+            logger.debug(f"Skipping update check - outside scheduled hours (current hour: {now.hour})")
+        else:
+            logger.info(f"Update check scheduled for current hour ({now.hour}:00)")
+        return should_check
+
     async def run(self):
-        """Run the bot with both polling and periodic updates"""
+        """Run the bot with both polling and time-based updates"""
         logger.info("Starting Mintos Update Bot")
         try:
             # Start polling in the background
             polling_task = asyncio.create_task(self.start_polling())
 
-            # Start periodic updates
+            # Start scheduled updates
             while True:
-                await self.check_updates()
-                await asyncio.sleep(UPDATE_INTERVAL)
+                if await self.should_check_updates():
+                    logger.info(f"Running scheduled update check at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                    await self.check_updates()
+                    # Wait for 55 minutes before next check to avoid duplicate runs
+                    logger.info("Update check completed, waiting 55 minutes before next check")
+                    await asyncio.sleep(55 * 60)
+                else:
+                    # Check every 5 minutes for the next scheduled time
+                    next_check = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                    logger.debug(f"Next update check scheduled for: {next_check.strftime('%Y-%m-%d %H:%M:%S')}")
+                    await asyncio.sleep(5 * 60)
 
         except Exception as e:
             logger.error(f"Error in main run loop: {e}", exc_info=True)

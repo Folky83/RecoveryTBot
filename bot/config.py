@@ -6,7 +6,6 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
 USERS_FILE = os.path.join('data', 'users.json')
 
 # Application Configuration
-UPDATE_INTERVAL = 3600  # Check for updates every hour
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
 REQUEST_TIMEOUT = 30  # seconds
@@ -21,4 +20,4 @@ REQUEST_DELAY = 0.1  # seconds between requests
 
 # Logging Configuration
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'  # Changed from INFO to DEBUG to show scheduling logs
