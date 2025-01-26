@@ -25,6 +25,7 @@ class MintosBot:
         # Register handlers
         self.application.add_handler(CommandHandler("start", self.start_command))
         self.application.add_handler(CommandHandler("company", self.company_command))
+        self.application.add_handler(CommandHandler("today", self.today_command))
         self.application.add_handler(CallbackQueryHandler(self.handle_callback))
         logger.info("Bot initialized and handlers registered")
 
@@ -272,6 +273,43 @@ class MintosBot:
         await self.application.start()
         await self.application.updater.start_polling()
         logger.info("Bot polling started successfully")
+
+    async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle the /today command - show all updates from today"""
+        try:
+            chat_id = update.effective_chat.id
+            updates = self.data_manager.load_previous_updates()
+            today = time.strftime("%Y-%m-%d")
+            
+            today_updates = []
+            for company_update in updates:
+                if "items" in company_update:
+                    lender_id = company_update.get('lender_id')
+                    company_name = self.data_manager.get_company_name(lender_id)
+                    
+                    for year_data in company_update["items"]:
+                        for item in year_data.get("items", []):
+                            if item.get('date') == today:
+                                update_with_company = {
+                                    "lender_id": lender_id,
+                                    "company_name": company_name,
+                                    **year_data,
+                                    **item
+                                }
+                                today_updates.append(update_with_company)
+            
+            if not today_updates:
+                await self.send_message(chat_id, "No updates found for today.")
+                return
+                
+            await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today:")
+            for update in today_updates:
+                message = self.format_update_message(update)
+                await self.send_message(chat_id, message)
+                
+        except Exception as e:
+            logger.error(f"Error in today_command: {e}", exc_info=True)
+            await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.")
 
     async def run(self):
         """Run the bot with both polling and periodic updates"""
