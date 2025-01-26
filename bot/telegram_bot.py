@@ -307,14 +307,14 @@ class MintosBot:
             if cache_age > 600:  # 10 minutes in seconds
                 await self.send_message(chat_id, "Cache is older than 10 minutes. Fetching live data...")
                 lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
-                cached_updates = self.mintos_client.fetch_all_updates(lender_ids)
-                self.data_manager.save_updates(cached_updates)
+                updates = self.mintos_client.fetch_all_updates(lender_ids)
+                self.data_manager.save_updates(updates)
             else:
-                cached_updates = self.data_manager.load_previous_updates()
+                updates = self.data_manager.load_previous_updates()
             today = time.strftime("%Y-%m-%d")
 
             today_updates = []
-            for company_update in cached_updates:
+            for company_update in updates:
                 if "items" in company_update:
                     lender_id = company_update.get('lender_id')
                     company_name = self.data_manager.get_company_name(lender_id)
@@ -331,7 +331,7 @@ class MintosBot:
                                 today_updates.append(update_with_company)
 
             if not today_updates:
-                await self.send_message(chat_id, "No updates found for today in the cached data.")
+                await self.send_message(chat_id, "No updates found for today.")
                 return
 
             await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
