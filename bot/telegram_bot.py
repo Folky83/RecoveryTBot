@@ -157,19 +157,62 @@ class MintosBot:
             raise
 
     def format_update_message(self, update):
+        """Format update message with rich information from Mintos API"""
+        logger.debug(f"Formatting update message for: {update.get('company_name')}")
         company_name = update.get('company_name', 'Unknown Company')
-        message = f"🔔 <b>New Update for {company_name}</b>\n\n"
+        message = f"🏢 <b>{company_name}</b>\n"
 
-        if 'lastUpdate' in update:
-            message += f"Last Update: {update['lastUpdate']}\n"
+        # Add date and year if available
+        if 'date' in update:
+            message += f"📅 Date: {update['date']}\n"
+            if 'year' in update:
+                message += f"Year: {update['year']}\n"
+
+        # Add status information
         if 'status' in update:
-            message += f"Status: {update['status']}\n"
+            status = update['status'].replace('_', ' ').title()
+            message += f"📊 Status: {status}\n"
+            if update.get('substatus'):
+                substatus = update['substatus'].replace('_', ' ').title()
+                message += f"Sub-status: {substatus}\n"
+
+        # Add recovery information
+        if any(key in update for key in ['recoveredAmount', 'remainingAmount', 'expectedRecoveryTo', 'expectedRecoveryFrom']):
+            message += "\n💰 Recovery Information:\n"
+            if update.get('recoveredAmount'):
+                message += f"• Recovered: {update['recoveredAmount']}%\n"
+            if update.get('remainingAmount'):
+                message += f"• Remaining: {update['remainingAmount']}%\n"
+            if update.get('expectedRecoveryFrom') and update.get('expectedRecoveryTo'):
+                message += f"• Expected Recovery: {update['expectedRecoveryFrom']}% - {update['expectedRecoveryTo']}%\n"
+            elif update.get('expectedRecoveryTo'):
+                message += f"• Expected Recovery: Up to {update['expectedRecoveryTo']}%\n"
+
+        # Add recovery timeline
+        if any(key in update for key in ['expectedRecoveryYearFrom', 'expectedRecoveryYearTo']):
+            timeline = ""
+            if update.get('expectedRecoveryYearFrom') and update.get('expectedRecoveryYearTo'):
+                timeline = f"{update['expectedRecoveryYearFrom']} - {update['expectedRecoveryYearTo']}"
+            elif update.get('expectedRecoveryYearTo'):
+                timeline = str(update['expectedRecoveryYearTo'])
+
+            if timeline:
+                message += f"📆 Expected Recovery Timeline: {timeline}\n"
+
+        # Add description
         if 'description' in update:
             # Clean up HTML tags if present in description
-            description = update['description'].replace('<p>', '').replace('</p>', '\n')
-            message += f"\nDescription:\n{description}\n"
+            description = update['description'].replace('<p>', '').replace('</p>', '\n').strip()
+            description = description.replace('\u003C', '<').replace('\u003E', '>')  # Handle escaped HTML
+            description = description.replace('&#39;', "'")  # Handle apostrophes
+            message += f"\n📝 Details:\n{description}\n"
 
-        return message
+        # Add Mintos link with company ID if available
+        if 'lender_id' in update:
+            message += f"\n🔗 <a href='https://www.mintos.com/en/loan-companies/{update['lender_id']}'>View on Mintos</a>"
+
+        logger.debug("Formatted message created")
+        return message.strip()
 
     async def check_updates(self):
         try:
