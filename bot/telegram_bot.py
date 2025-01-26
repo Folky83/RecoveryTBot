@@ -53,9 +53,14 @@ class MintosBot:
             raise
 
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /company command - display company selection menu"""
+        """Handle the /company command - display company selection menu with live data"""
         try:
             chat_id = update.effective_chat.id
+            # Fetch fresh data for all companies
+            lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
+            await update.message.reply_text("Fetching latest data from Mintos...")
+            new_updates = self.mintos_client.fetch_all_updates(lender_ids)
+            
             company_buttons = []
             # Create buttons for each company, 2 per row
             companies = sorted(self.data_manager.company_names.items(), key=lambda x: x[1])
@@ -103,8 +108,10 @@ class MintosBot:
                 company_id = int(company_id)
                 company_name = self.data_manager.get_company_name(company_id)
 
-                updates = self.data_manager.load_previous_updates()
-                company_updates = next((item for item in updates if item["lender_id"] == company_id), None)
+                # Fetch fresh data for the specific company
+                company_updates = self.mintos_client.get_recovery_updates(company_id)
+                if company_updates:
+                    company_updates = {"lender_id": company_id, **company_updates}
 
                 if not company_updates:
                     await query.edit_message_text(f"No updates found for {company_name}")
