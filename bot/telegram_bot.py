@@ -110,10 +110,21 @@ class MintosBot:
                 # Show fetching message
                 await query.edit_message_text(f"Fetching latest data for {company_name}...")
                 
-                # Fetch fresh data for the specific company
+                # Always fetch fresh data for the specific company
                 company_updates = self.mintos_client.get_recovery_updates(company_id)
                 if company_updates:
                     company_updates = {"lender_id": company_id, **company_updates}
+                    # Save to cache for other commands to use
+                    cached_updates = self.data_manager.load_previous_updates()
+                    updated = False
+                    for i, update in enumerate(cached_updates):
+                        if update.get('lender_id') == company_id:
+                            cached_updates[i] = company_updates
+                            updated = True
+                            break
+                    if not updated:
+                        cached_updates.append(company_updates)
+                    self.data_manager.save_updates(cached_updates)
 
                 if not company_updates:
                     await query.edit_message_text(f"No updates found for {company_name}")
