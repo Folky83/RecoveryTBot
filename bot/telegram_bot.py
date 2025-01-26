@@ -96,7 +96,7 @@ class MintosBot:
                 # Show update type selection
                 buttons = [
                     [InlineKeyboardButton("Latest Update", callback_data=f"latest_{company_id}")],
-                    [InlineKeyboardButton("All Updates", callback_data=f"all_{company_id}")]
+                    [InlineKeyboardButton("All Updates", callback_data=f"all_{company_id}_0")]  # Added page number
                 ]
                 reply_markup = InlineKeyboardMarkup(buttons)
                 await query.edit_message_text(
@@ -107,15 +107,17 @@ class MintosBot:
             elif query.data == "cancel":
                 await query.edit_message_text("Operation cancelled.")
                 return
-                
+
             elif query.data.startswith(("latest_", "all_")):
-                update_type, company_id = query.data.split("_")
-                company_id = int(company_id)
+                parts = query.data.split("_")
+                update_type = parts[0]
+                company_id = int(parts[1])
+                page = int(parts[2]) if len(parts) > 2 else 0
                 company_name = self.data_manager.get_company_name(company_id)
 
                 # Show fetching message
                 await query.edit_message_text(f"Fetching latest data for {company_name}...")
-                
+
                 # Always fetch fresh data for the specific company
                 company_updates = self.mintos_client.get_recovery_updates(company_id)
                 if company_updates:
@@ -149,10 +151,12 @@ class MintosBot:
 
                 else:  # all updates
                     messages = []
-                    # Reverse the year_data list to start from oldest
-                    for year_data in reversed(company_updates.get("items", [])):
-                        # Reverse the update_items to start from oldest
-                        for update_item in reversed(year_data.get("items", [])):
+                    for year_data in sorted(company_updates.get("items", []), key=lambda x: x.get('year', 0), reverse=True):
+                        # Sort updates within each year by date, newest first
+                        year_items = sorted(year_data.get("items", []), 
+                                             key=lambda x: datetime.datetime.strptime(x.get('date', '1900-01-01'), '%Y-%m-%d'),
+                                             reverse=True)
+                        for update_item in year_items:
                             update_with_company = {
                                 "lender_id": company_id,
                                 "company_name": company_name,
@@ -160,26 +164,62 @@ class MintosBot:
                             }
                             messages.append(self.format_update_message(update_with_company))
 
-                    # Send updates in chunks to avoid message length limits
-                    for message in messages[:5]:  # Limit to 5 oldest updates
+                    # Calculate total pages and current page bounds
+                    updates_per_page = 5
+                    total_updates = len(messages)
+                    total_pages = (total_updates + updates_per_page - 1) // updates_per_page
+
+                    # Validate page number
+                    if page >= total_pages:
+                        page = total_pages - 1
+                    if page < 0:
+                        page = 0
+
+                    start_idx = page * updates_per_page
+                    end_idx = min(start_idx + updates_per_page, total_updates)
+
+                    # Send header with page info
+                    header_message = (
+                        f"📊 Updates for {company_name}\n"
+                        f"Page {page + 1} of {total_pages}\n"
+                        f"Showing updates {start_idx + 1}-{end_idx} of {total_updates}"
+                    )
+                    await self.send_message(query.message.chat_id, header_message)
+
+                    # Get current page updates
+                    current_page_updates = messages[start_idx:end_idx]
+
+                    # Send updates for current page
+                    for message in current_page_updates:
                         await self.send_message(query.message.chat_id, message)
 
-                    if len(messages) > 5:
+                    # Create navigation buttons
+                    nav_buttons = []
+                    if page > 0:  # Show Previous button if not on first page
+                        nav_buttons.append(InlineKeyboardButton("◀️ Previous", callback_data=f"all_{company_id}_{page-1}"))
+                    if page < total_pages - 1:  # Show Next button if not on last page
+                        nav_buttons.append(InlineKeyboardButton("Next ▶️", callback_data=f"all_{company_id}_{page+1}"))
+
+                    # If there are navigation buttons, send them
+                    if nav_buttons:
+                        reply_markup = InlineKeyboardMarkup([nav_buttons])
                         await self.send_message(
                             query.message.chat_id,
-                            f"Showing 5 most recent updates out of {len(messages)} total updates."
+                            "Navigate through updates:",
+                            reply_markup=reply_markup
                         )
 
         except Exception as e:
             logger.error(f"Error in handle_callback: {e}", exc_info=True)
             await query.edit_message_text("⚠️ Error processing your request. Please try again.")
 
-    async def send_message(self, chat_id, text):
+    async def send_message(self, chat_id, text, reply_markup=None):
         try:
             await self.application.bot.send_message(
                 chat_id=chat_id,
                 text=text,
-                parse_mode='HTML'
+                parse_mode='HTML',
+                reply_markup=reply_markup
             )
             logger.debug(f"Message sent successfully to {chat_id}")
         except TelegramError as e:
@@ -309,7 +349,7 @@ class MintosBot:
         try:
             chat_id = update.effective_chat.id
             cache_age = self.data_manager.get_cache_age()
-            
+
             if cache_age > 600:  # 10 minutes in seconds
                 await self.send_message(chat_id, "Cache is older than 10 minutes. Fetching live data...")
                 lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
@@ -370,12 +410,15 @@ class MintosBot:
         """Run the bot with both polling and time-based updates"""
         logger.info("Starting Mintos Update Bot")
         try:
-            # Force clean previous instances
+            # Force clean previous instances more thoroughly
             await self.application.bot.delete_webhook(drop_pending_updates=True)
             await self.application.bot.get_updates(offset=-1)  # Clear pending updates
-            await asyncio.sleep(2)  # Give more time for cleanup
-            await self.application.initialize()
-                
+            await asyncio.sleep(5)  # Give more time for cleanup
+
+            # Ensure application is properly initialized
+            if not self.application.running:
+                await self.application.initialize()
+
             # Start polling in the background
             polling_task = asyncio.create_task(self.start_polling())
 
