@@ -117,3 +117,7 @@ try:
 except Exception as e:
     logger.error(f"Critical error in Streamlit application: {str(e)}", exc_info=True)
     st.error("⚠️ An error occurred while starting the application. Please check the logs for details.")
+
+if __name__ == "__main__":
+    import streamlit.web.bootstrap
+    streamlit.web.bootstrap.run(main, "", args=['--server.port=5000', '--server.address=0.0.0.0'], flag_options={})
