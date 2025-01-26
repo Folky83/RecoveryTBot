@@ -97,7 +97,16 @@ class DataManager:
         added_updates = []
         for key, update in new_updates_dict.items():
             if key not in prev_updates_dict:
-                added_updates.append(update)
+                # Check if this is truly a new update by comparing content
+                is_new = True
+                for prev_key, prev_update in prev_updates_dict.items():
+                    if (prev_key[0] == key[0]  # Same lender_id
+                        and prev_update.get('description') == update.get('description')
+                        and prev_update.get('date') == update.get('date')):
+                        is_new = False
+                        break
+                if is_new:
+                    added_updates.append(update)
 
         logger.info(f"Found {len(added_updates)} new updates")
         return added_updates
