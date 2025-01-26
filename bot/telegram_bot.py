@@ -72,6 +72,8 @@ class MintosBot:
                     ))
                 company_buttons.append(row)
 
+            # Add cancel button as the last row
+            company_buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
             reply_markup = InlineKeyboardMarkup(company_buttons)
             await update.message.reply_text(
                 "Select a company to view updates:",
@@ -102,6 +104,10 @@ class MintosBot:
                     reply_markup=reply_markup
                 )
 
+            elif query.data == "cancel":
+                await query.edit_message_text("Operation cancelled.")
+                return
+                
             elif query.data.startswith(("latest_", "all_")):
                 update_type, company_id = query.data.split("_")
                 company_id = int(company_id)
