@@ -304,7 +304,7 @@ class MintosBot:
             chat_id = update.effective_chat.id
             cache_age = self.data_manager.get_cache_age()
             
-            if cache_age > 7200:  # 2 hours in seconds
+            if cache_age > 600:  # 10 minutes in seconds
                 await self.send_message(chat_id, "Cache is older than 2 hours. Fetching live data...")
                 lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
                 cached_updates = self.mintos_client.fetch_all_updates(lender_ids)
