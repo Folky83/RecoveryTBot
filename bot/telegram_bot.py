@@ -228,6 +228,7 @@ class MintosBot:
                 .replace('\u003C', '<')
                 .replace('\u003E', '>')
                 .replace('&#39;', "'")
+                .replace('&rsquo;', "'")
                 .replace('&euro;', '€')
                 .replace('<p>', '')
                 .replace('</p>', '\n')
