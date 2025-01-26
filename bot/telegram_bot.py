@@ -288,10 +288,18 @@ class MintosBot:
         logger.info("Bot polling started successfully")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /today command - show all updates from today using cached data"""
+        """Handle the /today command - show all updates from today using cached or live data"""
         try:
             chat_id = update.effective_chat.id
-            cached_updates = self.data_manager.load_previous_updates()
+            cache_age = self.data_manager.get_cache_age()
+            
+            if cache_age > 7200:  # 2 hours in seconds
+                await self.send_message(chat_id, "Cache is older than 2 hours. Fetching live data...")
+                lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
+                cached_updates = self.mintos_client.fetch_all_updates(lender_ids)
+                self.data_manager.save_updates(cached_updates)
+            else:
+                cached_updates = self.data_manager.load_previous_updates()
             today = time.strftime("%Y-%m-%d")
 
             today_updates = []

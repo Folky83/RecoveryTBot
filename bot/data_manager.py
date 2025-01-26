@@ -27,6 +27,16 @@ class DataManager:
             self.company_names = {}
             raise
 
+    def get_cache_age(self):
+        """Get age of cache in seconds"""
+        try:
+            if os.path.exists(UPDATES_FILE):
+                return time.time() - os.path.getmtime(UPDATES_FILE)
+            return float('inf')  # Return infinity if file doesn't exist
+        except Exception as e:
+            logger.error(f"Error checking cache age: {e}")
+            return float('inf')
+
     def load_previous_updates(self):
         try:
             if os.path.exists(UPDATES_FILE):
