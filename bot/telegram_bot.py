@@ -346,11 +346,17 @@ class MintosBot:
         try:
             # Check if bot is already running
             try:
-                await self.application.bot.delete_webhook()  # Clear any existing webhooks
+                await self.application.bot.delete_webhook(drop_pending_updates=True)  # Clear webhooks and pending updates
                 await self.application.bot.get_updates(offset=-1, limit=1)  # Test if we can get updates
             except telegram.error.Conflict:
                 logger.error("Another bot instance is already running")
-                return
+                # Wait for a bit and try to recover
+                await asyncio.sleep(10)
+                try:
+                    await self.application.bot.delete_webhook(drop_pending_updates=True)
+                except:
+                    logger.error("Could not recover from conflict, exiting")
+                    return
                 
             # Start polling in the background
             polling_task = asyncio.create_task(self.start_polling())
