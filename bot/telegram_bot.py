@@ -176,19 +176,23 @@ class MintosBot:
                 substatus = update['substatus'].replace('_', ' ').title()
                 message += f"Sub-status: {substatus}\n"
 
-        # Add recovery information with rounded Euro amounts
+        # Add recovery information with proper formatting
         if any(key in update for key in ['recoveredAmount', 'remainingAmount', 'expectedRecoveryTo', 'expectedRecoveryFrom']):
             message += "\n💰 Recovery Information:\n"
+
+            # Handle recovered and remaining amounts as Euro values
             if update.get('recoveredAmount'):
                 amount = round(float(update['recoveredAmount']))
                 message += f"• Recovered: €{amount:,}\n"
             if update.get('remainingAmount'):
                 amount = round(float(update['remainingAmount']))
                 message += f"• Remaining: €{amount:,}\n"
+
+            # Handle expected recovery - always as percentage
             if update.get('expectedRecoveryFrom') and update.get('expectedRecoveryTo'):
-                from_amount = round(float(update['expectedRecoveryFrom']))
-                to_amount = round(float(update['expectedRecoveryTo']))
-                message += f"• Expected Recovery: €{from_amount:,} - €{to_amount:,}\n"
+                from_percentage = round(float(update['expectedRecoveryFrom']))
+                to_percentage = round(float(update['expectedRecoveryTo']))
+                message += f"• Expected Recovery: {from_percentage}% - {to_percentage}%\n"
             elif update.get('expectedRecoveryTo'):
                 percentage = round(float(update['expectedRecoveryTo']))
                 message += f"• Expected Recovery: Up to {percentage}%\n"
@@ -204,21 +208,23 @@ class MintosBot:
             if timeline:
                 message += f"📆 Expected Recovery Timeline: {timeline}\n"
 
-        # Add description
+        # Add description with proper HTML entity handling
         if 'description' in update:
-            # Clean up HTML tags and entities
             description = update['description']
-            description = description.replace('\u003C', '<').replace('\u003E', '>')  # Handle escaped HTML
-            description = description.replace('&#39;', "'")  # Handle apostrophes
-            description = description.replace('&euro;', '€')  # Handle euro symbol
-            description = description.replace('<p>', '').replace('</p>', '\n').strip()
+            description = (description
+                .replace('\u003C', '<')
+                .replace('\u003E', '>')
+                .replace('&#39;', "'")
+                .replace('&euro;', '€')
+                .replace('<p>', '')
+                .replace('</p>', '\n')
+                .strip())
             message += f"\n📝 Details:\n{description}\n"
 
-        # Add Mintos link with company ID if available
+        # Add Mintos link
         if 'lender_id' in update:
             message += f"\n🔗 <a href='https://www.mintos.com/en/loan-companies/{update['lender_id']}'>View on Mintos</a>"
 
-        logger.debug("Formatted message created")
         return message.strip()
 
     async def check_updates(self):
