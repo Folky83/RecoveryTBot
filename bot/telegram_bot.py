@@ -352,15 +352,16 @@ class MintosBot:
 
             if cache_age > 600:  # 10 minutes in seconds
                 await self.send_message(chat_id, "Cache is older than 10 minutes. Fetching live data...")
-                # Always fetch fresh data and update cache
+                # Fetch fresh data and update main cache for all users
                 lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
                 updates = self.mintos_client.fetch_all_updates(lender_ids)
-                # Update cache for use by scheduled checks
+                # Update cache for all users to benefit
                 self.data_manager.save_updates(updates)
-                logger.info("Cache updated with fresh data from /today command")
+                logger.info("Cache updated with fresh data from /today command - all users will benefit")
                 today = time.strftime("%Y-%m-%d")
             else:
                 updates = self.data_manager.load_previous_updates()
+                logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
                 today = time.strftime("%Y-%m-%d")
 
             today_updates = []
