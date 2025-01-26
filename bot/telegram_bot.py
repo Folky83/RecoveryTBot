@@ -134,8 +134,10 @@ class MintosBot:
 
                 else:  # all updates
                     messages = []
-                    for year_data in company_updates.get("items", []):
-                        for update_item in year_data.get("items", []):
+                    # Reverse the year_data list to start from oldest
+                    for year_data in reversed(company_updates.get("items", [])):
+                        # Reverse the update_items to start from oldest
+                        for update_item in reversed(year_data.get("items", [])):
                             update_with_company = {
                                 "lender_id": company_id,
                                 "company_name": company_name,
@@ -144,7 +146,7 @@ class MintosBot:
                             messages.append(self.format_update_message(update_with_company))
 
                     # Send updates in chunks to avoid message length limits
-                    for message in messages[:5]:  # Limit to 5 most recent updates
+                    for message in messages[:5]:  # Limit to 5 oldest updates
                         await self.send_message(query.message.chat_id, message)
 
                     if len(messages) > 5:
