@@ -160,65 +160,36 @@ class MintosBot:
         """Format update message with rich information from Mintos API"""
         logger.debug(f"Formatting update message for: {update.get('company_name')}")
         company_name = update.get('company_name', 'Unknown Company')
-        message = f"🏢 <b>{company_name}</b>\n"
+        message = f"📊 {company_name}\n"
 
-        # Add date and year if available
+        # Add date
         if 'date' in update:
             message += f"📅 Date: {update['date']}\n"
-            if 'year' in update:
-                message += f"Year: {update['year']}\n"
 
-        # Add status information
+        # Add status information with proper spacing and formatting
         if 'status' in update:
             status = update['status'].replace('_', ' ').title()
-            message += f"📊 Status: {status}\n"
-            if update.get('substatus'):
-                substatus = update['substatus'].replace('_', ' ').title()
-                message += f"Sub-status: {substatus}\n"
+            message += f"📈 Status: {status}\n"
 
-        # Add recovery information with rounded Euro amounts
-        if any(key in update for key in ['recoveredAmount', 'remainingAmount', 'expectedRecoveryTo', 'expectedRecoveryFrom']):
-            message += "\n💰 Recovery Information:\n"
-            if update.get('recoveredAmount'):
-                amount = round(float(update['recoveredAmount']))
-                message += f"• Recovered: €{amount:,}\n"
-            if update.get('remainingAmount'):
-                amount = round(float(update['remainingAmount']))
-                message += f"• Remaining: €{amount:,}\n"
-            if update.get('expectedRecoveryFrom') and update.get('expectedRecoveryTo'):
-                from_amount = round(float(update['expectedRecoveryFrom']))
-                to_amount = round(float(update['expectedRecoveryTo']))
-                message += f"• Expected Recovery: €{from_amount:,} - €{to_amount:,}\n"
-            elif update.get('expectedRecoveryTo'):
-                percentage = round(float(update['expectedRecoveryTo']))
-                message += f"• Expected Recovery: Up to {percentage}%\n"
-
-        # Add recovery timeline
-        if any(key in update for key in ['expectedRecoveryYearFrom', 'expectedRecoveryYearTo']):
-            timeline = ""
-            if update.get('expectedRecoveryYearFrom') and update.get('expectedRecoveryYearTo'):
-                timeline = f"{update['expectedRecoveryYearFrom']} - {update['expectedRecoveryYearTo']}"
-            elif update.get('expectedRecoveryYearTo'):
-                timeline = str(update['expectedRecoveryYearTo'])
-
-            if timeline:
-                message += f"📆 Expected Recovery Timeline: {timeline}\n"
+        # Add recovery information with percentage
+        message += "💰 Recovery Information:\n"
+        if update.get('expectedRecoveryTo'):
+            percentage = round(float(update['expectedRecoveryTo']))
+            message += f"Expected Recovery: Up to {percentage}%"
 
         # Add description
         if 'description' in update:
-            # Clean up HTML tags and entities
             description = update['description']
-            description = description.replace('\u003C', '<').replace('\u003E', '>')  # Handle escaped HTML
-            description = description.replace('&#39;', "'")  # Handle apostrophes
-            description = description.replace('&euro;', '€')  # Handle euro symbol
-            description = description.replace('<p>', '').replace('</p>', '\n').strip()
-            message += f"\n📝 Details:\n{description}\n"
+            description = description.replace('\u003C', '<').replace('\u003E', '>')
+            description = description.replace('&#39;', "'")
+            description = description.replace('&euro;', '€')
+            description = description.replace('<p>', '').replace('</p>', '').strip()
+            message += f"\n📝 Details:\n{description}"
 
-        # Add Mintos link with company ID if available
+        # Add Mintos link
         if 'lender_id' in update:
-            message += f"\n🔗 <a href='https://www.mintos.com/en/loan-companies/{update['lender_id']}'>View on Mintos</a>"
+            message += f"\n\n🔗 View on Mintos"
 
-        logger.debug("Formatted message created")
         return message.strip()
 
     async def check_updates(self):
