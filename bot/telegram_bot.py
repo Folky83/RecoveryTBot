@@ -275,14 +275,14 @@ class MintosBot:
         logger.info("Bot polling started successfully")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /today command - show all updates from today"""
+        """Handle the /today command - show all updates from today using cached data"""
         try:
             chat_id = update.effective_chat.id
-            updates = self.data_manager.load_previous_updates()
+            cached_updates = self.data_manager.load_previous_updates()
             today = time.strftime("%Y-%m-%d")
             
             today_updates = []
-            for company_update in updates:
+            for company_update in cached_updates:
                 if "items" in company_update:
                     lender_id = company_update.get('lender_id')
                     company_name = self.data_manager.get_company_name(lender_id)
@@ -299,10 +299,10 @@ class MintosBot:
                                 today_updates.append(update_with_company)
             
             if not today_updates:
-                await self.send_message(chat_id, "No updates found for today.")
+                await self.send_message(chat_id, "No updates found for today in the cached data.")
                 return
                 
-            await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today:")
+            await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
             for update in today_updates:
                 message = self.format_update_message(update)
                 await self.send_message(chat_id, message)
