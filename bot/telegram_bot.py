@@ -344,6 +344,14 @@ class MintosBot:
         """Run the bot with both polling and time-based updates"""
         logger.info("Starting Mintos Update Bot")
         try:
+            # Check if bot is already running
+            try:
+                await self.application.bot.delete_webhook()  # Clear any existing webhooks
+                await self.application.bot.get_updates(offset=-1, limit=1)  # Test if we can get updates
+            except telegram.error.Conflict:
+                logger.error("Another bot instance is already running")
+                return
+                
             # Start polling in the background
             polling_task = asyncio.create_task(self.start_polling())
 
