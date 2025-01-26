@@ -119,5 +119,4 @@ except Exception as e:
     st.error("⚠️ An error occurred while starting the application. Please check the logs for details.")
 
 if __name__ == "__main__":
-    import streamlit.web.bootstrap
-    streamlit.web.bootstrap.run(main, "", args=['--server.port=5000', '--server.address=0.0.0.0'], flag_options={})
+    st.info("The Telegram bot will automatically collect updates during working days at 4 PM, 5 PM, and 6 PM.")
