@@ -40,9 +40,13 @@ class MintosBot:
             self.user_manager.add_user(str(chat_id))
             welcome_message = (
                 "🚀 Welcome to Mintos Update Bot!\n\n"
-                "You'll receive updates about lending companies automatically.\n"
-                "Use /company to check specific company updates.\n"
-                "Stay tuned for important updates!"
+                "📅 Update Schedule:\n"
+                "• Automatic updates on weekdays at 4 PM, 5 PM, and 6 PM\n\n"
+                "Available Commands:\n"
+                "• /company - Check updates for a specific company\n"
+                "• /today - View all updates from today\n"
+                "• /start - Show this welcome message\n\n"
+                "You'll receive updates about lending companies automatically. Stay tuned!"
             )
             await self.send_message(chat_id, welcome_message)
             logger.info(f"User {user.username} successfully registered")
