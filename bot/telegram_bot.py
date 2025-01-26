@@ -347,7 +347,8 @@ class MintosBot:
             # Force clean previous instances
             await self.application.bot.delete_webhook(drop_pending_updates=True)
             await self.application.bot.get_updates(offset=-1)  # Clear pending updates
-            await asyncio.sleep(1)  # Wait for cleanup
+            await asyncio.sleep(2)  # Give more time for cleanup
+            await self.application.initialize()
                 
             # Start polling in the background
             polling_task = asyncio.create_task(self.start_polling())
