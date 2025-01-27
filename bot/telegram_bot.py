@@ -3,12 +3,13 @@ from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from telegram.error import TelegramError
 import time
+import datetime
+import math
 from .logger import setup_logger
 from .config import TELEGRAM_TOKEN
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
-import datetime
 
 logger = setup_logger(__name__)
 
@@ -413,8 +414,14 @@ class MintosBot:
                                 today_updates.append(update_with_company)
 
             if not today_updates:
-                minutes_old = int(cache_age / 60)
-                await self.send_message(chat_id, f"No updates found for today in cache (last updated {minutes_old} minutes ago).")
+                cache_message = ""
+                if math.isinf(cache_age):
+                    cache_message = "Cache age unknown"
+                else:
+                    minutes_old = max(0, int(cache_age / 60))
+                    cache_message = f"Cache last updated {minutes_old} minutes ago"
+
+                await self.send_message(chat_id, f"No updates found for today ({cache_message}).")
                 return
 
             await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
