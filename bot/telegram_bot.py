@@ -51,11 +51,19 @@ class MintosBot:
                 # First stop polling if it's running
                 if hasattr(self.application, 'updater') and self.application.updater.running:
                     await self.application.updater.stop()
+                    await asyncio.sleep(1)  # Give time for polling to stop
 
                 # Then clean up the webhook and pending updates
                 await self.application.bot.delete_webhook(drop_pending_updates=True)
-                await self.application.stop()
-                await self.application.shutdown()
+                try:
+                    await self.application.stop()
+                except RuntimeError:
+                    pass  # Ignore "not running" errors
+                try:
+                    await self.application.shutdown()
+                except RuntimeError:
+                    pass  # Ignore "not running" errors
+
                 self.application = None
                 # Reset initialization flag to allow clean restart
                 self._initialized = False
@@ -407,15 +415,26 @@ class MintosBot:
         """Start the bot in polling mode with proper error handling"""
         try:
             logger.info("Starting bot polling")
+            # Make sure we're initialized
+            if not self._initialized:
+                await self.initialize()
+
+            # Double-check no webhook exists
+            await self.application.bot.delete_webhook(drop_pending_updates=True)
+            # Clear any pending updates
+            await self.application.bot.get_updates(offset=-1)
+
             await self.application.initialize()
             await self.application.start()
             await self.application.updater.start_polling(
-                drop_pending_updates=True,  # Ignore updates from when bot was offline
-                allowed_updates=["message", "callback_query"]  # Only handle messages and callbacks
+                drop_pending_updates=True,
+                allowed_updates=["message", "callback_query"],
+                close_loop=False  # Don't close the event loop
             )
             logger.info("Bot polling started successfully")
         except Exception as e:
             logger.error(f"Error starting polling: {e}", exc_info=True)
+            await self.cleanup()  # Cleanup on error
             raise
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -492,6 +511,10 @@ class MintosBot:
 
         while retry_count < max_retries:
             try:
+                # Ensure clean state before starting
+                await self.cleanup()
+                await asyncio.sleep(2)  # Give time for cleanup
+
                 async with self as bot:  # Use context manager for proper cleanup
                     if not await bot.initialize():
                         raise Exception("Failed to initialize bot")

@@ -57,10 +57,15 @@ async def cleanup():
         logging.info("Starting cleanup process...")
         await kill_existing_processes()
 
+        # Add a delay to ensure processes are fully killed
+        await asyncio.sleep(2)
+
         # Clean up any existing bot instances
         async with managed_bot() as bot:
-            await bot.application.bot.delete_webhook(drop_pending_updates=True)
-            await bot.application.bot.get_updates(offset=-1)
+            # Ensure webhook is deleted and updates are cleared
+            if bot.application and bot.application.bot:
+                await bot.application.bot.delete_webhook(drop_pending_updates=True)
+                await bot.application.bot.get_updates(offset=-1)
             await asyncio.sleep(2)  # Give more time for cleanup
 
         logging.info("Cleanup completed successfully")
@@ -75,8 +80,9 @@ async def main():
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-    # Perform cleanup first
+    # Always perform cleanup first
     await cleanup()
+    await asyncio.sleep(2)  # Give extra time for cleanup to complete
 
     streamlit_process = None
     try:
