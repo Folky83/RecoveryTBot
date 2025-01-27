@@ -22,8 +22,8 @@ async def kill_port_process(port):
 
 async def kill_existing_processes():
     """Kill any existing Python and Streamlit processes"""
-    # First kill any process using port 5000
-    await kill_port_process(5000)
+    # First kill any process using port 5001
+    await kill_port_process(5001)
 
     # Then kill any existing streamlit processes
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
@@ -76,7 +76,7 @@ async def main():
         streamlit_process = subprocess.Popen([
             sys.executable, "-m", "streamlit", "run",
             "main.py", "--server.address", "0.0.0.0",
-            "--server.port", "5000"
+            "--server.port", "5001"
         ])
 
         # Wait for bot task to complete
