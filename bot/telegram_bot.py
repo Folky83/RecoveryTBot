@@ -120,12 +120,27 @@ class MintosBot:
                 self.application.add_handler(CommandHandler("refresh", self.refresh_command))
                 self.application.add_handler(CallbackQueryHandler(self.handle_callback))
 
+                # Set up error handlers
+                self.application.add_error_handler(self._error_handler)
+
                 self._initialized = True
                 logger.info("Bot initialized and handlers registered")
                 return True
             except Exception as e:
                 logger.error(f"Error during bot initialization: {e}", exc_info=True)
                 return False
+
+    async def _error_handler(self, update: object, context: ContextTypes.DEFAULT_TYPE):
+        """Global error handler for the bot"""
+        logger.error(f"Exception while handling an update: {context.error}")
+        if isinstance(context.error, TelegramError) and context.error.message == "Forbidden: bot was blocked by the user":
+            logger.warning(f"Bot blocked by user {update.effective_user.id if update else 'unknown'}. Removing user from database.")
+            self.user_manager.remove_user(update.effective_user.id if update else None)
+        elif isinstance(context.error, telegram.error.Conflict):
+            logger.error("Detected multiple instance conflict, initiating cleanup...")
+            await self.cleanup()
+            await asyncio.sleep(5)  # Give time for other instances to clean up
+            await self.initialize()  # Reinitialize bot
 
     async def scheduled_updates(self):
         """Handle scheduled updates"""
@@ -504,30 +519,6 @@ class MintosBot:
                     await self.send_message(user_id, "⚠️ Error occurred while checking for updates")
                 except Exception as nested_e:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
-
-    async def start_polling(self):
-        """Start the bot in polling mode with proper error handling"""
-        try:
-            logger.info("Starting bot polling")
-            # Make sure we're initialized
-            if not self._initialized:
-                await self.initialize()
-
-            # Double-check no webhook exists
-            await self.application.bot.delete_webhook(drop_pending_updates=True)
-            # Clear any pending updates
-            await self.application.bot.get_updates(offset=-1)
-
-            # Initialize and start application
-            await self.application.initialize()
-            await self.application.start()
-            await self.application.updater.start_polling()
-
-            logger.info("Bot polling started successfully")
-        except Exception as e:
-            logger.error(f"Error starting polling: {e}", exc_info=True)
-            await self.cleanup()  # Cleanup on error
-            raise
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /today command - show today's updates from cache"""
