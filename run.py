@@ -7,34 +7,49 @@ import psutil
 import logging
 import os
 import time
+import contextlib
 
 async def kill_port_process(port):
     """Kill any process using the specified port"""
     for proc in psutil.process_iter(['pid', 'name', 'connections']):
         try:
-            connections = proc.connections()
-            for conn in connections:
-                if conn.laddr.port == port:
+            for conn in proc.info.get('connections', []):
+                if hasattr(conn, 'laddr') and hasattr(conn.laddr, 'port') and conn.laddr.port == port:
                     proc.kill()
                     await asyncio.sleep(0.5)  # Give process time to die
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
 async def kill_existing_processes():
     """Kill any existing Python and Streamlit processes"""
-    # First kill any process using port 5000
-    await kill_port_process(5000)
+    try:
+        # First kill any process using port 5000
+        await kill_port_process(5000)
 
-    # Then kill any existing streamlit processes
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-        try:
-            cmdline = proc.info['cmdline']
-            if cmdline and ('streamlit' in ' '.join(cmdline) or 'run.py' in ' '.join(cmdline)):
-                proc.kill()
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
+        # Then kill any existing streamlit processes
+        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            try:
+                cmdline = proc.info.get('cmdline', [])
+                if cmdline and ('streamlit' in ' '.join(cmdline) or 'run.py' in ' '.join(cmdline)):
+                    proc.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
 
-    await asyncio.sleep(3)  # Give processes time to close
+        await asyncio.sleep(3)  # Give processes time to close
+        logging.info("Existing processes killed successfully")
+    except Exception as e:
+        logging.error(f"Error killing existing processes: {e}")
+
+@contextlib.asynccontextmanager
+async def managed_bot():
+    """Context manager for bot lifecycle management"""
+    bot = None
+    try:
+        bot = MintosBot()
+        yield bot
+    finally:
+        if bot:
+            await bot.cleanup()
 
 async def cleanup():
     """Force cleanup any existing bot instances and processes"""
@@ -43,10 +58,10 @@ async def cleanup():
         await kill_existing_processes()
 
         # Clean up any existing bot instances
-        bot = MintosBot()
-        await bot.application.bot.delete_webhook(drop_pending_updates=True)
-        await bot.application.bot.get_updates(offset=-1)
-        await asyncio.sleep(3)  # Give more time for cleanup
+        async with managed_bot() as bot:
+            await bot.application.bot.delete_webhook(drop_pending_updates=True)
+            await bot.application.bot.get_updates(offset=-1)
+            await asyncio.sleep(2)  # Give more time for cleanup
 
         logging.info("Cleanup completed successfully")
     except Exception as e:
@@ -65,22 +80,22 @@ async def main():
 
     streamlit_process = None
     try:
-        # Initialize and run the bot
-        bot = MintosBot()
-        bot_task = asyncio.create_task(bot.run())
+        async with managed_bot() as bot:
+            # Initialize and run the bot
+            bot_task = asyncio.create_task(bot.run())
 
-        # Give the bot time to initialize before starting Streamlit
-        await asyncio.sleep(2)
+            # Give the bot time to initialize before starting Streamlit
+            await asyncio.sleep(2)
 
-        # Start Streamlit in a separate process
-        streamlit_process = subprocess.Popen([
-            sys.executable, "-m", "streamlit", "run",
-            "main.py", "--server.address", "0.0.0.0",
-            "--server.port", "5000"
-        ])
+            # Start Streamlit in a separate process
+            streamlit_process = subprocess.Popen([
+                sys.executable, "-m", "streamlit", "run",
+                "main.py", "--server.address", "0.0.0.0",
+                "--server.port", "5000"
+            ])
 
-        # Wait for bot task to complete
-        await bot_task
+            # Wait for bot task to complete
+            await bot_task
 
     except Exception as e:
         logging.error(f"Application error: {e}")

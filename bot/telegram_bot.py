@@ -16,14 +16,22 @@ logger = setup_logger(__name__)
 class MintosBot:
     _instance = None
     _lock = asyncio.Lock()
+    _initialized = False
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    async def __aenter__(self):
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.cleanup()
+
     def __init__(self):
-        if not hasattr(self, '_initialized'):
+        if not self._initialized:
             logger.info("Initializing Mintos Bot...")
             if not TELEGRAM_TOKEN:
                 raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set")
@@ -35,20 +43,28 @@ class MintosBot:
             self._initialized = True
             logger.info("Bot instance created")
 
+    async def cleanup(self):
+        """Cleanup bot resources"""
+        if self.application:
+            try:
+                logger.info("Cleaning up bot resources...")
+                await self.application.bot.delete_webhook(drop_pending_updates=True)
+                await self.application.stop()
+                await self.application.shutdown()
+                self.application = None
+                logger.info("Bot cleanup completed")
+            except Exception as e:
+                logger.error(f"Error during bot cleanup: {e}", exc_info=True)
+
     async def initialize(self):
         """Initialize bot application with proper cleanup"""
         async with self._lock:
             try:
-                if self.application:
-                    logger.info("Cleaning up existing application...")
-                    try:
-                        await self.application.stop()
-                        await self.application.shutdown()
-                    except Exception as e:
-                        logger.warning(f"Error during application cleanup: {e}")
+                # Cleanup existing instance if any
+                await self.cleanup()
 
-                    # Force sleep to ensure cleanup
-                    await asyncio.sleep(5)
+                # Force sleep to ensure cleanup
+                await asyncio.sleep(2)
 
                 # Create new application instance
                 self.application = Application.builder().token(TELEGRAM_TOKEN).build()
@@ -460,21 +476,22 @@ class MintosBot:
 
         while retry_count < max_retries:
             try:
-                if not await self.initialize():
-                    raise Exception("Failed to initialize bot")
+                async with self as bot:  # Use context manager for proper cleanup
+                    if not await bot.initialize():
+                        raise Exception("Failed to initialize bot")
 
-                # Start polling in the background
-                polling_task = asyncio.create_task(self.start_polling())
+                    # Start polling in the background
+                    polling_task = asyncio.create_task(bot.start_polling())
 
-                # Start scheduled updates
-                while True:
-                    if await self.should_check_updates():
-                        logger.info(f"Running scheduled update check at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                        await self.check_updates()
-                        logger.info("Update check completed, waiting 55 minutes before next check")
-                        await asyncio.sleep(55 * 60)
-                    else:
-                        await asyncio.sleep(5 * 60)
+                    # Start scheduled updates
+                    while True:
+                        if await bot.should_check_updates():
+                            logger.info(f"Running scheduled update check at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            await bot.check_updates()
+                            logger.info("Update check completed, waiting 55 minutes before next check")
+                            await asyncio.sleep(55 * 60)
+                        else:
+                            await asyncio.sleep(5 * 60)
 
             except Exception as e:
                 logger.error(f"Error in main run loop: {e}", exc_info=True)
@@ -485,6 +502,8 @@ class MintosBot:
                 else:
                     logger.error("Max retries reached, shutting down...")
                     raise
+            finally:
+                await self.cleanup()  # Ensure cleanup happens even on error
 
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /refresh command - force an immediate update check"""
