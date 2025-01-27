@@ -490,6 +490,13 @@ class MintosBot:
         """Handle the /refresh command - force an immediate update check"""
         try:
             chat_id = update.effective_chat.id
+            cache_age = self.data_manager.get_cache_age()
+
+            # Check if cache is less than 15 minutes old
+            if cache_age < 900:  # 15 minutes = 900 seconds
+                minutes_left = int((900 - cache_age) / 60)
+                await self.send_message(chat_id, f"⏳ Please wait {minutes_left} minutes before refreshing again.")
+                return
 
             # Inform user that refresh is starting
             await self.send_message(chat_id, "🔄 Starting manual refresh...")
