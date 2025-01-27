@@ -1,5 +1,6 @@
 import json
 import os
+import time  # Added missing import
 import pandas as pd
 from .logger import setup_logger
 from .config import DATA_DIR, UPDATES_FILE
