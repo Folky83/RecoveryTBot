@@ -10,15 +10,14 @@ import time
 
 async def kill_port_process(port):
     """Kill any process using the specified port"""
-    for proc in psutil.process_iter(['pid', 'name', 'connections']):
+    for proc in psutil.process_iter(['pid', 'name']):
         try:
-            connections = proc.connections()
-            for conn in connections:
-                if conn.laddr.port == port:
+            for conn in proc.connections('inet'):  # Specify connection kind
+                if hasattr(conn, 'laddr') and conn.laddr.port == port:
                     logging.info(f"Killing process {proc.pid} using port {port}")
                     proc.kill()
                     await asyncio.sleep(0.5)  # Give process time to die
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
 async def kill_existing_processes():
@@ -31,10 +30,13 @@ async def kill_existing_processes():
     # Then kill any existing streamlit and python processes
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            cmdline = proc.info['cmdline']
+            cmdline = proc.info.get('cmdline', [])
             if cmdline and ('streamlit' in ' '.join(cmdline) or 'run.py' in ' '.join(cmdline)):
                 logging.info(f"Killing process: {proc.pid}")
-                proc.kill()
+                try:
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    continue
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
@@ -51,12 +53,18 @@ async def cleanup():
         # Clean up any existing bot instances
         try:
             bot = MintosBot()
-            if bot.application and bot.application.bot:
+            if hasattr(bot, 'application') and bot.application and bot.application.bot:
+                logging.info("Cleaning up existing bot instance...")
                 await bot.application.bot.delete_webhook(drop_pending_updates=True)
-                await asyncio.wait_for(
-                    bot.application.bot.get_updates(offset=-1),
-                    timeout=5.0
-                )
+                try:
+                    await asyncio.wait_for(
+                        bot.application.bot.get_updates(offset=-1),
+                        timeout=5.0
+                    )
+                except asyncio.TimeoutError:
+                    logging.warning("Timeout while cleaning up updates, continuing anyway")
+                except Exception as e:
+                    logging.warning(f"Non-critical error during update cleanup: {e}")
         except Exception as e:
             logging.warning(f"Bot cleanup warning (non-critical): {e}")
 

@@ -6,9 +6,19 @@ from datetime import datetime
 from bot.data_manager import DataManager
 from bot.logger import setup_logger
 
-# Set up logging
+# Set up logging with more detailed error handling
 logger = setup_logger("streamlit_dashboard")
 logger.info("Starting Streamlit Dashboard")
+
+# Error handler for streamlit exceptions
+def handle_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in {func.__name__}: {str(e)}", exc_info=True)
+            st.error(f"An error occurred: {str(e)}")
+    return wrapper
 
 try:
     # Page configuration
@@ -19,9 +29,14 @@ try:
     )
     logger.info("Page configuration set successfully")
 
-    # Initialize DataManager
-    data_manager = DataManager()
-    logger.info("DataManager initialized")
+    # Initialize DataManager with error handling
+    try:
+        data_manager = DataManager()
+        logger.info("DataManager initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize DataManager: {str(e)}", exc_info=True)
+        st.error("Failed to initialize data manager. Please try refreshing the page.")
+        st.stop()
 
     # Custom CSS for better styling
     st.markdown("""
@@ -47,7 +62,7 @@ try:
     st.title("🏦 Mintos Updates Dashboard")
     st.markdown("Real-time monitoring of lending company updates from Mintos")
 
-    # Load and display updates
+    # Load and display updates with improved error handling
     updates_file = 'data/recovery_updates.json'
     if os.path.exists(updates_file):
         logger.info(f"Loading updates from {updates_file}")
@@ -58,53 +73,70 @@ try:
 
             # Create a sidebar for company filtering
             st.sidebar.title("Filter Options")
-            # Get unique company names
+
+            # Get unique company names with error handling
             companies = set()
             for update in updates:
-                if "items" in update:
-                    company_name = data_manager.get_company_name(update.get('lender_id'))
-                    companies.add(company_name)
+                try:
+                    if "items" in update:
+                        company_name = data_manager.get_company_name(update.get('lender_id'))
+                        if company_name:  # Only add if we got a valid name
+                            companies.add(company_name)
+                except Exception as e:
+                    logger.warning(f"Error processing company name: {str(e)}")
+                    continue
 
             selected_company = st.sidebar.selectbox(
                 "Select Company",
                 ["All Companies"] + sorted(list(companies))
             )
 
-            # Display updates
+            # Display updates with improved error handling
             for update in updates:
-                if "items" in update:
-                    company_name = data_manager.get_company_name(update.get('lender_id'))
+                try:
+                    if "items" in update:
+                        company_name = data_manager.get_company_name(update.get('lender_id'))
+                        if not company_name:
+                            continue
 
-                    # Skip if doesn't match filter
-                    if selected_company != "All Companies" and company_name != selected_company:
-                        continue
+                        # Skip if doesn't match filter
+                        if selected_company != "All Companies" and company_name != selected_company:
+                            continue
 
-                    st.markdown(f"<h2 class='company-header'>{company_name}</h2>", unsafe_allow_html=True)
+                        st.markdown(f"<h2 class='company-header'>{company_name}</h2>", unsafe_allow_html=True)
 
-                    for year_data in update["items"]:
-                        year = year_data.get('year')
-                        status = year_data.get('status', '').replace('_', ' ').title()
+                        for year_data in update.get("items", []):
+                            try:
+                                year = year_data.get('year')
+                                status = year_data.get('status', '').replace('_', ' ').title()
 
-                        with st.expander(f"📅 {year} - {status}"):
-                            for item in year_data.get("items", []):
-                                st.markdown(f"<p class='update-date'>🕒 {item.get('date', 'N/A')}</p>", unsafe_allow_html=True)
-                                st.markdown(f"<div class='update-description'>{item.get('description', 'No description available')}</div>", unsafe_allow_html=True)
+                                with st.expander(f"📅 {year} - {status}"):
+                                    for item in year_data.get("items", []):
+                                        st.markdown(f"<p class='update-date'>🕒 {item.get('date', 'N/A')}</p>", unsafe_allow_html=True)
+                                        st.markdown(f"<div class='update-description'>{item.get('description', 'No description available')}</div>", unsafe_allow_html=True)
 
-                                # Display recovery information if available
-                                if 'recoveredAmount' in item or 'remainingAmount' in item:
-                                    recovery_col1, recovery_col2 = st.columns(2)
-                                    with recovery_col1:
-                                        if item.get('recoveredAmount'):
-                                            st.metric("Recovered Amount", f"€{float(item['recoveredAmount']):,.2f}")
-                                    with recovery_col2:
-                                        if item.get('remainingAmount'):
-                                            st.metric("Remaining Amount", f"€{float(item['remainingAmount']):,.2f}")
+                                        # Display recovery information if available
+                                        if 'recoveredAmount' in item or 'remainingAmount' in item:
+                                            recovery_col1, recovery_col2 = st.columns(2)
+                                            with recovery_col1:
+                                                if item.get('recoveredAmount'):
+                                                    st.metric("Recovered Amount", f"€{float(item['recoveredAmount']):,.2f}")
+                                            with recovery_col2:
+                                                if item.get('remainingAmount'):
+                                                    st.metric("Remaining Amount", f"€{float(item['remainingAmount']):,.2f}")
 
-                                # Display expected recovery timeline
-                                if item.get('expectedRecoveryYearFrom') and item.get('expectedRecoveryYearTo'):
-                                    st.info(f"Expected Recovery Timeline: {item['expectedRecoveryYearFrom']} - {item['expectedRecoveryYearTo']}")
+                                        # Display expected recovery timeline
+                                        if item.get('expectedRecoveryYearFrom') and item.get('expectedRecoveryYearTo'):
+                                            st.info(f"Expected Recovery Timeline: {item['expectedRecoveryYearFrom']} - {item['expectedRecoveryYearTo']}")
 
-                                st.markdown("---")
+                                        st.markdown("---")
+                            except Exception as e:
+                                logger.error(f"Error processing year data: {str(e)}", exc_info=True)
+                                continue
+                except Exception as e:
+                    logger.error(f"Error processing update: {str(e)}", exc_info=True)
+                    continue
+
         except Exception as e:
             logger.error(f"Error loading or processing updates: {str(e)}", exc_info=True)
             st.error(f"Error loading updates: {str(e)}")
@@ -118,5 +150,6 @@ except Exception as e:
     logger.error(f"Critical error in Streamlit application: {str(e)}", exc_info=True)
     st.error("⚠️ An error occurred while starting the application. Please check the logs for details.")
 
+# Only show this message if we reach the end without critical errors
 if __name__ == "__main__":
     st.info("The Telegram bot will automatically collect updates during working days at 4 PM, 5 PM, and 6 PM.")
