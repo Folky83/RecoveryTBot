@@ -48,10 +48,17 @@ class MintosBot:
         if self.application:
             try:
                 logger.info("Cleaning up bot resources...")
+                # First stop polling if it's running
+                if hasattr(self.application, 'updater') and self.application.updater.running:
+                    await self.application.updater.stop()
+
+                # Then clean up the webhook and pending updates
                 await self.application.bot.delete_webhook(drop_pending_updates=True)
                 await self.application.stop()
                 await self.application.shutdown()
                 self.application = None
+                # Reset initialization flag to allow clean restart
+                self._initialized = False
                 logger.info("Bot cleanup completed")
             except Exception as e:
                 logger.error(f"Error during bot cleanup: {e}", exc_info=True)
@@ -60,7 +67,7 @@ class MintosBot:
         """Initialize bot application with proper cleanup"""
         async with self._lock:
             try:
-                # Cleanup existing instance if any
+                # Always cleanup existing instance
                 await self.cleanup()
 
                 # Force sleep to ensure cleanup
@@ -71,6 +78,7 @@ class MintosBot:
 
                 # Clean up any existing webhooks and updates
                 await self.application.bot.delete_webhook(drop_pending_updates=True)
+                # Clear any pending updates
                 await self.application.bot.get_updates(offset=-1)
 
                 # Register handlers
@@ -80,6 +88,7 @@ class MintosBot:
                 self.application.add_handler(CommandHandler("refresh", self.refresh_command))
                 self.application.add_handler(CallbackQueryHandler(self.handle_callback))
 
+                self._initialized = True
                 logger.info("Bot initialized and handlers registered")
                 return True
             except Exception as e:
@@ -395,12 +404,19 @@ class MintosBot:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
 
     async def start_polling(self):
-        """Start the bot in polling mode"""
-        logger.info("Starting bot polling")
-        await self.application.initialize()
-        await self.application.start()
-        await self.application.updater.start_polling()
-        logger.info("Bot polling started successfully")
+        """Start the bot in polling mode with proper error handling"""
+        try:
+            logger.info("Starting bot polling")
+            await self.application.initialize()
+            await self.application.start()
+            await self.application.updater.start_polling(
+                drop_pending_updates=True,  # Ignore updates from when bot was offline
+                allowed_updates=["message", "callback_query"]  # Only handle messages and callbacks
+            )
+            logger.info("Bot polling started successfully")
+        except Exception as e:
+            logger.error(f"Error starting polling: {e}", exc_info=True)
+            raise
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /today command - show today's updates from cache"""
