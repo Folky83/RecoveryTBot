@@ -42,34 +42,20 @@ class MintosBot:
                 if self.application:
                     logger.info("Cleaning up existing application...")
                     try:
-                        if getattr(self.application, '_running', False):
-                            await self.application.stop()
-                            await self.application.shutdown()
-                        else:
-                            logger.info("Application was not running, skipping cleanup")
+                        await self.application.stop()
+                        await self.application.shutdown()
                     except Exception as e:
                         logger.warning(f"Error during application cleanup: {e}")
 
-                    self.application = None
                     # Force sleep to ensure cleanup
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(5)
 
                 # Create new application instance
                 self.application = Application.builder().token(TELEGRAM_TOKEN).build()
 
                 # Clean up any existing webhooks and updates
-                try:
-                    await self.application.bot.delete_webhook(drop_pending_updates=True)
-                    # Use a timeout for get_updates to prevent hanging
-                    await asyncio.wait_for(
-                        self.application.bot.get_updates(offset=-1),
-                        timeout=10.0
-                    )
-                except asyncio.TimeoutError:
-                    logger.warning("Timeout while getting updates, continuing anyway")
-                except Exception as e:
-                    logger.warning(f"Error while cleaning updates: {e}")
-                    # Continue anyway as this is not critical
+                await self.application.bot.delete_webhook(drop_pending_updates=True)
+                await self.application.bot.get_updates(offset=-1)
 
                 # Register handlers
                 self.application.add_handler(CommandHandler("start", self.start_command))
@@ -471,20 +457,9 @@ class MintosBot:
         logger.info("Starting Mintos Update Bot")
         max_retries = 3
         retry_count = 0
-        retry_delay = 5  # seconds
 
         while retry_count < max_retries:
             try:
-                # Ensure cleanup of any existing instance
-                if self.application:
-                    try:
-                        await self.application.stop()
-                        await self.application.shutdown()
-                    except Exception as e:
-                        logger.warning(f"Cleanup error: {e}")
-                    self.application = None
-                    await asyncio.sleep(2)
-
                 if not await self.initialize():
                     raise Exception("Failed to initialize bot")
 
@@ -506,8 +481,7 @@ class MintosBot:
                 retry_count += 1
                 if retry_count < max_retries:
                     logger.info(f"Retrying bot startup (attempt {retry_count + 1}/{max_retries})...")
-                    await asyncio.sleep(retry_delay)
-                    retry_delay *= 2  # Exponential backoff
+                    await asyncio.sleep(5)  # Wait before retry
                 else:
                     logger.error("Max retries reached, shutting down...")
                     raise
