@@ -1,7 +1,8 @@
+from __future__ import annotations
 import asyncio
 from datetime import datetime
 import time
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, cast
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from telegram.error import TelegramError, Conflict
@@ -35,7 +36,7 @@ class MintosBot:
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.cleanup()
 
     def __init__(self) -> None:
@@ -131,10 +132,10 @@ class MintosBot:
         logger.error(f"Update error: {context.error}")
         if isinstance(context.error, TelegramError):
             if "Forbidden: bot was blocked by the user" in str(context.error):
-                user_id = getattr(update, 'effective_user', None)
-                if user_id:
-                    logger.warning(f"Bot blocked by user {user_id.id}")
-                    self.user_manager.remove_user(user_id.id)
+                user = getattr(update, 'effective_user', None)
+                if user and hasattr(user, 'id'):
+                    logger.warning(f"Bot blocked by user {user.id}")
+                    await self.user_manager.remove_user(user.id)
             elif isinstance(context.error, Conflict):
                 logger.error("Multiple instance conflict detected")
                 await self.cleanup()

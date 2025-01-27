@@ -9,8 +9,9 @@ import time
 import contextlib
 import fcntl
 import errno
-from typing import Optional
+from typing import Optional, Any
 from dataclasses import dataclass
+from psutil import Process
 
 # Configuration
 LOCK_FILE = 'bot.lock'
@@ -21,7 +22,7 @@ PROCESS_KILL_WAIT = 3
 
 @dataclass
 class ProcessManager:
-    lock_file: Optional[object] = None
+    lock_file: Optional[Any] = None
     streamlit_process: Optional[subprocess.Popen] = None
 
     def __post_init__(self):
@@ -57,7 +58,8 @@ class ProcessManager:
         try:
             for proc in psutil.process_iter(['pid', 'name']):
                 try:
-                    for conn in proc.net_connections():
+                    proc_with_connections = Process(proc.pid)
+                    for conn in proc_with_connections.connections():
                         if conn.laddr.port == port:
                             self.logger.info(f"Killing process {proc.pid} using port {port}")
                             proc.kill()
@@ -101,7 +103,8 @@ class ProcessManager:
             try:
                 for proc in psutil.process_iter(['pid', 'name']):
                     try:
-                        for conn in proc.net_connections():
+                        proc_with_connections = Process(proc.pid)
+                        for conn in proc_with_connections.connections():
                             if conn.laddr.port == STREAMLIT_PORT and conn.status == 'LISTEN':
                                 self.logger.info(f"Streamlit running on port {STREAMLIT_PORT}")
                                 await asyncio.sleep(2)
@@ -124,7 +127,8 @@ class ProcessManager:
             if self.lock_file:
                 try:
                     os.unlink(LOCK_FILE)
-                    self.lock_file.close()
+                    if hasattr(self.lock_file, 'close'):
+                        self.lock_file.close()
                 except Exception:
                     pass
 
