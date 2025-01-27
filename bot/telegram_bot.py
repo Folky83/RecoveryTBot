@@ -61,6 +61,7 @@ class MintosBot:
                 self.application.add_handler(CommandHandler("start", self.start_command))
                 self.application.add_handler(CommandHandler("company", self.company_command))
                 self.application.add_handler(CommandHandler("today", self.today_command))
+                self.application.add_handler(CommandHandler("refresh", self.refresh_command))
                 self.application.add_handler(CallbackQueryHandler(self.handle_callback))
 
                 logger.info("Bot initialized and handlers registered")
@@ -84,6 +85,7 @@ class MintosBot:
                 "Available Commands:\n"
                 "• /company - Check updates for a specific company\n"
                 "• /today - View all updates from today\n"
+                "• /refresh - Force an immediate update check\n"
                 "• /start - Show this welcome message\n\n"
                 "You'll receive updates about lending companies automatically. Stay tuned!"
             )
@@ -483,6 +485,25 @@ class MintosBot:
                 else:
                     logger.error("Max retries reached, shutting down...")
                     raise
+
+    async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle the /refresh command - force an immediate update check"""
+        try:
+            chat_id = update.effective_chat.id
+
+            # Inform user that refresh is starting
+            await self.send_message(chat_id, "🔄 Starting manual refresh...")
+
+            # Run the update check
+            await self.check_updates()
+
+            # Inform about completion
+            await self.send_message(chat_id, "✅ Manual refresh completed!")
+
+        except Exception as e:
+            logger.error(f"Error in refresh_command: {e}", exc_info=True)
+            await self.send_message(chat_id, "⚠️ Error during manual refresh. Please try again.")
+
 
 if __name__ == "__main__":
     bot = MintosBot()
