@@ -1,0 +1,72 @@
+2025-01-27 21:08:05.30
+5f867c90
+User
+Traceback (most recent call last):
+2025-01-27 21:08:05.30
+5f867c90
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/telegram/request/_httpxrequest.py", line 268, in do_request
+2025-01-27 21:08:05.30
+5f867c90
+User
+res = await self._client.request(
+2025-01-27 21:08:05.30
+5f867c90
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-27 21:08:05.30
+5f867c90
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 1530, in request
+2025-01-27 21:08:05.30
+5f867c90
+User
+return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+2025-01-27 21:08:05.30
+5f867c90
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-27 21:08:05.30
+5f867c90
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 1617, in send
+2025-01-27 21:08:05.30
+5f867c90
+User
+response = await self._send_handling_auth(
+2025-01-27 21:08:05.30
+5f867c90
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-27 21:08:05.30
+5f867c90
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 1645, in _send_handling_auth
+2025-01-27 21:08:05.30
+5f867c90
+User
+response = await self._send_handling_redirects(
+2025-01-27 21:08:05.30
+5f867c90
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-27 21:08:05.30
+5f867c90
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 1682, in _send_handling_redirects
+2025-01-27 21:08:05.30
+5f867c90
+User
+response = await self._send_single_request(request)
+2025-01-27 21:08:05.30
+5f867c90
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-27 21:08:05.30
+5f867c90
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/httpx/_client.py", line 1719, in _send_single_request
+2025-01-27 21:08:05.30
+5f867c90
+User
+response = await transport.handle_async_request(request)
