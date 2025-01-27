@@ -384,39 +384,15 @@ class MintosBot:
         logger.info("Bot polling started successfully")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /today command - check for new updates first, then show today's updates"""
+        """Handle the /today command - show today's updates from cache"""
         try:
             chat_id = update.effective_chat.id
 
-            # First check for new updates like check_updates does
-            previous_updates = self.data_manager.load_previous_updates()
-            lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
-            new_updates = self.mintos_client.fetch_all_updates(lender_ids)
-
-            # Compare and get new updates
-            added_updates = self.data_manager.compare_updates(new_updates, previous_updates)
-
-            if added_updates:
-                # New updates found - send them to the requesting user
-                await self.send_message(chat_id, f"📢 Found {len(added_updates)} new updates!")
-                for update_item in added_updates:
-                    message = self.format_update_message(update_item)
-                    await self.send_message(chat_id, message)
-
-                # Save the new updates
-                self.data_manager.save_updates(new_updates)
-                return
-
-            # If no new updates, continue with regular today command logic
+            # Load updates from cache
+            updates = self.data_manager.load_previous_updates()
             cache_age = self.data_manager.get_cache_age()
-            if cache_age > 600:  # 10 minutes in seconds
-                await self.send_message(chat_id, "No new updates. Cache is older than 10 minutes. Fetching live data...")
-                updates = new_updates  # Use already fetched updates
-                self.data_manager.save_updates(updates)
-                logger.info("Cache updated with fresh data from /today command")
-            else:
-                updates = self.data_manager.load_previous_updates()
-                logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
+            logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
+
             today = time.strftime("%Y-%m-%d")
 
             today_updates = []
@@ -437,7 +413,8 @@ class MintosBot:
                                 today_updates.append(update_with_company)
 
             if not today_updates:
-                await self.send_message(chat_id, "No updates found for today.")
+                minutes_old = int(cache_age / 60)
+                await self.send_message(chat_id, f"No updates found for today in cache (last updated {minutes_old} minutes ago).")
                 return
 
             await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
