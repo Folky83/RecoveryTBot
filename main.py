@@ -16,6 +16,15 @@ logger.info("Starting Streamlit Dashboard")
 UPDATES_FILE = os.path.join('data', 'recovery_updates.json')
 CACHE_REFRESH_SECONDS = 900  # 15 minutes
 
+def _convert_to_float(value: Any) -> Optional[float]:
+    """Safely convert a value to float"""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
 @dataclass
 class UpdateItem:
     """Represents a single update item"""
@@ -68,8 +77,8 @@ class DashboardManager:
                             description=item.get('description', ''),
                             year=year_data.get('year'),
                             status=year_data.get('status', '').replace('_', ' ').title(),
-                            recovered_amount=float(item.get('recoveredAmount', 0)),
-                            remaining_amount=float(item.get('remainingAmount', 0)),
+                            recovered_amount=_convert_to_float(item.get('recoveredAmount')),
+                            remaining_amount=_convert_to_float(item.get('remainingAmount')),
                             recovery_year_from=item.get('expectedRecoveryYearFrom'),
                             recovery_year_to=item.get('expectedRecoveryYearTo')
                         ))
