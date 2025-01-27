@@ -15,6 +15,7 @@ async def kill_port_process(port):
             connections = proc.connections()
             for conn in connections:
                 if conn.laddr.port == port:
+                    logging.info(f"Killing process {proc.pid} using port {port}")
                     proc.kill()
                     await asyncio.sleep(0.5)  # Give process time to die
         except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -22,32 +23,44 @@ async def kill_port_process(port):
 
 async def kill_existing_processes():
     """Kill any existing Python and Streamlit processes"""
+    logging.info("Starting cleanup of existing processes")
+
     # First kill any process using port 5001
     await kill_port_process(5001)
 
-    # Then kill any existing streamlit processes
+    # Then kill any existing streamlit and python processes
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             cmdline = proc.info['cmdline']
             if cmdline and ('streamlit' in ' '.join(cmdline) or 'run.py' in ' '.join(cmdline)):
+                logging.info(f"Killing process: {proc.pid}")
                 proc.kill()
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
 
-    await asyncio.sleep(3)  # Give processes time to close
+    # Give processes time to fully terminate
+    await asyncio.sleep(5)  # Increased sleep time for thorough cleanup
 
 async def cleanup():
     """Force cleanup any existing bot instances and processes"""
     try:
         logging.info("Starting cleanup process...")
         await kill_existing_processes()
+        logging.info("Process cleanup completed")
 
         # Clean up any existing bot instances
-        bot = MintosBot()
-        await bot.application.bot.delete_webhook(drop_pending_updates=True)
-        await bot.application.bot.get_updates(offset=-1)
-        await asyncio.sleep(3)  # Give more time for cleanup
+        try:
+            bot = MintosBot()
+            if bot.application and bot.application.bot:
+                await bot.application.bot.delete_webhook(drop_pending_updates=True)
+                await asyncio.wait_for(
+                    bot.application.bot.get_updates(offset=-1),
+                    timeout=5.0
+                )
+        except Exception as e:
+            logging.warning(f"Bot cleanup warning (non-critical): {e}")
 
+        await asyncio.sleep(3)  # Give more time for cleanup
         logging.info("Cleanup completed successfully")
     except Exception as e:
         logging.error(f"Cleanup error: {e}")
@@ -60,6 +73,9 @@ async def main():
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
+    # Create data directory if it doesn't exist
+    os.makedirs('data', exist_ok=True)
+
     # Perform cleanup first
     await cleanup()
 
@@ -70,14 +86,16 @@ async def main():
         bot_task = asyncio.create_task(bot.run())
 
         # Give the bot time to initialize before starting Streamlit
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)  # Increased sleep time for proper initialization
 
         # Start Streamlit in a separate process
+        logging.info("Starting Streamlit process...")
         streamlit_process = subprocess.Popen([
             sys.executable, "-m", "streamlit", "run",
             "main.py", "--server.address", "0.0.0.0",
             "--server.port", "5001"
         ])
+        logging.info("Streamlit process started")
 
         # Wait for bot task to complete
         await bot_task
@@ -87,10 +105,12 @@ async def main():
     finally:
         # Cleanup on exit
         if streamlit_process:
+            logging.info("Terminating Streamlit process...")
             streamlit_process.terminate()
             try:
                 streamlit_process.wait(timeout=5)
             except subprocess.TimeoutExpired:
+                logging.warning("Streamlit process didn't terminate gracefully, forcing kill")
                 streamlit_process.kill()
 
 def signal_handler(sig, frame):
