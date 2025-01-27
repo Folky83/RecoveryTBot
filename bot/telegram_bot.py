@@ -428,8 +428,7 @@ class MintosBot:
             await self.application.start()
             await self.application.updater.start_polling(
                 drop_pending_updates=True,
-                allowed_updates=["message", "callback_query"],
-                close_loop=False  # Don't close the event loop
+                allowed_updates=["message", "callback_query"]
             )
             logger.info("Bot polling started successfully")
         except Exception as e:
@@ -519,18 +518,24 @@ class MintosBot:
                     if not await bot.initialize():
                         raise Exception("Failed to initialize bot")
 
-                    # Start polling in the background
-                    polling_task = asyncio.create_task(bot.start_polling())
+                # Start polling in the background
+                polling_task = asyncio.create_task(bot.start_polling())
 
-                    # Start scheduled updates
-                    while True:
+                # Start scheduled updates
+                while True:
+                    try:
                         if await bot.should_check_updates():
                             logger.info(f"Running scheduled update check at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                            # Add delay to avoid conflict with polling
+                            await asyncio.sleep(1)
                             await bot.check_updates()
                             logger.info("Update check completed, waiting 55 minutes before next check")
                             await asyncio.sleep(55 * 60)
                         else:
                             await asyncio.sleep(5 * 60)
+                    except Exception as update_error:
+                        logger.error(f"Error in scheduled update: {update_error}", exc_info=True)
+                        await asyncio.sleep(60)  # Wait before retrying
 
             except Exception as e:
                 logger.error(f"Error in main run loop: {e}", exc_info=True)
@@ -568,6 +573,7 @@ class MintosBot:
         except Exception as e:
             logger.error(f"Error in refresh_command: {e}", exc_info=True)
             await self.send_message(chat_id, "⚠️ Error during manual refresh. Please try again.")
+
 
 
 if __name__ == "__main__":
