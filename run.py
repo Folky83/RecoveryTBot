@@ -168,7 +168,7 @@ async def main():
         process_manager.streamlit_process = subprocess.Popen([
             sys.executable, "-m", "streamlit", "run",
             "main.py", "--server.address", "0.0.0.0",
-            "--server.port", str(STREAMLIT_PORT)
+            "--server.port", "80"
         ])
 
         # Wait for Streamlit and start bot
