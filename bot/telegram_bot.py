@@ -224,6 +224,7 @@ class MintosBot:
             logger.debug(f"Message sent successfully to {chat_id}")
         except TelegramError as e:
             logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
+            logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
             raise
 
     def format_update_message(self, update):
@@ -348,26 +349,26 @@ class MintosBot:
         """Handle the /today command - check for new updates first, then show today's updates"""
         try:
             chat_id = update.effective_chat.id
-            
+
             # First check for new updates like check_updates does
             previous_updates = self.data_manager.load_previous_updates()
             lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
             new_updates = self.mintos_client.fetch_all_updates(lender_ids)
-            
+
             # Compare and get new updates
             added_updates = self.data_manager.compare_updates(new_updates, previous_updates)
-            
+
             if added_updates:
                 # New updates found - send them to the requesting user
                 await self.send_message(chat_id, f"📢 Found {len(added_updates)} new updates!")
                 for update_item in added_updates:
                     message = self.format_update_message(update_item)
                     await self.send_message(chat_id, message)
-                
+
                 # Save the new updates
                 self.data_manager.save_updates(new_updates)
                 return
-                
+
             # If no new updates, continue with regular today command logic
             cache_age = self.data_manager.get_cache_age()
             if cache_age > 600:  # 10 minutes in seconds
