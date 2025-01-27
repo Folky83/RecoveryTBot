@@ -50,13 +50,14 @@ class MintosBot:
         try:
             logger.info("Starting cleanup process...")
 
-            # Cancel running tasks
+            # Cancel running tasks first
             if self._polling_task and not self._polling_task.done():
                 self._polling_task.cancel()
                 try:
                     await self._polling_task
                 except asyncio.CancelledError:
                     pass
+                self._polling_task = None
 
             if self._update_task and not self._update_task.done():
                 self._update_task.cancel()
@@ -64,26 +65,34 @@ class MintosBot:
                     await self._update_task
                 except asyncio.CancelledError:
                     pass
+                self._update_task = None
 
             if self.application:
-                # Stop polling if running
-                if hasattr(self.application, 'updater') and self.application.updater.running:
-                    await self.application.updater.stop()
-                    await asyncio.sleep(1)
-
-                # Cleanup webhook and updates
-                await self.application.bot.delete_webhook(drop_pending_updates=True)
                 try:
-                    await self.application.stop()
-                except Exception:
-                    pass
-                try:
-                    await self.application.shutdown()
-                except Exception:
-                    pass
+                    # Stop the updater if it's running
+                    if hasattr(self.application, 'updater') and self.application.updater.running:
+                        await self.application.updater.stop()
+                        await asyncio.sleep(1)
 
-                self.application = None
-                self._initialized = False
+                    # Clean up webhook and updates
+                    if hasattr(self.application, 'bot'):
+                        await self.application.bot.delete_webhook(drop_pending_updates=True)
+                        await self.application.bot.get_updates(offset=-1)
+
+                    # Stop and shutdown the application
+                    try:
+                        await self.application.stop()
+                    except Exception:
+                        pass
+                    try:
+                        await self.application.shutdown()
+                    except Exception:
+                        pass
+
+                    self.application = None
+                    self._initialized = False
+                except Exception as e:
+                    logger.error(f"Error during application cleanup: {e}")
 
             logger.info("Cleanup completed successfully")
         except Exception as e:
@@ -124,10 +133,14 @@ class MintosBot:
             try:
                 if await self.should_check_updates():
                     logger.info("Running scheduled update check")
-                    await asyncio.sleep(1)  # Small delay to avoid conflicts
-                    await self.check_updates()
-                    logger.info("Update check completed")
-                    await asyncio.sleep(55 * 60)  # Wait 55 minutes before next check
+                    try:
+                        await asyncio.sleep(1)  # Small delay to avoid conflicts
+                        await self.check_updates()
+                        logger.info("Update check completed")
+                        await asyncio.sleep(55 * 60)  # Wait 55 minutes before next check
+                    except Exception as check_error:
+                        logger.error(f"Error in update check: {check_error}", exc_info=True)
+                        await asyncio.sleep(60)  # Wait before retry
                 else:
                     await asyncio.sleep(5 * 60)  # Check every 5 minutes
             except asyncio.CancelledError:
@@ -156,13 +169,16 @@ class MintosBot:
                 # Start polling
                 await self.application.initialize()
                 await self.application.start()
-                await self.application.updater.start_polling(
-                    drop_pending_updates=True,
-                    allowed_updates=["message", "callback_query"]
+
+                # Only create one polling task
+                self._polling_task = asyncio.create_task(
+                    self.application.updater.start_polling(
+                        drop_pending_updates=True,
+                        allowed_updates=["message", "callback_query"]
+                    )
                 )
 
-                # Create tasks for polling and updates
-                self._polling_task = asyncio.create_task(self.application.updater.start_polling())
+                # Create scheduled updates task
                 self._update_task = asyncio.create_task(self.scheduled_updates())
 
                 # Wait for both tasks
@@ -502,12 +518,11 @@ class MintosBot:
             # Clear any pending updates
             await self.application.bot.get_updates(offset=-1)
 
+            # Initialize and start application
             await self.application.initialize()
             await self.application.start()
-            await self.application.updater.start_polling(
-                drop_pending_updates=True,
-                allowed_updates=["message", "callback_query"]
-            )
+            await self.application.updater.start_polling()
+
             logger.info("Bot polling started successfully")
         except Exception as e:
             logger.error(f"Error starting polling: {e}", exc_info=True)
