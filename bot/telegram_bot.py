@@ -17,6 +17,8 @@ class MintosBot:
     _instance = None
     _lock = asyncio.Lock()
     _initialized = False
+    _polling_task = None
+    _update_task = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -45,31 +47,47 @@ class MintosBot:
 
     async def cleanup(self):
         """Cleanup bot resources"""
-        if self.application:
-            try:
-                logger.info("Cleaning up bot resources...")
-                # First stop polling if it's running
+        try:
+            logger.info("Starting cleanup process...")
+
+            # Cancel running tasks
+            if self._polling_task and not self._polling_task.done():
+                self._polling_task.cancel()
+                try:
+                    await self._polling_task
+                except asyncio.CancelledError:
+                    pass
+
+            if self._update_task and not self._update_task.done():
+                self._update_task.cancel()
+                try:
+                    await self._update_task
+                except asyncio.CancelledError:
+                    pass
+
+            if self.application:
+                # Stop polling if running
                 if hasattr(self.application, 'updater') and self.application.updater.running:
                     await self.application.updater.stop()
-                    await asyncio.sleep(1)  # Give time for polling to stop
+                    await asyncio.sleep(1)
 
-                # Then clean up the webhook and pending updates
+                # Cleanup webhook and updates
                 await self.application.bot.delete_webhook(drop_pending_updates=True)
                 try:
                     await self.application.stop()
-                except RuntimeError:
-                    pass  # Ignore "not running" errors
+                except Exception:
+                    pass
                 try:
                     await self.application.shutdown()
-                except RuntimeError:
-                    pass  # Ignore "not running" errors
+                except Exception:
+                    pass
 
                 self.application = None
-                # Reset initialization flag to allow clean restart
                 self._initialized = False
-                logger.info("Bot cleanup completed")
-            except Exception as e:
-                logger.error(f"Error during bot cleanup: {e}", exc_info=True)
+
+            logger.info("Cleanup completed successfully")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}", exc_info=True)
 
     async def initialize(self):
         """Initialize bot application with proper cleanup"""
@@ -77,16 +95,13 @@ class MintosBot:
             try:
                 # Always cleanup existing instance
                 await self.cleanup()
-
-                # Force sleep to ensure cleanup
-                await asyncio.sleep(2)
+                await asyncio.sleep(2)  # Give time for cleanup
 
                 # Create new application instance
                 self.application = Application.builder().token(TELEGRAM_TOKEN).build()
 
                 # Clean up any existing webhooks and updates
                 await self.application.bot.delete_webhook(drop_pending_updates=True)
-                # Clear any pending updates
                 await self.application.bot.get_updates(offset=-1)
 
                 # Register handlers
@@ -102,6 +117,69 @@ class MintosBot:
             except Exception as e:
                 logger.error(f"Error during bot initialization: {e}", exc_info=True)
                 return False
+
+    async def scheduled_updates(self):
+        """Handle scheduled updates"""
+        while True:
+            try:
+                if await self.should_check_updates():
+                    logger.info("Running scheduled update check")
+                    await asyncio.sleep(1)  # Small delay to avoid conflicts
+                    await self.check_updates()
+                    logger.info("Update check completed")
+                    await asyncio.sleep(55 * 60)  # Wait 55 minutes before next check
+                else:
+                    await asyncio.sleep(5 * 60)  # Check every 5 minutes
+            except asyncio.CancelledError:
+                logger.info("Scheduled updates task cancelled")
+                break
+            except Exception as e:
+                logger.error(f"Error in scheduled updates: {e}", exc_info=True)
+                await asyncio.sleep(60)  # Wait before retry
+
+    async def run(self):
+        """Run the bot with both polling and scheduled updates"""
+        logger.info("Starting Mintos Update Bot")
+        max_retries = 3
+        retry_count = 0
+
+        while retry_count < max_retries:
+            try:
+                # Ensure clean state
+                await self.cleanup()
+                await asyncio.sleep(2)
+
+                # Initialize bot
+                if not await self.initialize():
+                    raise Exception("Failed to initialize bot")
+
+                # Start polling
+                await self.application.initialize()
+                await self.application.start()
+                await self.application.updater.start_polling(
+                    drop_pending_updates=True,
+                    allowed_updates=["message", "callback_query"]
+                )
+
+                # Create tasks for polling and updates
+                self._polling_task = asyncio.create_task(self.application.updater.start_polling())
+                self._update_task = asyncio.create_task(self.scheduled_updates())
+
+                # Wait for both tasks
+                await asyncio.gather(self._polling_task, self._update_task)
+                return
+
+            except Exception as e:
+                logger.error(f"Error in main run loop: {e}", exc_info=True)
+                retry_count += 1
+                if retry_count < max_retries:
+                    logger.info(f"Retrying bot startup (attempt {retry_count + 1}/{max_retries})...")
+                    await asyncio.sleep(5)
+                else:
+                    logger.error("Max retries reached, shutting down...")
+                    raise
+            finally:
+                await self.cleanup()
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /start command - register new users"""
@@ -502,53 +580,6 @@ class MintosBot:
             logger.info(f"Update check scheduled for current hour ({now.hour}:00)")
         return should_check
 
-    async def run(self):
-        """Run the bot with both polling and time-based updates"""
-        logger.info("Starting Mintos Update Bot")
-        max_retries = 3
-        retry_count = 0
-
-        while retry_count < max_retries:
-            try:
-                # Ensure clean state before starting
-                await self.cleanup()
-                await asyncio.sleep(2)  # Give time for cleanup
-
-                async with self as bot:  # Use context manager for proper cleanup
-                    if not await bot.initialize():
-                        raise Exception("Failed to initialize bot")
-
-                # Start polling in the background
-                polling_task = asyncio.create_task(bot.start_polling())
-
-                # Start scheduled updates
-                while True:
-                    try:
-                        if await bot.should_check_updates():
-                            logger.info(f"Running scheduled update check at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                            # Add delay to avoid conflict with polling
-                            await asyncio.sleep(1)
-                            await bot.check_updates()
-                            logger.info("Update check completed, waiting 55 minutes before next check")
-                            await asyncio.sleep(55 * 60)
-                        else:
-                            await asyncio.sleep(5 * 60)
-                    except Exception as update_error:
-                        logger.error(f"Error in scheduled update: {update_error}", exc_info=True)
-                        await asyncio.sleep(60)  # Wait before retrying
-
-            except Exception as e:
-                logger.error(f"Error in main run loop: {e}", exc_info=True)
-                retry_count += 1
-                if retry_count < max_retries:
-                    logger.info(f"Retrying bot startup (attempt {retry_count + 1}/{max_retries})...")
-                    await asyncio.sleep(5)  # Wait before retry
-                else:
-                    logger.error("Max retries reached, shutting down...")
-                    raise
-            finally:
-                await self.cleanup()  # Ensure cleanup happens even on error
-
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle the /refresh command - force an immediate update check"""
         try:
@@ -573,7 +604,6 @@ class MintosBot:
         except Exception as e:
             logger.error(f"Error in refresh_command: {e}", exc_info=True)
             await self.send_message(chat_id, "⚠️ Error during manual refresh. Please try again.")
-
 
 
 if __name__ == "__main__":

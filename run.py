@@ -56,22 +56,18 @@ async def cleanup():
     try:
         logging.info("Starting cleanup process...")
         await kill_existing_processes()
-
-        # Add a delay to ensure processes are fully killed
-        await asyncio.sleep(2)
+        await asyncio.sleep(2)  # Give time for cleanup
 
         # Clean up any existing bot instances
         async with managed_bot() as bot:
-            # Ensure webhook is deleted and updates are cleared
             if bot.application and bot.application.bot:
                 await bot.application.bot.delete_webhook(drop_pending_updates=True)
                 await bot.application.bot.get_updates(offset=-1)
-            await asyncio.sleep(2)  # Give more time for cleanup
+                await asyncio.sleep(2)
 
         logging.info("Cleanup completed successfully")
     except Exception as e:
         logging.error(f"Cleanup error: {e}")
-        # Continue despite cleanup errors - new instance might still work
 
 async def main():
     # Configure logging
