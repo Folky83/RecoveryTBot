@@ -372,14 +372,13 @@ class MintosBot:
             cache_age = self.data_manager.get_cache_age()
             if cache_age > 600:  # 10 minutes in seconds
                 await self.send_message(chat_id, "No new updates. Cache is older than 10 minutes. Fetching live data...")
-                # Use already fetched updates instead of fetching again
-                self.data_manager.save_updates(new_updates)
+                updates = new_updates  # Use already fetched updates
+                self.data_manager.save_updates(updates)
                 logger.info("Cache updated with fresh data from /today command")
-                today = time.strftime("%Y-%m-%d")
             else:
                 updates = self.data_manager.load_previous_updates()
                 logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
-                today = time.strftime("%Y-%m-%d")
+            today = time.strftime("%Y-%m-%d")
 
             today_updates = []
             for company_update in updates:
