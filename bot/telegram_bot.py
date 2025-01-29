@@ -215,9 +215,12 @@ class MintosBot:
 
         chat_id = update.effective_chat.id
         try:
-            # Delete the command message
-            await update.message.delete()
-            
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+
             user = update.effective_user
             logger.info(f"Start command from {user.username} (chat_id: {chat_id})")
 
@@ -249,10 +252,13 @@ class MintosBot:
         try:
             if not update.message:
                 return
-                
-            # Delete the command message
-            await update.message.delete()
-            
+
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+
             chat_id = update.effective_chat.id
             company_buttons = []
             companies = sorted(self.data_manager.company_names.items(), key=lambda x: x[1])
@@ -503,10 +509,13 @@ class MintosBot:
         try:
             if not update.message:
                 return
-                
-            # Delete the command message
-            await update.message.delete()
-            
+
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+
             chat_id = update.effective_chat.id
             updates = self.data_manager.load_previous_updates()
             cache_age = self.data_manager.get_cache_age()
@@ -569,10 +578,13 @@ class MintosBot:
         try:
             if not update.message:
                 return
-                
-            # Delete the command message
-            await update.message.delete()
-            
+
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+
             chat_id = update.effective_chat.id
             cache_age = self.data_manager.get_cache_age()
 
