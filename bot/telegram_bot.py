@@ -210,11 +210,14 @@ class MintosBot:
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /start command"""
-        if not update.effective_chat:
+        if not update.effective_chat or not update.message:
             return
 
         chat_id = update.effective_chat.id
         try:
+            # Delete the command message
+            await update.message.delete()
+            
             user = update.effective_user
             logger.info(f"Start command from {user.username} (chat_id: {chat_id})")
 
@@ -244,6 +247,12 @@ class MintosBot:
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle the /company command - display company selection menu with live data"""
         try:
+            if not update.message:
+                return
+                
+            # Delete the command message
+            await update.message.delete()
+            
             chat_id = update.effective_chat.id
             company_buttons = []
             companies = sorted(self.data_manager.company_names.items(), key=lambda x: x[1])
@@ -492,6 +501,12 @@ class MintosBot:
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         try:
+            if not update.message:
+                return
+                
+            # Delete the command message
+            await update.message.delete()
+            
             chat_id = update.effective_chat.id
             updates = self.data_manager.load_previous_updates()
             cache_age = self.data_manager.get_cache_age()
@@ -552,6 +567,12 @@ class MintosBot:
 
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         try:
+            if not update.message:
+                return
+                
+            # Delete the command message
+            await update.message.delete()
+            
             chat_id = update.effective_chat.id
             cache_age = self.data_manager.get_cache_age()
 
