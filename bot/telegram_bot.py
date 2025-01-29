@@ -238,7 +238,7 @@ class MintosBot:
         return (
             "🚀 Welcome to Mintos Update Bot!\n\n"
             "📅 Update Schedule:\n"
-            "• Automatic updates on weekdays at 4 PM, 5 PM, and 6 PM\n\n"
+            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM\n\n"
             "Available Commands:\n"
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
@@ -567,7 +567,7 @@ class MintosBot:
             logger.debug(f"Skipping update check - weekend day ({now.strftime('%A')})")
             return False
 
-        should_check = now.hour in [16, 17, 18]
+        should_check = now.hour in [15, 16, 17]
         if not should_check:
             logger.debug(f"Skipping update check - outside scheduled hours (current hour: {now.hour})")
         else:
