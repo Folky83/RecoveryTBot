@@ -37,9 +37,21 @@ class UserManager:
             logger.error(f"Error saving users: {e}")
 
     def add_user(self, chat_id):
-        self.users.add(chat_id)
+        self.users.add(str(chat_id))
         self.save_users()
         logger.info(f"Added new user: {chat_id}")
 
+    def remove_user(self, chat_id):
+        """Remove a user from the saved users list"""
+        chat_id = str(chat_id)
+        if chat_id in self.users:
+            self.users.remove(chat_id)
+            self.save_users()
+            logger.info(f"Removed user: {chat_id}")
+
     def get_all_users(self):
         return list(self.users)
+
+    def has_user(self, chat_id):
+        """Check if a user exists in the saved users list"""
+        return str(chat_id) in self.users

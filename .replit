@@ -1,11 +1,11 @@
-modules = ["python-3.11"]
+modules = ["python-3.11", "python3"]
 
 [nix]
 channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["python3", "run.py"]
+run = ["sh", "-c", "python run.py"]
 
 [workflows]
 runButton = "Project"
@@ -16,8 +16,8 @@ author = "agent"
 mode = "parallel"
 
 [[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python run.py"
+task = "workflow.run"
+args = "Telegram Bot"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
