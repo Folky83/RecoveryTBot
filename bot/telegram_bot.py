@@ -98,14 +98,30 @@ class MintosBot:
             try:
                 logger.info("Starting bot initialization...")
                 await self.cleanup()
-                await asyncio.sleep(2)
+                await asyncio.sleep(2)  # Wait for cleanup to complete
+
+                if not TELEGRAM_TOKEN:
+                    logger.error("TELEGRAM_BOT_TOKEN not set")
+                    return False
 
                 logger.info("Creating application instance...")
                 self.application = Application.builder().token(TELEGRAM_TOKEN).build()
 
+                # Verify bot connection
+                try:
+                    bot_info = await self.application.bot.get_me()
+                    logger.info(f"Connected as bot: {bot_info.username}")
+                except Exception as e:
+                    logger.error(f"Failed to connect to Telegram: {e}")
+                    return False
+
                 logger.info("Setting up webhook...")
-                await self.application.bot.delete_webhook(drop_pending_updates=True)
-                await self.application.bot.get_updates(offset=-1)
+                try:
+                    await self.application.bot.delete_webhook(drop_pending_updates=True)
+                    await self.application.bot.get_updates(offset=-1)
+                except Exception as e:
+                    logger.error(f"Webhook setup failed: {e}")
+                    return False
 
                 logger.info("Registering command handlers...")
                 self._register_handlers()
@@ -113,6 +129,15 @@ class MintosBot:
                 logger.debug("Registered handlers:")
                 for handler in self.application.handlers[0]:
                     logger.debug(f"- {handler.__class__.__name__}")
+
+                # Initialize the application
+                try:
+                    await self.application.initialize()
+                    await self.application.start()
+                    logger.info("Application started successfully")
+                except Exception as e:
+                    logger.error(f"Application startup failed: {e}")
+                    return False
 
                 self._initialized = True
                 logger.info("Bot initialization completed successfully")
@@ -145,7 +170,6 @@ class MintosBot:
             except Exception as e:
                 logger.error(f"Error registering handler {handler.__class__.__name__}: {e}")
                 raise
-
         self.application.add_error_handler(self._error_handler)
         logger.info("All handlers registered successfully")
 
@@ -198,23 +222,27 @@ class MintosBot:
 
         while retry_count < max_retries:
             try:
+                # Ensure clean state
                 await self.cleanup()
                 await asyncio.sleep(2)
 
+                # Initialize bot
                 if not await self.initialize():
+                    logger.error("Bot initialization failed")
                     raise RuntimeError("Bot initialization failed")
 
-                await self.application.initialize()
-                await self.application.start()
-
+                # Start polling in background
                 self._polling_task = asyncio.create_task(
                     self.application.updater.start_polling(
                         drop_pending_updates=True,
                         allowed_updates=["message", "callback_query"]
                     )
                 )
+
+                # Start scheduled updates
                 self._update_task = asyncio.create_task(self.scheduled_updates())
 
+                # Wait for both tasks
                 await asyncio.gather(self._polling_task, self._update_task)
                 return
 
@@ -643,19 +671,62 @@ class MintosBot:
             await self.send_message(chat_id, "⚠️ Error during manual refresh. Please try again.")
 
 
+    async def _resolve_channel_id(self, channel_identifier: str) -> str:
+        """Convert channel username to ID if needed and validate format"""
+        logger.info(f"Resolving channel identifier: {channel_identifier}")
+
+        # If it's already a channel ID format, validate and return
+        if channel_identifier.startswith('-100') and channel_identifier[4:].isdigit():
+            return channel_identifier
+
+        # If it's a @username format
+        if channel_identifier.startswith('@'):
+            try:
+                # Use getChat API endpoint directly
+                if not self.application or not self.application.bot:
+                    raise ValueError("Bot not initialized")
+
+                logger.info(f"Resolving channel username: {channel_identifier}")
+                chat = await self.application.bot.get_chat(channel_identifier)
+
+                if not chat or not chat.id:
+                    raise ValueError(f"Could not get chat ID for {channel_identifier}")
+
+                channel_id = str(chat.id)
+                logger.info(f"Raw channel ID from API: {channel_id}")
+
+                # Ensure proper format for channels/supergroups
+                if not channel_id.startswith('-100'):
+                    if channel_id.startswith('-'):
+                        # Convert regular group ID to supergroup ID format
+                        channel_id = f"-100{abs(int(channel_id))}"
+                    else:
+                        channel_id = f"-100{abs(int(channel_id))}"
+
+                logger.info(f"Resolved {channel_identifier} to ID: {channel_id}")
+                return channel_id
+
+            except Exception as e:
+                logger.error(f"Error resolving channel {channel_identifier}: {e}")
+                raise ValueError(
+                    f"Could not resolve channel {channel_identifier}. "
+                    "Please ensure the bot is a member of the channel and "
+                    "has admin rights."
+                )
+
+        raise ValueError("Invalid channel format. Use @channelname or -100...")
+
     async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /trigger_today @channel command"""
         try:
-            logger.info("trigger_today_command received")
             if not update.message or not update.effective_chat or not update.effective_user:
-                logger.warning("Missing message, chat, or user in trigger_today command")
                 return
 
             chat_id = update.effective_chat.id
             user_id = update.effective_user.id
             logger.info(f"Processing trigger_today command from user {user_id}")
 
-            # Try to delete the command message, continue if not possible
+            # Try to delete the command message
             try:
                 await update.message.delete()
             except Exception as e:
@@ -664,84 +735,67 @@ class MintosBot:
             # Parse the channel argument
             args = context.args if context and hasattr(context, 'args') else None
             if not args:
-                logger.warning(f"No channel argument provided by user {user_id}")
-                await self.send_message(chat_id, "⚠️ Please specify a channel (e.g., /trigger_today @yourchannel)")
+                await self.send_message(chat_id, "Please specify a channel (e.g., /trigger_today @yourchannel)")
                 return
 
             target_channel = args[0]
-            # Handle both @ and -100 formats
-            if not (target_channel.startswith('@') or (target_channel.startswith('-100') and target_channel[4:].isdigit())):
-                logger.warning(f"Invalid channel format provided: {target_channel}")
-                await self.send_message(
-                    chat_id,
-                    "⚠️ Please use either:\n"
-                    "1. Channel username (e.g., @yourchannel)\n"
-                    "2. Channel ID (e.g., -1001234567890)"
-                )
-                return
-
-            # Auto-save user on first use if not already saved
-            if not self.user_manager.has_user(str(user_id)):
-                logger.info(f"New user detected ({user_id}), adding to user manager")
-                self.user_manager.add_user(str(user_id))
-                await self.send_message(chat_id, "✅ Your user ID has been automatically saved!")
-
-            # Try to send a test message to verify bot permissions
-            if not self.application or not self.application.bot:
-                logger.error("Application or bot instance is None")
-                await self.send_message(chat_id, "⚠️ Bot initialization error. Please try again later.")
-                return
+            logger.info(f"Target channel specified: {target_channel}")
 
             try:
-                logger.info(f"Attempting to send test message to channel {target_channel}")
+                # Convert/validate channel identifier
+                resolved_channel = await self._resolve_channel_id(target_channel)
+                logger.info(f"Channel resolved: {resolved_channel}")
+            except ValueError as e:
+                await self.send_message(
+                    chat_id,
+                    f"⚠️ {str(e)}\n"
+                    "Please verify:\n"
+                    "1. The channel exists\n"
+                    "2. The bot is a member of the channel\n"
+                    "3. You provided the correct channel name/ID"
+                )
+                return
+
+            # Verify bot permissions
+            try:
                 await self.application.bot.send_message(
-                    chat_id=target_channel,
-                    text="🔄 Fetching today's updates...",
+                    chat_id=resolved_channel,
+                    text="🔄 Checking bot permissions...",
                     parse_mode='HTML'
                 )
-            except TelegramError as e:
+            except Exception as e:
                 error_msg = str(e).lower()
-                logger.error(f"Telegram error when sending to channel {target_channel}: {error_msg}")
+                logger.error(f"Permission error for channel {resolved_channel}: {error_msg}")
 
-                if 'chat not found' in error_msg:
+                if 'not enough rights' in error_msg:
                     await self.send_message(
                         chat_id,
-                        "⚠️ Channel not found. Please:\n"
-                        "1. Make sure the channel name/ID is correct\n"
-                        "2. Add the bot to your channel as an administrator\n"
-                        "3. Try again with /trigger_today and your channel"
-                    )
-                elif 'bot is not a member' in error_msg or 'not enough rights' in error_msg:
-                    await self.send_message(
-                        chat_id,
-                        "⚠️ Bot needs administrator rights. Please:\n"
-                        "1. Add the bot to your channel\n"
-                        "2. Make the bot an administrator\n"
+                        "⚠️ Bot needs admin rights. Please:\n"
+                        "1. Add the bot as channel admin\n"
+                        "2. Enable 'Post Messages' permission\n"
                         "3. Try again"
                     )
                 else:
                     await self.send_message(
                         chat_id,
                         f"⚠️ Error accessing channel: {str(e)}\n"
-                        "Please verify the bot's permissions and try again."
+                        "Please verify the bot's permissions."
                     )
-                return
-
-            # Get today's updates
-            logger.info("Fetching today's updates from data manager")
-            updates = self.data_manager.load_previous_updates()
+                return            # Retrieve today's updates
+            logger.info("Getting today's updates")
             today = time.strftime("%Y-%m-%d")
+            updates = self.data_manager.load_previous_updates()
             today_updates = []
 
             # Process updates
             for company_update in updates:
-                if isinstance(company_update, dict) and "items" in company_update:
+                if "items" in company_update:
                     lender_id = company_update.get('lender_id')
                     company_name = self.data_manager.get_company_name(lender_id)
 
-                    for year_data in company_update.get("items", []):
+                    for year_data in company_update["items"]:
                         for item in year_data.get("items", []):
-                            if isinstance(item, dict) and item.get('date') == today:
+                            if item.get('date') == today:
                                 update_with_company = {
                                     "lender_id": lender_id,
                                     "company_name": company_name,
@@ -752,59 +806,52 @@ class MintosBot:
 
             logger.info(f"Found {len(today_updates)} updates for today")
 
+            # Handle no updates case
             if not today_updates:
                 await self.application.bot.send_message(
-                    chat_id=target_channel,
-                    text="No updates found for today.",
+                    chat_id=resolved_channel,
+                    text="📝 No updates found for today.",
                     parse_mode='HTML'
                 )
-                awaitself.send_message(chat_id, "✅ No updates found for today")
+                await self.send_message(chat_id, "✅ No updates found for today")
                 return
 
-            # Send header message
+            # Send header
             await self.application.bot.send_message(
-                chat_id=target_channel,
-                text=f"📅 Found {len(today_updates)} updates for today:",
+                chat_id=resolved_channel,
+                text=f"📊 Found {len(today_updates)} updates for today:",
                 parse_mode='HTML'
             )
 
-            # Send updates with rate limiting
+            # Send updates
             successful_sends = 0
-            failed_sends = 0
             for update_item in today_updates:
                 try:
                     message = self.format_update_message(update_item)
                     await self.application.bot.send_message(
-                        chat_id=target_channel,
+                        chat_id=resolved_channel,
                         text=message,
                         parse_mode='HTML'
                     )
                     successful_sends += 1
-                    # Add small delay between messages to avoid rate limits
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(0.5)  # Rate limiting
                 except Exception as e:
-                    logger.error(f"Error sending update to channel: {e}")
-                    failed_sends += 1
+                    logger.error(f"Error sending update: {e}")
 
-            # Send final status message to user
-            status_message = (
-                f"✅ Successfully sent {successful_sends} updates to {target_channel}\n"
-                f"❌ Failed to send {failed_sends} updates"
-                if failed_sends > 0 else
-                f"✅ Successfully sent all {successful_sends} updates to {target_channel}"
-            )
-            logger.info(status_message)
-            await self.send_message(chat_id, status_message)
+            # Send status
+            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates to {target_channel}"
+            logger.info(status)
+            await self.send_message(chat_id, status)
 
         except Exception as e:
             logger.error(f"Error in trigger_today_command: {e}", exc_info=True)
-            error_message = (
-                "⚠️ Error processing command. Please check:\n"
+            await self.send_message(
+                chat_id,
+                "⚠️ An error occurred. Please verify:\n"
                 "1. Channel name/ID is correct\n"
-                "2. Bot has administrator rights\n"
-                "3. Bot can send messages in the channel"
+                "2. Bot has proper permissions\n"
+                "3. Bot can send messages"
             )
-            await self.send_message(chat_id, error_message)
 
 if __name__ == "__main__":
     bot = MintosBot()
