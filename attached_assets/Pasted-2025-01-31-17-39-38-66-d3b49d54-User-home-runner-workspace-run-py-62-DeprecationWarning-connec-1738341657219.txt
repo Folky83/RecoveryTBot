@@ -1,0 +1,92 @@
+2025-01-31 17:39:38.66
+d3b49d54
+User
+/home/runner/workspace/run.py:62: DeprecationWarning: connections() is deprecated and will be removed; use net_connections() instead
+2025-01-31 17:39:38.66
+d3b49d54
+User
+for conn in proc_with_connections.connections():
+2025-01-31 17:39:43.66
+d3b49d54
+User
+2025-01-31 16:39:43,669 - INFO - Process cleanup completed
+2025-01-31 17:39:43.66
+d3b49d54
+User
+2025-01-31 16:39:43,669 - INFO - Cleanup completed
+2025-01-31 17:39:43.67
+d3b49d54
+User
+Traceback (most recent call last):
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/home/runner/workspace/run.py", line 210, in
+2025-01-31 17:39:43.67
+d3b49d54
+User
+asyncio.run(main())
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/runners.py", line 190, in run
+2025-01-31 17:39:43.67
+d3b49d54
+User
+return runner.run(main)
+2025-01-31 17:39:43.67
+d3b49d54
+User
+^^^^^^^^^^^^^^^^
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/runners.py", line 118, in run
+2025-01-31 17:39:43.67
+d3b49d54
+User
+return self._loop.run_until_complete(task)
+2025-01-31 17:39:43.67
+d3b49d54
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+2025-01-31 17:39:43.67
+d3b49d54
+User
+self.run_forever()
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+2025-01-31 17:39:43.67
+d3b49d54
+User
+self._run_once()
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 1898, in _run_once
+2025-01-31 17:39:43.67
+d3b49d54
+User
+event_list = self._selector.select(timeout)
+2025-01-31 17:39:43.67
+d3b49d54
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-01-31 17:39:43.67
+d3b49d54
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/selectors.py", line 468, in select
+2025-01-31 17:39:43.67
+d3b49d54
+User
+fd_event_list = self._selector.poll(timeout, max_ev)
+2025-01-31 17:39:43.67
+d3b49d54
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
