@@ -5,7 +5,7 @@ import time
 from typing import Optional, List, Dict, Any, Union, cast
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from telegram.error import TelegramError, Conflict
+from telegram.error import TelegramError, Conflict, Forbidden, BadRequest
 import math
 
 from .logger import setup_logger
@@ -672,49 +672,93 @@ class MintosBot:
 
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
-        """Convert channel username to ID if needed and validate format"""
-        logger.info(f"Resolving channel identifier: {channel_identifier}")
+        """Validate channel ID format and verify bot permissions"""
+        logger.info(f"Validating channel ID: {channel_identifier}")
 
-        # If it's already a channel ID format, validate and return
-        if channel_identifier.startswith('-100') and channel_identifier[4:].isdigit():
-            return channel_identifier
+        # Only accept channel IDs in the correct format
+        if not channel_identifier.startswith('-100') or not channel_identifier[4:].isdigit():
+            logger.error(f"Invalid channel ID format: {channel_identifier}")
+            raise ValueError(
+                "Invalid channel ID format. Please use the full channel ID\n"
+                "Example: -1001234567890\n"
+                "Note: Channel ID must start with '-100' followed by numbers"
+            )
 
-        # If it's a @username format
-        if channel_identifier.startswith('@'):
+        try:
+            # Verify bot permissions in the channel
+            if await self._verify_bot_permissions(channel_identifier):
+                logger.info(f"Channel ID validated and permissions verified: {channel_identifier}")
+                return channel_identifier
+
+            logger.error(f"Bot lacks required permissions in channel: {channel_identifier}")
+            raise ValueError(
+                "Bot lacks required permissions in the channel.\n"
+                "Please ensure the bot:\n"
+                "1. Is added to the channel\n"
+                "2. Has admin rights in the channel"
+            )
+
+        except Exception as e:
+            logger.error(f"Error validating channel ID {channel_identifier}: {e}")
+            logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
+            if isinstance(e, ValueError):
+                raise
+            raise ValueError(
+                f"Could not validate channel {channel_identifier}. "
+                "Please ensure the channel ID is correct and the bot has proper permissions."
+            )
+
+    async def _verify_bot_permissions(self, chat_id: str) -> bool:
+        """Verify bot's permissions in the channel"""
+        try:
+            if not self.application or not self.application.bot:
+                logger.error("Bot application not initialized during permission check")
+                raise ValueError("Bot not initialized")
+
+            logger.info(f"Starting permission verification for chat: {chat_id}")
+
             try:
-                # Use getChat API endpoint directly
-                if not self.application or not self.application.bot:
-                    raise ValueError("Bot not initialized")
+                # First verify if chat exists and is accessible
+                chat = await self.application.bot.get_chat(chat_id)
+                logger.info(f"Chat verification successful - Type: {chat.type}, Title: {chat.title}")
 
-                logger.info(f"Resolving channel username: {channel_identifier}")
-                chat = await self.application.bot.get_chat(channel_identifier)
-
-                if not chat or not chat.id:
-                    raise ValueError(f"Could not get chat ID for {channel_identifier}")
-
-                channel_id = str(chat.id)
-                logger.info(f"Raw channel ID from API: {channel_id}")
-
-                # Ensure proper format for channels/supergroups
-                if not channel_id.startswith('-100'):
-                    if channel_id.startswith('-'):
-                        # Convert regular group ID to supergroup ID format
-                        channel_id = f"-100{abs(int(channel_id))}"
-                    else:
-                        channel_id = f"-100{abs(int(channel_id))}"
-
-                logger.info(f"Resolved {channel_identifier} to ID: {channel_id}")
-                return channel_id
-
-            except Exception as e:
-                logger.error(f"Error resolving channel {channel_identifier}: {e}")
-                raise ValueError(
-                    f"Could not resolve channel {channel_identifier}. "
-                    "Please ensure the bot is a member of the channel and "
-                    "has admin rights."
+                # Then check bot's member status
+                bot_member = await self.application.bot.get_chat_member(
+                    chat_id=chat_id,
+                    user_id=self.application.bot.id
                 )
 
-        raise ValueError("Invalid channel format. Use @channelname or -100...")
+                # Log detailed status information
+                logger.info(f"Bot member status in chat {chat_id}: {bot_member.status}")
+
+                if bot_member.status not in ['administrator', 'creator']:
+                    logger.warning(
+                        f"Bot lacks required permissions in chat {chat_id}. "
+                        f"Current status: {bot_member.status}. "
+                        "Required status: administrator or creator"
+                    )
+                    return False
+
+                logger.info(
+                    f"Permission verification successful for chat {chat_id}. "
+                    f"Bot status: {bot_member.status}"
+                )
+                return True
+
+            except BadRequest as e:
+                logger.error(f"Bad request during permission check: {e}")
+                return False
+            except Forbidden as e:
+                logger.error(f"Bot was denied access during permission check: {e}")
+                return False
+            except TelegramError as e:
+                logger.error(f"Telegram API error during permission check: {e}")
+                return False
+
+        except Exception as e:
+            logger.error(f"Unexpected error during permission verification: {e}")
+            logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
+            return False
 
     async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /trigger_today @channel command"""
