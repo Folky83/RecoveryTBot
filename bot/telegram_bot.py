@@ -523,13 +523,11 @@ class MintosBot:
                 return
 
             chat_id = update.effective_chat.id
-            chat_type = update.effective_chat.type
-
-            # Try to delete the command message in groups/supergroups
-            if chat_type in ['group', 'supergroup']:
-                try:
-                    await update.message.delete()
-                except Exception as e:
+            
+            # Always try to delete the command message
+            try:
+                await update.message.delete()
+            except Exception as e:
                     logger.warning(f"Could not delete command message: {e}")
             updates = self.data_manager.load_previous_updates()
             cache_age = self.data_manager.get_cache_age()
