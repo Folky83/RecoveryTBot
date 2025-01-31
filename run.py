@@ -126,14 +126,16 @@ class ProcessManager:
 
             if self.lock_file:
                 try:
+                    self.lock_file.close()
                     os.unlink(LOCK_FILE)
-                    if hasattr(self.lock_file, 'close'):
-                        self.lock_file.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    self.logger.error(f"Error cleaning up lock file: {e}")
 
-            await asyncio.sleep(1)  # Allow time for cleanup to complete
-            self.logger.info("Cleanup completed")
+            try:
+                await asyncio.sleep(0.5)  # Reduced sleep time
+                self.logger.info("Cleanup completed")
+            except asyncio.CancelledError:
+                self.logger.info("Cleanup interrupted but completed")
         except Exception as e:
             self.logger.error(f"Error during cleanup: {e}")
 
