@@ -59,7 +59,7 @@ class ProcessManager:
             for proc in psutil.process_iter(['pid', 'name']):
                 try:
                     proc_with_connections = Process(proc.pid)
-                    for conn in proc_with_connections.connections():
+                    for conn in proc_with_connections.net_connections():
                         if conn.laddr.port == port:
                             self.logger.info(f"Killing process {proc.pid} using port {port}")
                             proc.kill()
@@ -104,7 +104,7 @@ class ProcessManager:
                 for proc in psutil.process_iter(['pid', 'name']):
                     try:
                         proc_with_connections = Process(proc.pid)
-                        for conn in proc_with_connections.connections():
+                        for conn in proc_with_connections.net_connections():
                             if conn.laddr.port == STREAMLIT_PORT and conn.status == 'LISTEN':
                                 self.logger.info(f"Streamlit running on port {STREAMLIT_PORT}")
                                 await asyncio.sleep(2)
@@ -132,9 +132,10 @@ class ProcessManager:
                 except Exception:
                     pass
 
+            await asyncio.sleep(1)  # Allow time for cleanup to complete
             self.logger.info("Cleanup completed")
         except Exception as e:
-            self.logger.error(f"Cleanup error: {e}")
+            self.logger.error(f"Error during cleanup: {e}")
 
 @contextlib.asynccontextmanager
 async def managed_bot():
@@ -200,8 +201,10 @@ def signal_handler(sig, frame):
     asyncio.get_event_loop().run_until_complete(ProcessManager().cleanup_processes())
     try:
         os.unlink(LOCK_FILE)
-    except Exception:
-        pass
+    except FileNotFoundError:
+        pass #Ignore if the file does not exist.
+    except Exception as e:
+        logging.error(f"Error removing lock file: {e}")
     sys.exit(0)
 
 if __name__ == "__main__":
