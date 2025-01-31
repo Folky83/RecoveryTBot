@@ -223,7 +223,7 @@ class MintosBot:
 
             chat_type = update.effective_chat.type
             user = update.effective_user
-            
+
             if chat_type in ['channel', 'supergroup', 'group']:
                 logger.info(f"Start command from channel/group {update.effective_chat.title} (chat_id: {chat_id})")
                 welcome_message = "🚀 Bot added to channel/group. Updates will be sent here."
@@ -498,11 +498,11 @@ class MintosBot:
             if added_updates:
                 users = self.user_manager.get_all_users()
                 logger.info(f"Sending {len(added_updates)} new updates to {len(users)} users")
-                
+
                 # Only send updates that are actually new
                 today = time.strftime("%Y-%m-%d")
                 new_today_updates = [update for update in added_updates if update.get('date') == today]
-                
+
                 if new_today_updates:
                     for update in new_today_updates:
                         message = self.format_update_message(update)
@@ -529,7 +529,7 @@ class MintosBot:
                 return
 
             chat_id = update.effective_chat.id
-            
+
             # Always try to delete the command message
             try:
                 await update.message.delete()
