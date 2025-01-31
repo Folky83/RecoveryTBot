@@ -424,34 +424,40 @@ class MintosBot:
         message = f"🏢 <b>{company_name}</b>\n"
 
         if 'date' in update:
-            message += f"📅 Date: {update['date']}\n"
+            message += f"📅 <b>{update['date']}</b>"
             if 'year' in update:
-                message += f"Year: {update['year']}\n"
+                message += f" | Year: <b>{update['year']}</b>"
+            message += "\n"
 
         if 'status' in update:
             status = update['status'].replace('_', ' ').title()
-            message += f"📊 Status: {status}\n"
+            message += f"\n📊 <b>Status:</b> {status}"
             if update.get('substatus'):
                 substatus = update['substatus'].replace('_', ' ').title()
-                message += f"Sub-status: {substatus}\n"
+                message += f"\n└ {substatus}"
+            message += "\n"
 
         if any(key in update for key in ['recoveredAmount', 'remainingAmount', 'expectedRecoveryTo', 'expectedRecoveryFrom']):
-            message += "\n💰 Recovery Information:\n"
+            message += "\n💰 <b>Recovery Information:</b>\n"
 
             if update.get('recoveredAmount'):
                 amount = round(float(update['recoveredAmount']))
-                message += f"• Recovered: €{amount:,}\n"
+                message += f"└ Recovered: <b>€{amount:,}</b>\n"
             if update.get('remainingAmount'):
                 amount = round(float(update['remainingAmount']))
-                message += f"• Remaining: €{amount:,}\n"
+                message += f"└ Remaining: <b>€{amount:,}</b>\n"
 
+            recovery_info = []
             if update.get('expectedRecoveryFrom') and update.get('expectedRecoveryTo'):
                 from_percentage = round(float(update['expectedRecoveryFrom']))
                 to_percentage = round(float(update['expectedRecoveryTo']))
-                message += f"• Expected Recovery: {from_percentage}% - {to_percentage}%\n"
+                recovery_info.append(f"{from_percentage}% - {to_percentage}%")
             elif update.get('expectedRecoveryTo'):
                 percentage = round(float(update['expectedRecoveryTo']))
-                message += f"• Expected Recovery: Up to {percentage}%\n"
+                recovery_info.append(f"Up to {percentage}%")
+
+            if recovery_info:
+                message += f"└ Expected Recovery: <b>{recovery_info[0]}</b>\n"
 
         if any(key in update for key in ['expectedRecoveryYearFrom', 'expectedRecoveryYearTo']):
             timeline = ""
