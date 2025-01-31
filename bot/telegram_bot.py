@@ -221,13 +221,19 @@ class MintosBot:
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
 
+            chat_type = update.effective_chat.type
             user = update.effective_user
-            logger.info(f"Start command from {user.username} (chat_id: {chat_id})")
+            
+            if chat_type in ['channel', 'supergroup', 'group']:
+                logger.info(f"Start command from channel/group {update.effective_chat.title} (chat_id: {chat_id})")
+                welcome_message = "🚀 Bot added to channel/group. Updates will be sent here."
+            else:
+                logger.info(f"Start command from user {user.username} (chat_id: {chat_id})")
+                welcome_message = self._create_welcome_message()
 
             self.user_manager.add_user(str(chat_id))
-            welcome_message = self._create_welcome_message()
             await self.send_message(chat_id, welcome_message)
-            logger.info(f"User {user.username} registered")
+            logger.info(f"Chat {chat_id} registered")
 
         except Exception as e:
             logger.error(f"Start command error: {e}", exc_info=True)
