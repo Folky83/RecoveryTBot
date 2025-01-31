@@ -983,6 +983,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-01-31",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We expect a payment of &euro;85K to be processed by the end of today, and the remaining outstanding balance to be settled next week.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-01-17",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -3125,6 +3141,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-01-31",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We &nbsp;received proof of payment for &euro;546k &nbsp;today. The money will be distributed to &nbsp;investors as soon as it arrives in our account.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-01-24",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -3518,6 +3550,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-01-31",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We &nbsp;received proof of payment for &euro;546k &nbsp;today. The money will be distributed to &nbsp;investors as soon as it arrives in our account.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-01-24",
                         "recoveredAmount": null,
@@ -4652,6 +4700,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-01-31",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>Dinerito Xtra informed us about delays in receiving government payments due to the fiscal year closing process. These delays have caused overdue settlements, which are expected to be fully resolved by February 2025, after the payments from the government are released. In the interim, Dinerito is making regular payments. This week we have received &euro;56k from the LC.&nbsp;</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-01-24",
                         "recoveredAmount": null,
@@ -15172,6 +15236,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-01-31",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We mutually agreed with Rapidcredit to wind down the cooperation by the end of April 2025. We expect to receive the next payment in February 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-01-24",
                         "recoveredAmount": null,
