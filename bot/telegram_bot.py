@@ -485,14 +485,20 @@ class MintosBot:
 
             if added_updates:
                 users = self.user_manager.get_all_users()
-                logger.info(f"Sending {len(added_updates)} updates to {len(users)} users")
-                for update in added_updates:
-                    message = self.format_update_message(update)
-                    for user_id in users:
-                        try:
-                            await self.send_message(user_id, message)
-                        except Exception as e:
-                            logger.error(f"Failed to send update to user {user_id}: {e}")
+                logger.info(f"Sending {len(added_updates)} new updates to {len(users)} users")
+                
+                # Only send updates that are actually new
+                today = time.strftime("%Y-%m-%d")
+                new_today_updates = [update for update in added_updates if update.get('date') == today]
+                
+                if new_today_updates:
+                    for update in new_today_updates:
+                        message = self.format_update_message(update)
+                        for user_id in users:
+                            try:
+                                await self.send_message(user_id, message)
+                            except Exception as e:
+                                logger.error(f"Failed to send update to user {user_id}: {e}")
 
             self.data_manager.save_updates(new_updates)
             logger.info(f"Update check completed. Found {len(added_updates)} new updates.")
