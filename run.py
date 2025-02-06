@@ -19,6 +19,7 @@ STREAMLIT_PORT = 5000
 STARTUP_TIMEOUT = 60
 CLEANUP_WAIT = 5
 PROCESS_KILL_WAIT = 3
+BOT_STARTUP_TIMEOUT = 30  # Add timeout for bot initialization
 
 @dataclass
 class ProcessManager:
@@ -72,6 +73,7 @@ class ProcessManager:
     async def cleanup_processes(self) -> None:
         """Clean up all related processes"""
         try:
+            self.logger.info("Starting process cleanup...")
             await self.kill_port_process(STREAMLIT_PORT)
             current_pid = os.getpid()
 
@@ -107,7 +109,7 @@ class ProcessManager:
                         for conn in proc_with_connections.net_connections():
                             if conn.laddr.port == STREAMLIT_PORT and conn.status == 'LISTEN':
                                 self.logger.info(f"Streamlit running on port {STREAMLIT_PORT}")
-                                await asyncio.sleep(2)
+                                await asyncio.sleep(2)  # Give it a moment to fully initialize
                                 return
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         continue
@@ -132,7 +134,7 @@ class ProcessManager:
                     self.logger.error(f"Error cleaning up lock file: {e}")
 
             try:
-                await asyncio.sleep(0.5)  # Reduced sleep time
+                await asyncio.sleep(0.5)
                 self.logger.info("Cleanup completed")
             except asyncio.CancelledError:
                 self.logger.info("Cleanup interrupted but completed")
@@ -147,8 +149,20 @@ async def managed_bot():
     logger = logging.getLogger(__name__)
     try:
         logger.info("Starting bot initialization...")
+        if not os.getenv('TELEGRAM_BOT_TOKEN'):
+            logger.error("TELEGRAM_BOT_TOKEN environment variable is not set")
+            raise ValueError("Bot token is missing")
+
         bot = MintosBot()
-        logger.info("Bot instance created successfully")
+        start_time = time.time()
+        while not hasattr(bot, 'token') and time.time() - start_time < BOT_STARTUP_TIMEOUT:
+            logger.warning("Waiting for bot token initialization...")
+            await asyncio.sleep(1)
+
+        if not hasattr(bot, 'token'):
+            raise RuntimeError("Bot failed to initialize token within timeout")
+
+        logger.info("Bot instance created successfully with valid token")
         yield bot
     except ImportError as e:
         logger.error(f"Failed to import required modules: {str(e)}")
@@ -192,12 +206,6 @@ async def main():
         async with managed_bot() as bot:
             logger.info("Initializing Telegram bot...")
             try:
-                # Verify bot token is available
-                if not bot.token:
-                    logger.error("Telegram bot token is not available")
-                    raise ValueError("Bot token is missing")
-
-                logger.info("Starting Telegram bot with valid token...")
                 # Start the bot and wait for it indefinitely
                 bot_task = asyncio.create_task(bot.run())
                 logger.info("Bot task created, waiting for completion...")
@@ -229,7 +237,7 @@ def signal_handler(sig, frame):
     try:
         os.unlink(LOCK_FILE)
     except FileNotFoundError:
-        pass #Ignore if the file does not exist.
+        pass  # Ignore if the file does not exist
     except Exception as e:
         logging.error(f"Error removing lock file: {e}")
     sys.exit(0)
