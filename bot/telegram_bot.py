@@ -208,6 +208,8 @@ class MintosBot:
                 if await self.should_check_updates():
                     logger.info("Running scheduled update")
                     await self._safe_update_check()
+                    # Try to resend any failed messages
+                    await self.retry_failed_messages()
                     await asyncio.sleep(55 * 60)  # Wait 55 minutes
                 else:
                     await asyncio.sleep(5 * 60)  # Check every 5 minutes
@@ -466,6 +468,29 @@ class MintosBot:
             logger.error(f"Error in handle_callback: {e}", exc_info=True)
             await query.edit_message_text("⚠️ Error processing your request. Please try again.")
 
+    _failed_messages: List[Dict[str, Any]] = []
+
+    async def retry_failed_messages(self) -> None:
+        """Attempt to resend failed messages"""
+        if not self._failed_messages:
+            return
+
+        logger.info(f"Attempting to resend {len(self._failed_messages)} failed messages")
+        retry_messages = self._failed_messages.copy()
+        self._failed_messages.clear()
+
+        for msg in retry_messages:
+            try:
+                await self.send_message(
+                    msg['chat_id'], 
+                    msg['text'],
+                    msg.get('reply_markup')
+                )
+                logger.info(f"Successfully resent message to {msg['chat_id']}")
+            except Exception as e:
+                logger.error(f"Failed to resend message: {e}")
+                self._failed_messages.append(msg)
+
     async def send_message(self, chat_id: Union[int, str], text: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> None:
         max_retries = 3
         base_delay = 1.0
@@ -510,6 +535,12 @@ class MintosBot:
             except TelegramError as e:
                 if attempt == max_retries - 1:
                     logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
+                    # Store failed message for later retry
+                    self._failed_messages.append({
+                        'chat_id': chat_id,
+                        'text': text,
+                        'reply_markup': reply_markup
+                    })
                     raise
                 delay = base_delay * (2 ** attempt)  # Exponential backoff
                 logger.warning(f"Telegram error, retrying in {delay} seconds: {e}")
