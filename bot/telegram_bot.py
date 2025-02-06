@@ -2,10 +2,10 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 import time
-from typing import Optional, List, Dict, Any, Union, cast
+from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from telegram.error import TelegramError, Conflict, Forbidden, BadRequest
+from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, RetryAfter
 import math
 
 from .logger import setup_logger
@@ -15,6 +15,19 @@ from .mintos_client import MintosClient
 from .user_manager import UserManager
 
 logger = setup_logger(__name__)
+
+class YearItem(TypedDict, total=False):
+    year: int
+    status: str
+    substatus: str
+    items: List[Dict[str, Any]]
+
+class CompanyUpdate(TypedDict, total=False):
+    lender_id: int
+    items: List[YearItem]
+    company_name: str
+    date: str
+    description: str
 
 class MintosBot:
     """
@@ -454,19 +467,32 @@ class MintosBot:
             await query.edit_message_text("⚠️ Error processing your request. Please try again.")
 
     async def send_message(self, chat_id: Union[int, str], text: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> None:
-        try:
-            await self.application.bot.send_message(
-                chat_id=chat_id,
-                text=text,
-                parse_mode='HTML',
-                reply_markup=reply_markup
-            )
-            logger.debug(f"Message sent successfully to {chat_id}")
-            await asyncio.sleep(1)  # Add 1 second delay after sending each message
-        except TelegramError as e:
-            logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
-            logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
-            raise
+        max_retries = 3
+        base_delay = 1.0
+
+        for attempt in range(max_retries):
+            try:
+                await self.application.bot.send_message(
+                    chat_id=chat_id,
+                    text=text,
+                    parse_mode='HTML',
+                    reply_markup=reply_markup
+                )
+                logger.debug(f"Message sent successfully to {chat_id}")
+                await asyncio.sleep(2)  # Add 2 second delay between messages
+                return
+            except RetryAfter as e:
+                delay = e.retry_after
+                logger.warning(f"Rate limit hit, waiting {delay} seconds before retry")
+                await asyncio.sleep(delay)
+                continue
+            except TelegramError as e:
+                if attempt == max_retries - 1:
+                    logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
+                    raise
+                delay = base_delay * (2 ** attempt)  # Exponential backoff
+                logger.warning(f"Telegram error, retrying in {delay} seconds: {e}")
+                await asyncio.sleep(delay)
 
     def format_update_message(self, update: Dict[str, Any]) -> str:
         """Format update message with rich information from Mintos API"""
@@ -522,6 +548,7 @@ class MintosBot:
 
         if 'description' in update:
             description = update['description']
+            # Clean HTML tags and entities
             description = (description
                 .replace('\u003C', '<')
                 .replace('\u003E', '>')
@@ -529,6 +556,9 @@ class MintosBot:
                 .replace('&rsquo;', "'")
                 .replace('&euro;', '€')
                 .replace('&nbsp;', ' ')
+                .replace('<br>', '\n')
+                .replace('<br/>', '\n')
+                .replace('<br />', '\n')
                 .replace('<p>', '')
                 .replace('</p>', '\n')
                 .strip())
@@ -545,13 +575,17 @@ class MintosBot:
             previous_updates = self.data_manager.load_previous_updates()
             lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
             new_updates = self.mintos_client.fetch_all_updates(lender_ids)
+
+            # Ensure both lists are of the correct type
+            previous_updates = cast(List[CompanyUpdate], previous_updates)
+            new_updates = cast(List[CompanyUpdate], new_updates)
+
             added_updates = self.data_manager.compare_updates(new_updates, previous_updates)
 
             if added_updates:
                 users = self.user_manager.get_all_users()
                 logger.info(f"Sending {len(added_updates)} new updates to {len(users)} users")
 
-                # Only send updates that are actually new
                 today = time.strftime("%Y-%m-%d")
                 new_today_updates = [update for update in added_updates if update.get('date') == today]
 
@@ -656,18 +690,28 @@ class MintosBot:
                 return
 
             logger.info(f"Found {len(today_updates)} updates for today")
-            await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
 
-            for update in today_updates:
-                message = self.format_update_message(update)
-                await self.send_message(chat_id, message)
+            # Combine updates into batches to reduce number of messages
+            batch_size = 3
+            for i in range(0, len(today_updates), batch_size):
+                batch = today_updates[i:i + batch_size]
+                combined_message = f"📅 Updates {i+1}-{min(i+batch_size, len(today_updates))} of {len(today_updates)}:\n\n"
+                combined_message += "\n---\n".join([self.format_update_message(update) for update in batch])
+
+                try:
+                    await self.send_message(chat_id, combined_message)
+                    logger.debug(f"Successfully sent batch {i//batch_size + 1} to {chat_id}")
+                    await asyncio.sleep(2)  # Add delay between batches
+                except Exception as batch_error:
+                    logger.error(f"Error sending batch {i//batch_size + 1}: {batch_error}", exc_info=True)
+                    # Continue with next batch instead of failing completely
 
         except Exception as e:
             error_msg = f"Error in today_command: {str(e)}"
             logger.error(error_msg, exc_info=True)
             if chat_id:
                 await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.")
-            raise  # Re-raise to let the error handler deal with it
+            raise
 
     async def should_check_updates(self) -> bool:
         """Determine if updates should be checked based on current time"""
@@ -729,7 +773,7 @@ class MintosBot:
         try:
             # Verify bot permissions in the channel
             if await self._verify_bot_permissions(channel_identifier):
-                logger.info(f"Channel ID validated and permissions verified: {channel_identifier}")
+                logger.info(f"Channel ID validatedand permissions verified:` {channel_identifier}")
                 return channel_identifier
 
             logger.error(f"Bot lacks required permissions in channel: {channel_identifier}")
