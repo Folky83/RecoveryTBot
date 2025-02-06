@@ -470,6 +470,10 @@ class MintosBot:
         max_retries = 3
         base_delay = 1.0
 
+        # Calculate delay based on message length
+        message_length = len(text)
+        adaptive_delay = min(2.0 + (message_length / 1000), 5.0)  # Max 5 second delay for very long messages
+
         for attempt in range(max_retries):
             try:
                 await self.application.bot.send_message(
@@ -478,14 +482,31 @@ class MintosBot:
                     parse_mode='HTML',
                     reply_markup=reply_markup
                 )
-                logger.debug(f"Message sent successfully to {chat_id}")
-                await asyncio.sleep(2)  # Add 2 second delay between messages
+                logger.debug(f"Message sent successfully to {chat_id} (length: {message_length} chars)")
+
+                # Apply adaptive delay based on message size and previous success
+                delay = adaptive_delay * (0.8 if attempt == 0 else 1.2)
+                logger.debug(f"Waiting {delay:.1f}s before next message")
+                await asyncio.sleep(delay)
                 return
+
             except RetryAfter as e:
-                delay = e.retry_after
+                delay = e.retry_after + 1  # Add 1 second buffer
                 logger.warning(f"Rate limit hit, waiting {delay} seconds before retry")
                 await asyncio.sleep(delay)
                 continue
+
+            except Forbidden as e:
+                logger.error(f"Bot was blocked by user {chat_id}: {e}")
+                await self.user_manager.remove_user(str(chat_id))
+                raise
+
+            except BadRequest as e:
+                if "chat not found" in str(e).lower():
+                    logger.error(f"Chat {chat_id} not found, removing user")
+                    await self.user_manager.remove_user(str(chat_id))
+                raise
+
             except TelegramError as e:
                 if attempt == max_retries - 1:
                     logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
@@ -689,22 +710,20 @@ class MintosBot:
                 await self.send_message(chat_id, f"No updates found for today ({cache_message}).")
                 return
 
-            logger.info(f"Found {len(today_updates)} updates for today")
+            # Send header message with total count
+            header_message = f"📅 Found {len(today_updates)} updates for today:\n"
+            await self.send_message(chat_id, header_message)
 
-            # Combine updates into batches to reduce number of messages
-            batch_size = 3
-            for i in range(0, len(today_updates), batch_size):
-                batch = today_updates[i:i + batch_size]
-                combined_message = f"📅 Updates {i+1}-{min(i+batch_size, len(today_updates))} of {len(today_updates)}:\n\n"
-                combined_message += "\n---\n".join([self.format_update_message(update) for update in batch])
-
+            # Send each update individually
+            for i, update_item in enumerate(today_updates, 1):
                 try:
-                    await self.send_message(chat_id, combined_message)
-                    logger.debug(f"Successfully sent batch {i//batch_size + 1} to {chat_id}")
-                    await asyncio.sleep(2)  # Add delay between batches
-                except Exception as batch_error:
-                    logger.error(f"Error sending batch {i//batch_size + 1}: {batch_error}", exc_info=True)
-                    # Continue with next batch instead of failing completely
+                    message = self.format_update_message(update_item)
+                    await self.send_message(chat_id, message)
+                    logger.debug(f"Successfully sent update {i}/{len(today_updates)} to {chat_id}")
+                    await asyncio.sleep(1)  # Small delay between messages
+                except Exception as e:
+                    logger.error(f"Error sending update {i}/{len(today_updates)}: {e}", exc_info=True)
+                    continue
 
         except Exception as e:
             error_msg = f"Error in today_command: {str(e)}"
@@ -729,9 +748,14 @@ class MintosBot:
         return should_check
 
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        chat_id = None
         try:
-            if not update.message:
+            if not update.message or not update.effective_chat:
+                logger.error("Invalid update object: message or effective_chat is None")
                 return
+
+            chat_id = update.effective_chat.id
+            logger.info(f"Processing /refresh command for chat_id: {chat_id}")
 
             # Try to delete the command message, continue if not possible
             try:
@@ -739,22 +763,16 @@ class MintosBot:
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
 
-            chat_id = update.effective_chat.id
-            cache_age = self.data_manager.get_cache_age()
-
-            if cache_age < 900:
-                minutes_left = int((900 - cache_age) / 60)
-                await self.send_message(chat_id, f"⏳ Please wait {minutes_left} minutes before refreshing again.")
-                return
-
-            await self.send_message(chat_id, "🔄 Starting manual refresh...")
+            await self.send_message(chat_id, "🔄 Checking for updates...")
             await self.check_updates()
-            await self.send_message(chat_id, "✅ Manual refresh completed!")
+            await self.send_message(chat_id, "✅ Update check completed!")
 
         except Exception as e:
-            logger.error(f"Error in refresh_command: {e}", exc_info=True)
-            await self.send_message(chat_id, "⚠️ Error during manual refresh. Please try again.")
-
+            error_msg = f"Error in refresh_command: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            if chat_id:
+                await self.send_message(chat_id, "⚠️ Error refreshing updates. Please try again.")
+            raise
 
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
@@ -773,7 +791,7 @@ class MintosBot:
         try:
             # Verify bot permissions in the channel
             if await self._verify_bot_permissions(channel_identifier):
-                logger.info(f"Channel ID validatedand permissions verified:` {channel_identifier}")
+                logger.info(f"Channel ID validated and permissions verified: {channel_identifier}")
                 return channel_identifier
 
             logger.error(f"Bot lacks required permissions in channel: {channel_identifier}")
