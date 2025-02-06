@@ -179,10 +179,17 @@ async def main():
         logger.info("Streamlit started successfully")
 
         async with managed_bot() as bot:
-            await bot.cleanup()  # Ensure clean state
-            await asyncio.sleep(2)
-            bot_task = asyncio.create_task(bot.run())
-            await bot_task
+            logger.info("Starting Telegram bot...")
+            try:
+                # Start the bot and wait for it indefinitely
+                bot_task = asyncio.create_task(bot.run())
+                await bot_task
+            except asyncio.CancelledError:
+                logger.info("Bot task was cancelled")
+                raise
+            except Exception as e:
+                logger.error(f"Bot error: {e}")
+                raise
 
     except Exception as e:
         logger.error(f"Application error: {e}")
