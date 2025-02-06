@@ -1,3 +1,4 @@
+
 modules = ["python-3.11", "python3"]
 
 [nix]
@@ -12,12 +13,8 @@ runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
-author = "agent"
+author = "agent" 
 mode = "parallel"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Telegram Bot"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
