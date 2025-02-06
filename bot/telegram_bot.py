@@ -462,6 +462,7 @@ class MintosBot:
                 reply_markup=reply_markup
             )
             logger.debug(f"Message sent successfully to {chat_id}")
+            await asyncio.sleep(1)  # Add 1 second delay after sending each message
         except TelegramError as e:
             logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
             logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
