@@ -21,3 +21,5 @@ REQUEST_DELAY = 0.1  # seconds between requests
 # Logging Configuration
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 LOG_LEVEL = 'DEBUG'  # Changed from INFO to DEBUG to show scheduling logs
+LOG_MAX_BYTES = 10 * 1024 * 1024  # 10MB
+LOG_BACKUP_COUNT = 5

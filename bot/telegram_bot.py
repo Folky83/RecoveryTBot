@@ -576,38 +576,72 @@ class MintosBot:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /today command to show today's updates"""
+        chat_id = None
         try:
             if not update.message or not update.effective_chat:
+                logger.error("Invalid update object: message or effective_chat is None")
                 return
 
             chat_id = update.effective_chat.id
+            logger.info(f"Processing /today command for chat_id: {chat_id}")
 
             # Always try to delete the command message
             try:
                 await update.message.delete()
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
+
             updates = self.data_manager.load_previous_updates()
+            if not updates:
+                logger.warning("No updates found in cache")
+                await self.send_message(chat_id, "No cached updates found. Try /refresh first.")
+                return
+
             cache_age = self.data_manager.get_cache_age()
             logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
 
             today = time.strftime("%Y-%m-%d")
+            logger.debug(f"Searching for updates on date: {today}")
             today_updates = []
-            for company_update in updates:
-                if "items" in company_update:
-                    lender_id = company_update.get('lender_id')
-                    company_name = self.data_manager.get_company_name(lender_id)
 
-                    for year_data in company_update["items"]:
-                        for item in year_data.get("items", []):
-                            if item.get('date') == today:
-                                update_with_company = {
-                                    "lender_id": lender_id,
-                                    "company_name": company_name,
-                                    **year_data,
-                                    **item
-                                }
-                                today_updates.append(update_with_company)
+            for company_update in updates:
+                if not isinstance(company_update, dict):
+                    logger.warning(f"Invalid update format: {type(company_update)}")
+                    continue
+
+                if "items" not in company_update:
+                    logger.warning(f"No 'items' in company update: {company_update.keys()}")
+                    continue
+
+                lender_id = company_update.get('lender_id')
+                if not lender_id:
+                    logger.warning("Missing lender_id in company update")
+                    continue
+
+                company_name = self.data_manager.get_company_name(lender_id)
+                logger.debug(f"Processing updates for company: {company_name} (ID: {lender_id})")
+
+                for year_data in company_update["items"]:
+                    if not isinstance(year_data, dict):
+                        logger.warning(f"Invalid year_data format: {type(year_data)}")
+                        continue
+
+                    items = year_data.get("items", [])
+                    if not isinstance(items, list):
+                        logger.warning(f"Invalid items format: {type(items)}")
+                        continue
+
+                    for item in items:
+                        if item.get('date') == today:
+                            update_with_company = {
+                                "lender_id": lender_id,
+                                "company_name": company_name,
+                                **year_data,
+                                **item
+                            }
+                            today_updates.append(update_with_company)
+                            logger.debug(f"Found update for {company_name} on {today}")
 
             if not today_updates:
                 cache_message = ""
@@ -617,17 +651,23 @@ class MintosBot:
                     minutes_old = max(0, int(cache_age / 60))
                     cache_message = f"Cache last updated {minutes_old} minutes ago"
 
+                logger.info(f"No updates found for today. {cache_message}")
                 await self.send_message(chat_id, f"No updates found for today ({cache_message}).")
                 return
 
+            logger.info(f"Found {len(today_updates)} updates for today")
             await self.send_message(chat_id, f"📅 Found {len(today_updates)} updates for today (from cache):")
+
             for update in today_updates:
                 message = self.format_update_message(update)
                 await self.send_message(chat_id, message)
 
         except Exception as e:
-            logger.error(f"Error in today_command: {e}", exc_info=True)
-            await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.")
+            error_msg = f"Error in today_command: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            if chat_id:
+                await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.")
+            raise  # Re-raise to let the error handler deal with it
 
     async def should_check_updates(self) -> bool:
         """Determine if updates should be checked based on current time"""
@@ -670,6 +710,7 @@ class MintosBot:
         except Exception as e:
             logger.error(f"Error in refresh_command: {e}", exc_info=True)
             await self.send_message(chat_id, "⚠️ Error during manual refresh. Please try again.")
+
 
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
