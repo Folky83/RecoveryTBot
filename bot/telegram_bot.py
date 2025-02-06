@@ -58,6 +58,7 @@ class MintosBot:
             if not TELEGRAM_TOKEN:
                 raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
 
+            self.token = TELEGRAM_TOKEN  # Store token as instance variable
             self.application: Optional[Application] = None
             self.data_manager = DataManager()
             self.mintos_client = MintosClient()
@@ -482,7 +483,7 @@ class MintosBot:
         for msg in retry_messages:
             try:
                 await self.send_message(
-                    msg['chat_id'], 
+                    msg['chat_id'],
                     msg['text'],
                     msg.get('reply_markup')
                 )
@@ -764,47 +765,47 @@ class MintosBot:
             raise
 
     async def should_check_updates(self) -> bool:
-        """Determine if updates should be checked based on current time"""
+        """Check if updates should be checked based on current time"""
         now = datetime.now()
+        # Schedule updates for working days (Monday = 0, Sunday = 6)
+        # at specific hours (15:00, 16:00, 17:00 UTC)
+        should_check = (
+            now.weekday() < 5 and  # Monday to Friday
+            now.hour in [15, 16, 17]  # 3 PM, 4 PM, 5 PM UTC
+        )
 
-        if now.weekday() >= 5:
-            logger.debug(f"Skipping update check - weekend day ({now.strftime('%A')})")
-            return False
-
-        should_check = now.hour in [15, 16, 17]
         if not should_check:
-            logger.debug(f"Skipping update check - outside scheduled hours (current hour: {now.hour})")
+            logger.debug(f"Skipping updatecheck - outside scheduled hours (current hour: {now.hour})")
         else:
-            logger.info(f"Update check scheduled for current hour ({now.hour}:00)")
+            logger.info(f"Update check scheduled for current hour ({now.hour:02d}:00)")
         return should_check
 
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        chat_id = None
+        """Force an immediate update check"""
+        if not update.effective_chat:
+            return
+
+        chat_id = update.effective_chat.id
         try:
-            if not update.message or not update.effective_chat:
-                logger.error("Invalid update object: message or effective_chat is None")
-                return
-
-            chat_id = update.effective_chat.id
-            logger.info(f"Processing /refresh command for chat_id: {chat_id}")
-
-            # Try to delete the command message, continue if not possible
-            try:
-                await update.message.delete()
-            except Exception as e:
-                logger.warning(f"Could not delete command message: {e}")
-
             await self.send_message(chat_id, "🔄 Checking for updates...")
-            await self.check_updates()
-            await self.send_message(chat_id, "✅ Update check completed!")
-
+            await self._safe_update_check()
+            await self.send_message(chat_id, "✅ Update check completed")
         except Exception as e:
-            error_msg = f"Error in refresh_command: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-            if chat_id:
-                await self.send_message(chat_id, "⚠️ Error refreshing updates. Please try again.")
-            raise
+            logger.error(f"Error in refresh command: {e}")
+            await self.send_message(chat_id, "⚠️ Error checking for updates")
 
+    async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Trigger an update check for today's updates"""
+        if not update.effective_chat:
+            return
+
+        chat_id = update.effective_chat.id
+        try:
+            await self.send_message(chat_id, "🔄 Checking today's updates...")
+            await self.today_command(update, context)
+        except Exception as e:
+            logger.error(f"Error in trigger_today command: {e}")
+            await self.send_message(chat_id, "⚠️ Error checking today's updates")
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
         """Validate channel ID format and verify bot permissions"""

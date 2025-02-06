@@ -144,12 +144,23 @@ async def managed_bot():
     """Context manager for bot lifecycle"""
     from bot.telegram_bot import MintosBot
     bot = None
+    logger = logging.getLogger(__name__)
     try:
+        logger.info("Starting bot initialization...")
         bot = MintosBot()
+        logger.info("Bot instance created successfully")
         yield bot
+    except ImportError as e:
+        logger.error(f"Failed to import required modules: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Failed to initialize bot: {str(e)}")
+        raise
     finally:
         if bot:
+            logger.info("Cleaning up bot resources...")
             await bot.cleanup()
+            logger.info("Bot cleanup completed")
 
 async def main():
     # Configure logging
@@ -179,20 +190,27 @@ async def main():
         logger.info("Streamlit started successfully")
 
         async with managed_bot() as bot:
-            logger.info("Starting Telegram bot...")
+            logger.info("Initializing Telegram bot...")
             try:
+                # Verify bot token is available
+                if not bot.token:
+                    logger.error("Telegram bot token is not available")
+                    raise ValueError("Bot token is missing")
+
+                logger.info("Starting Telegram bot with valid token...")
                 # Start the bot and wait for it indefinitely
                 bot_task = asyncio.create_task(bot.run())
+                logger.info("Bot task created, waiting for completion...")
                 await bot_task
             except asyncio.CancelledError:
                 logger.info("Bot task was cancelled")
                 raise
             except Exception as e:
-                logger.error(f"Bot error: {e}")
+                logger.error(f"Bot error: {str(e)}")
                 raise
 
     except Exception as e:
-        logger.error(f"Application error: {e}")
+        logger.error(f"Application error: {str(e)}")
         raise
     finally:
         if process_manager.streamlit_process:
