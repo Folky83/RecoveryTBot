@@ -11,6 +11,7 @@ class DataManager:
     def __init__(self):
         self.ensure_data_directory()
         self._load_company_names()
+        self._load_sent_updates()
 
     def ensure_data_directory(self):
         if not os.path.exists(DATA_DIR):
@@ -28,6 +29,39 @@ class DataManager:
             logger.error(f"Error loading company names: {e}", exc_info=True)
             self.company_names = {}
             raise
+
+    def _create_update_id(self, update):
+        """Create a unique identifier for an update"""
+        return f"{update.get('lender_id')}_{update.get('date')}_{hash(update.get('description', ''))}"
+
+    def _load_sent_updates(self):
+        """Load set of already sent update IDs"""
+        self.sent_updates_file = os.path.join(DATA_DIR, 'sent_updates.json')
+        try:
+            if os.path.exists(self.sent_updates_file):
+                with open(self.sent_updates_file, 'r') as f:
+                    self.sent_updates = set(json.load(f))
+            else:
+                self.sent_updates = set()
+            logger.info(f"Loaded {len(self.sent_updates)} sent update IDs")
+        except Exception as e:
+            logger.error(f"Error loading sent updates: {e}", exc_info=True)
+            self.sent_updates = set()
+
+    def save_sent_update(self, update):
+        """Mark an update as sent"""
+        try:
+            update_id = self._create_update_id(update)
+            self.sent_updates.add(update_id)
+            with open(self.sent_updates_file, 'w') as f:
+                json.dump(list(self.sent_updates), f)
+            logger.debug(f"Saved sent update ID: {update_id}")
+        except Exception as e:
+            logger.error(f"Error saving sent update: {e}", exc_info=True)
+
+    def is_update_sent(self, update):
+        """Check if an update has already been sent"""
+        return self._create_update_id(update) in self.sent_updates
 
     def get_cache_age(self):
         """Get age of cache in seconds"""

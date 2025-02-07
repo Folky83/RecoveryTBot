@@ -637,19 +637,29 @@ class MintosBot:
 
             if added_updates:
                 users = self.user_manager.get_all_users()
-                logger.info(f"Sending {len(added_updates)} new updates to {len(users)} users")
+                logger.info(f"Found {len(added_updates)} new updates to process")
 
                 today = time.strftime("%Y-%m-%d")
                 new_today_updates = [update for update in added_updates if update.get('date') == today]
 
                 if new_today_updates:
-                    for update in new_today_updates:
-                        message = self.format_update_message(update)
-                        for user_id in users:
-                            try:
-                                await self.send_message(user_id, message)
-                            except Exception as e:
-                                logger.error(f"Failed to send update to user {user_id}: {e}")
+                    unsent_updates = [
+                        update for update in new_today_updates 
+                        if not self.data_manager.is_update_sent(update)
+                    ]
+
+                    if unsent_updates:
+                        logger.info(f"Sending {len(unsent_updates)} unsent updates to {len(users)} users")
+                        for update in unsent_updates:
+                            message = self.format_update_message(update)
+                            for user_id in users:
+                                try:
+                                    await self.send_message(user_id, message)
+                                    self.data_manager.save_sent_update(update)
+                                except Exception as e:
+                                    logger.error(f"Failed to send update to user {user_id}: {e}")
+                    else:
+                        logger.info("No new unsent updates to send")
 
             self.data_manager.save_updates(new_updates)
             logger.info(f"Update check completed. Found {len(added_updates)} new updates.")
@@ -768,7 +778,7 @@ class MintosBot:
         """Check if updates should be checked based on current time"""
         now = datetime.now()
         # Schedule updates for working days (Monday = 0, Sunday = 6)
-        # at specific hours (15:00, 16:00, 17:00 UTC)
+        # at specific hours (15:00, 16:00, 1700 UTC)
         should_check = (
             now.weekday() < 5 and  # Monday to Friday
             now.hour in [15, 16, 17]  # 3 PM, 4 PM, 5 PM UTC
