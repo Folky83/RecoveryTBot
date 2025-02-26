@@ -696,45 +696,40 @@ class MintosBot:
                 
         # Description if available
         if campaign.get('shortDescription'):
-            # Clean HTML tags and entities
+            # Use regex to completely strip all HTML tags and safely handle entity references
+            import re
             description = campaign.get('shortDescription', '')
+            
+            # First, handle escaped characters
+            description = description.replace('\u003C', '<').replace('\u003E', '>')
+            
+            # Handle common HTML entities
             description = (description
-                .replace('\u003C', '<')
-                .replace('\u003E', '>')
                 .replace('&#39;', "'")
                 .replace('&rsquo;', "'")
                 .replace('&euro;', '€')
                 .replace('&nbsp;', ' ')
-                # Handle common HTML tags
+                .replace('&lt;', '<')
+                .replace('&gt;', '>')
+                .replace('&amp;', '&'))
+            
+            # Replace common line-breaking tags with newlines first
+            description = (description
                 .replace('<br>', '\n')
                 .replace('<br/>', '\n')
                 .replace('<br />', '\n')
-                .replace('<p>', '')
                 .replace('</p>', '\n')
-                # Remove unsupported HTML tags that might cause Telegram errors
-                .replace('<ul>', '')
-                .replace('</ul>', '')
-                .replace('<li>', '• ')
-                .replace('</li>', '\n')
-                .replace('<strong>', '')
-                .replace('</strong>', '')
-                .replace('<b>', '')
-                .replace('</b>', '')
-                .replace('<i>', '')
-                .replace('</i>', '')
-                .replace('<em>', '')
-                .replace('</em>', '')
-                .replace('<u>', '')
-                .replace('</u>', '')
-                .replace('<div>', '')
                 .replace('</div>', '\n')
-                .replace('<span>', '')
-                .replace('</span>', '')
-                # Clean up excessive whitespace
-                .strip())
+                .replace('</li>', '\n'))
             
-            # Remove multiple consecutive newlines and whitespace between sentences
-            import re
+            # Special handling for list items to preserve formatting
+            description = description.replace('<li>', '• ')
+            
+            # Strip all remaining HTML tags
+            description = re.sub(r'<[^>]*>', '', description)
+            
+            # Clean up whitespace
+            description = description.strip()
             description = re.sub(r'\n{3,}', '\n\n', description)  # Replace 3+ newlines with 2
             description = re.sub(r'\s{2,}', ' ', description)      # Replace multiple spaces with one
             message += f"\n📝 <b>Description:</b>\n{description}\n"
@@ -869,10 +864,10 @@ class MintosBot:
                 users = self.user_manager.get_all_users()
                 logger.info(f"Found {len(added_campaigns)} new campaigns to process for {len(users)} users")
                 
-                # Filter out Special Promotion (type 4) campaigns and unsent campaigns
+                # Filter out already sent campaigns
                 unsent_campaigns = [
                     campaign for campaign in added_campaigns 
-                    if not self.data_manager.is_campaign_sent(campaign) and campaign.get('type') != 4
+                    if not self.data_manager.is_campaign_sent(campaign)
                 ]
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
                 
@@ -1138,8 +1133,8 @@ class MintosBot:
             # Display header with count of campaigns
             active_campaigns = []
             for campaign in new_campaigns:
-                # Filter out "Special Promotion" campaigns (type 4) and check if active
-                if self._is_campaign_active(campaign) and campaign.get('type') != 4:
+                # Only check if campaign is active
+                if self._is_campaign_active(campaign):
                     active_campaigns.append(campaign)
             
             if not active_campaigns:
