@@ -14,6 +14,7 @@ logger.info("Starting Streamlit Dashboard")
 
 # Constants
 UPDATES_FILE = os.path.join('data', 'recovery_updates.json')
+CAMPAIGNS_FILE = os.path.join('data', 'campaigns.json')
 CACHE_REFRESH_SECONDS = 900  # 15 minutes
 
 def _convert_to_float(value: Any) -> Optional[float]:
@@ -43,13 +44,29 @@ class CompanyUpdate:
     company_name: str
     lender_id: int
     items: List[UpdateItem]
+    
+@dataclass
+class Campaign:
+    """Represents a Mintos campaign"""
+    id: int
+    name: str
+    short_description: str
+    valid_from: str
+    valid_to: str
+    image_url: str
+    terms_conditions_link: str
+    bonus_amount: Optional[str] = None
+    required_principal: Optional[str] = None
+    type: Optional[int] = None
 
 class DashboardManager:
     """Manages dashboard data and rendering"""
     def __init__(self):
         self.data_manager = DataManager()
         self.updates: List[CompanyUpdate] = []
+        self.campaigns: List[Campaign] = []
         self._load_updates()
+        self._load_campaigns()
 
     def _load_updates(self) -> None:
         """Load updates from file"""
@@ -93,6 +110,65 @@ class DashboardManager:
         except Exception as e:
             logger.error(f"Error loading updates: {e}", exc_info=True)
             self.updates = []
+            
+    def _load_campaigns(self) -> None:
+        """Load campaigns from file"""
+        try:
+            if not os.path.exists(CAMPAIGNS_FILE):
+                logger.warning(f"Campaigns file not found: {CAMPAIGNS_FILE}")
+                return
+
+            with open(CAMPAIGNS_FILE, 'r') as f:
+                raw_campaigns = json.load(f)
+
+            self.campaigns = []
+            for campaign in raw_campaigns:
+                if not campaign.get('id'):
+                    continue
+                    
+                # Skip campaigns without a name
+                name = campaign.get('name', '')
+                if not name and campaign.get('identifier'):
+                    name = f"Campaign {campaign.get('identifier')}"
+                elif not name:
+                    name = f"Campaign #{campaign.get('id')}"
+                
+                # Parse dates just to validate them
+                try:
+                    valid_from = campaign.get('validFrom', '')
+                    valid_to = campaign.get('validTo', '')
+                    
+                    # Clean up empty or None values
+                    bonus_amount = campaign.get('bonusAmount')
+                    if not bonus_amount:
+                        bonus_amount = None
+                        
+                    required_principal = campaign.get('requiredPrincipalExposure')
+                    if not required_principal:
+                        required_principal = None
+                    
+                    self.campaigns.append(Campaign(
+                        id=campaign.get('id'),
+                        name=name,
+                        short_description=campaign.get('shortDescription', ''),
+                        valid_from=valid_from,
+                        valid_to=valid_to,
+                        image_url=campaign.get('imageUrl', ''),
+                        terms_conditions_link=campaign.get('termsConditionsLink', ''),
+                        bonus_amount=bonus_amount,
+                        required_principal=required_principal,
+                        type=campaign.get('type')
+                    ))
+                except Exception as e:
+                    logger.error(f"Error parsing campaign {campaign.get('id')}: {e}")
+                    continue
+
+            # Sort campaigns by end date (validTo)
+            self.campaigns.sort(key=lambda x: x.valid_to, reverse=True)
+            logger.info(f"Loaded {len(self.campaigns)} campaigns")
+        except Exception as e:
+            logger.error(f"Error loading campaigns: {e}", exc_info=True)
+            self.campaigns = []
 
     def render_dashboard(self) -> None:
         """Render the main dashboard"""
@@ -101,12 +177,22 @@ class DashboardManager:
             self._apply_custom_css()
             self._render_header()
 
-            if not self.updates:
-                self._render_no_updates_message()
-                return
-
-            selected_company = self._render_company_filter()
-            self._render_updates(selected_company)
+            # Create tabs for recovery updates and campaigns
+            tab1, tab2 = st.tabs(["Recovery Updates", "Active Campaigns"])
+            
+            with tab1:
+                if not self.updates:
+                    self._render_no_updates_message()
+                else:
+                    selected_company = self._render_company_filter()
+                    self._render_updates(selected_company)
+            
+            with tab2:
+                if not self.campaigns:
+                    st.warning("⚠️ No active campaigns available yet.")
+                    st.info("The Telegram bot will automatically collect campaign data.")
+                else:
+                    self._render_campaigns()
 
         except Exception as e:
             logger.error(f"Error rendering dashboard: {e}", exc_info=True)
@@ -216,6 +302,61 @@ class DashboardManager:
                                f"{item.recovery_year_from} - {item.recovery_year_to}")
 
                     st.markdown("---")
+                    
+    def _render_campaigns(self) -> None:
+        """Render active campaigns"""
+        st.subheader("🎯 Active Mintos Campaigns")
+        
+        # Filter to show only active campaigns using the current date
+        now = datetime.now()
+        
+        # Format the date as ISO format for comparison
+        now_str = now.strftime("%Y-%m-%dT%H:%M:%S")
+        
+        # Count active campaigns
+        active_campaigns = [c for c in self.campaigns 
+                           if c.valid_from <= now_str <= c.valid_to]
+        
+        st.write(f"Showing {len(active_campaigns)} active campaigns out of {len(self.campaigns)} total campaigns")
+        
+        # Display each campaign in a card-like expander
+        for campaign in active_campaigns:
+            with st.expander(f"{campaign.name or f'Campaign #{campaign.id}'}"):
+                cols = st.columns([2, 1])
+                
+                with cols[0]:
+                    # Format dates nicely
+                    valid_from = datetime.fromisoformat(campaign.valid_from.replace('Z', '+00:00'))
+                    valid_to = datetime.fromisoformat(campaign.valid_to.replace('Z', '+00:00'))
+                    
+                    # Clean HTML content for display
+                    clean_description = ""
+                    if campaign.short_description:
+                        clean_description = campaign.short_description.replace('<p>', '').replace('</p>', '\n\n')
+                        clean_description = (clean_description
+                            .replace('<strong>', '**').replace('</strong>', '**')
+                            .replace('<br />', '\n').replace('<br/>', '\n').replace('<br>', '\n')
+                            .replace('&rsquo;', "'").replace('&euro;', '€').replace('&nbsp;', ' ')
+                            .replace('<ul>', '').replace('</ul>', '')
+                            .replace('<li>', '• ').replace('</li>', '\n'))
+                        
+                    st.markdown(clean_description, unsafe_allow_html=False)
+                    
+                    st.markdown("---")
+                    st.caption(f"**Campaign period:** {valid_from.strftime('%d %b %Y')} - {valid_to.strftime('%d %b %Y')}")
+                    
+                    if campaign.bonus_amount:
+                        st.success(f"Bonus: €{campaign.bonus_amount}")
+                    
+                    if campaign.required_principal:
+                        st.info(f"Required investment: €{float(campaign.required_principal):,.2f}")
+                    
+                    if campaign.terms_conditions_link:
+                        st.markdown(f"[Terms & Conditions]({campaign.terms_conditions_link})")
+                
+                with cols[1]:
+                    if campaign.image_url:
+                        st.image(campaign.image_url, use_column_width=True)
 
 def main():
     """Main application entry point"""

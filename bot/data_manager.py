@@ -4,7 +4,7 @@ import time
 import hashlib
 import pandas as pd
 from .logger import setup_logger
-from .config import DATA_DIR, UPDATES_FILE
+from .config import DATA_DIR, UPDATES_FILE, CAMPAIGNS_FILE
 
 logger = setup_logger(__name__)
 
@@ -13,6 +13,17 @@ class DataManager:
         self.ensure_data_directory()
         self._load_company_names()
         self._load_sent_updates()
+        
+        # Initialize sent_campaigns set
+        self.sent_campaigns = set()
+        self.sent_campaigns_file = os.path.join(DATA_DIR, 'sent_campaigns.json')
+        self.backup_sent_campaigns_file = os.path.join(DATA_DIR, 'sent_campaigns.json.bak')
+        
+        # Now load sent campaigns
+        try:
+            self._load_sent_campaigns()
+        except Exception as e:
+            logger.error(f"Error loading sent campaigns: {e}", exc_info=True)
 
     def ensure_data_directory(self):
         if not os.path.exists(DATA_DIR):
@@ -57,6 +68,19 @@ class DataManager:
         
         # Create a consistent string to hash
         hash_content = f"{lender_id}_{date}_{year}_{description}"
+        # Generate a stable, unique hash
+        return hashlib.md5(hash_content.encode()).hexdigest()
+        
+    def _create_campaign_id(self, campaign):
+        """Create a unique identifier for a campaign"""
+        # Use MD5 hash for consistent results across program runs
+        campaign_id = str(campaign.get('id', ''))
+        name = str(campaign.get('name', ''))
+        valid_from = str(campaign.get('validFrom', ''))
+        valid_to = str(campaign.get('validTo', ''))
+        
+        # Create a consistent string to hash
+        hash_content = f"campaign_{campaign_id}_{name}_{valid_from}_{valid_to}"
         # Generate a stable, unique hash
         return hashlib.md5(hash_content.encode()).hexdigest()
 
@@ -119,6 +143,66 @@ class DataManager:
     def is_update_sent(self, update):
         """Check if an update has already been sent"""
         return self._create_update_id(update) in self.sent_updates
+        
+    def _load_sent_campaigns(self):
+        """Load set of already sent campaign IDs with verification and backup handling"""
+        self.sent_campaigns_file = os.path.join(DATA_DIR, 'sent_campaigns.json')
+        self.backup_sent_campaigns_file = os.path.join(DATA_DIR, 'sent_campaigns.json.bak')
+        
+        try:
+            # First try to load from the main file
+            if os.path.exists(self.sent_campaigns_file):
+                with open(self.sent_campaigns_file, 'r') as f:
+                    data = json.load(f)
+                    self.sent_campaigns = set(data)
+                logger.info(f"Loaded {len(self.sent_campaigns)} sent campaign IDs from main file")
+                
+                # Create backup if it doesn't exist
+                if not os.path.exists(self.backup_sent_campaigns_file):
+                    with open(self.backup_sent_campaigns_file, 'w') as f:
+                        json.dump(list(self.sent_campaigns), f)
+                    logger.info(f"Created backup of sent campaigns with {len(self.sent_campaigns)} IDs")
+                    
+            # If main file doesn't exist, try to load from backup
+            elif os.path.exists(self.backup_sent_campaigns_file):
+                logger.warning("Main sent campaigns file not found, loading from backup")
+                with open(self.backup_sent_campaigns_file, 'r') as f:
+                    data = json.load(f)
+                    self.sent_campaigns = set(data)
+                logger.info(f"Loaded {len(self.sent_campaigns)} sent campaign IDs from backup file")
+                
+                # Recreate the main file
+                with open(self.sent_campaigns_file, 'w') as f:
+                    json.dump(list(self.sent_campaigns), f)
+                logger.info("Recreated main sent campaigns file from backup")
+            else:
+                logger.info("No sent campaigns files found, starting with empty set")
+                self.sent_campaigns = set()
+        except Exception as e:
+            logger.error(f"Error loading sent campaigns: {e}", exc_info=True)
+            self.sent_campaigns = set()
+            
+    def save_sent_campaign(self, campaign):
+        """Mark a campaign as sent with backup"""
+        try:
+            campaign_id = self._create_campaign_id(campaign)
+            self.sent_campaigns.add(campaign_id)
+            
+            # Save to main file
+            with open(self.sent_campaigns_file, 'w') as f:
+                json.dump(list(self.sent_campaigns), f)
+                
+            # Also save to backup file
+            with open(self.backup_sent_campaigns_file, 'w') as f:
+                json.dump(list(self.sent_campaigns), f)
+                
+            logger.info(f"Saved sent campaign ID: {campaign_id} (total: {len(self.sent_campaigns)})")
+        except Exception as e:
+            logger.error(f"Error saving sent campaign: {e}", exc_info=True)
+
+    def is_campaign_sent(self, campaign):
+        """Check if a campaign has already been sent"""
+        return self._create_campaign_id(campaign) in self.sent_campaigns
 
     def get_cache_age(self):
         """Get age of cache in seconds"""
@@ -159,6 +243,44 @@ class DataManager:
             logger.debug(f"Updates file size: {os.path.getsize(UPDATES_FILE)} bytes")
         except Exception as e:
             logger.error(f"Error saving updates: {e}", exc_info=True)
+            raise
+            
+    def get_campaigns_cache_age(self):
+        """Get age of campaigns cache in seconds"""
+        try:
+            if os.path.exists(CAMPAIGNS_FILE):
+                age = time.time() - os.path.getmtime(CAMPAIGNS_FILE)
+                logger.debug(f"Campaigns cache age: {age:.2f} seconds")
+                return age
+            logger.debug("Campaigns cache file does not exist")
+            return float('inf')
+        except Exception as e:
+            logger.error(f"Error checking campaigns cache age: {e}", exc_info=True)
+            return float('inf')
+    
+    def load_previous_campaigns(self):
+        """Load previous campaigns from cache file"""
+        try:
+            if os.path.exists(CAMPAIGNS_FILE):
+                with open(CAMPAIGNS_FILE, 'r') as f:
+                    campaigns = json.load(f)
+                logger.info(f"Loaded {len(campaigns)} campaigns from cache")
+                return campaigns
+            logger.info("No previous campaigns found")
+            return []
+        except Exception as e:
+            logger.error(f"Error loading previous campaigns: {e}", exc_info=True)
+            return []
+    
+    def save_campaigns(self, campaigns):
+        """Save campaigns to cache file"""
+        try:
+            with open(CAMPAIGNS_FILE, 'w') as f:
+                json.dump(campaigns, f, indent=4)
+            logger.info(f"Successfully saved {len(campaigns)} campaigns")
+            logger.debug(f"Campaigns file size: {os.path.getsize(CAMPAIGNS_FILE)} bytes")
+        except Exception as e:
+            logger.error(f"Error saving campaigns: {e}", exc_info=True)
             raise
 
     def get_company_name(self, lender_id):
@@ -223,3 +345,64 @@ class DataManager:
 
         logger.info(f"Found {len(added_updates)} new updates")
         return added_updates
+        
+    def compare_campaigns(self, new_campaigns, previous_campaigns):
+        """Compare campaigns to find new or updated ones"""
+        logger.debug(f"Comparing {len(new_campaigns)} new campaigns with {len(previous_campaigns)} previous campaigns")
+        
+        if not new_campaigns:
+            logger.info("No new campaigns to compare")
+            return []
+            
+        # Create a dictionary of previous campaigns by ID for easier comparison
+        prev_campaigns_dict = {campaign.get('id'): campaign for campaign in previous_campaigns if campaign.get('id')}
+        
+        added_campaigns = []
+        for new_campaign in new_campaigns:
+            campaign_id = new_campaign.get('id')
+            if not campaign_id:
+                logger.warning("Campaign without ID found, skipping")
+                continue
+                
+            # Check if this is a new campaign or changed campaign
+            if campaign_id not in prev_campaigns_dict:
+                # This is a completely new campaign
+                if not self.is_campaign_sent(new_campaign):
+                    logger.debug(f"Found new campaign: {new_campaign.get('name', 'Unnamed')} (ID: {campaign_id})")
+                    added_campaigns.append(new_campaign)
+                else:
+                    logger.debug(f"Found new campaign but already notified: {campaign_id}")
+            else:
+                # This campaign existed before, check if it was modified in important fields
+                prev_campaign = prev_campaigns_dict[campaign_id]
+                if not self._are_campaigns_identical(new_campaign, prev_campaign):
+                    # The campaign has been updated in a significant way
+                    if not self.is_campaign_sent(new_campaign):
+                        logger.debug(f"Found updated campaign: {new_campaign.get('name', 'Unnamed')} (ID: {campaign_id})")
+                        added_campaigns.append(new_campaign)
+                    else:
+                        logger.debug(f"Found updated campaign but already notified: {campaign_id}")
+                        
+        logger.info(f"Found {len(added_campaigns)} new or updated campaigns")
+        return added_campaigns
+        
+    def _are_campaigns_identical(self, new_campaign, prev_campaign):
+        """Compare two campaigns for equality in significant fields"""
+        # Fields to compare that would make a meaningful difference to users
+        significant_fields = [
+            'name', 
+            'shortDescription', 
+            'validFrom', 
+            'validTo', 
+            'bonusAmount',
+            'requiredPrincipalExposure',
+            'termsConditionsLink'
+        ]
+        
+        for field in significant_fields:
+            # Compare each significant field
+            if new_campaign.get(field) != prev_campaign.get(field):
+                logger.debug(f"Campaign field '{field}' changed: {prev_campaign.get(field)} -> {new_campaign.get(field)}")
+                return False
+                
+        return True

@@ -3,6 +3,7 @@ import time
 from .logger import setup_logger
 from .config import (
     MINTOS_API_BASE,
+    MINTOS_CAMPAIGNS_URL,
     REQUEST_DELAY,
     MAX_RETRIES,
     RETRY_DELAY,
@@ -38,3 +39,19 @@ class MintosClient:
                 updates.append({"lender_id": lender_id, **recovery_data})
             time.sleep(REQUEST_DELAY)
         return updates
+        
+    def get_campaigns(self):
+        """Fetch current Mintos campaigns"""
+        url = MINTOS_CAMPAIGNS_URL
+        
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = self.session.get(url, timeout=REQUEST_TIMEOUT)
+                response.raise_for_status()
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Error fetching campaigns, attempt {attempt + 1}: {e}")
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(RETRY_DELAY)
+                continue
+        return None

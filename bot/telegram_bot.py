@@ -1,6 +1,6 @@
 from __future__ import annotations
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -9,10 +9,11 @@ from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, Retry
 import math
 
 from .logger import setup_logger
-from .config import TELEGRAM_TOKEN
+from .config import TELEGRAM_TOKEN, UPDATES_FILE, CAMPAIGNS_FILE
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
+import os
 
 logger = setup_logger(__name__)
 
@@ -171,6 +172,7 @@ class MintosBot:
             CommandHandler("company", self.company_command),
             CommandHandler("today", self.today_command),
             CommandHandler("refresh", self.refresh_command),
+            CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CallbackQueryHandler(self.handle_callback)
         ]
@@ -314,6 +316,7 @@ class MintosBot:
             "Available Commands:\n"
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
+            "• /campaigns - View current Mintos campaigns\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n\n"
             "You'll receive updates about lending companies automatically. Stay tuned!"
@@ -373,6 +376,20 @@ class MintosBot:
                     reply_markup=reply_markup
                 )
 
+            elif query.data == "refresh_cache":
+                chat_id = update.effective_chat.id
+                await query.edit_message_text("🔄 Refreshing updates...")
+                
+                try:
+                    # Force update check regardless of hour
+                    await self._safe_update_check()
+                    # Run today command again
+                    await self.today_command(update, context)
+                except Exception as e:
+                    logger.error(f"Error during refresh from callback: {e}")
+                    await query.edit_message_text("⚠️ Error refreshing updates. Please try again.")
+                return
+                
             elif query.data == "cancel":
                 await query.edit_message_text("Operation cancelled.")
                 return
@@ -621,48 +638,173 @@ class MintosBot:
             message += f"\n🔗 <a href='https://www.mintos.com/en/loan-companies/{update['lender_id']}'>View on Mintos</a>"
 
         return message.strip()
+        
+    def format_campaign_message(self, campaign: Dict[str, Any]) -> str:
+        """Format campaign message with rich information from Mintos API"""
+        logger.debug(f"Formatting campaign message for ID: {campaign.get('id')}")
+        
+        # Set up the header
+        message = "🎯 <b>New Mintos Campaign</b>\n\n"
+        
+        # Name (some campaigns have no name)
+        if campaign.get('name'):
+            message += f"<b>{campaign.get('name')}</b>\n\n"
+            
+        # Campaign type information
+        campaign_type = campaign.get('type')
+        if campaign_type == 1:
+            message += "📱 <b>Type:</b> Refer a Friend\n"
+        elif campaign_type == 2:
+            message += "💰 <b>Type:</b> Cashback\n"
+        elif campaign_type == 4:
+            message += "🌟 <b>Type:</b> Special Promotion\n"
+        else:
+            message += f"📊 <b>Type:</b> Campaign (Type {campaign_type})\n"
+            
+        # Validity period
+        valid_from = campaign.get('validFrom')
+        valid_to = campaign.get('validTo')
+        if valid_from and valid_to:
+            # Parse and format the dates (example format: "2025-01-31T22:00:00.000000Z")
+            try:
+                from_date = datetime.fromisoformat(valid_from.replace('Z', '+00:00'))
+                to_date = datetime.fromisoformat(valid_to.replace('Z', '+00:00'))
+                message += f"📅 <b>Valid:</b> {from_date.strftime('%Y-%m-%d')} to {to_date.strftime('%Y-%m-%d')}\n"
+            except ValueError:
+                # Fallback if date parsing fails
+                message += f"📅 <b>Valid:</b> {valid_from} to {valid_to}\n"
+        
+        # Bonus amount
+        if campaign.get('bonusAmount'):
+            message += f"🎁 <b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
+            
+        # Required investment
+        if campaign.get('requiredPrincipalExposure'):
+            try:
+                required_amount = float(campaign.get('requiredPrincipalExposure'))
+                message += f"💸 <b>Required Investment:</b> €{required_amount:,.2f}\n"
+            except (ValueError, TypeError):
+                message += f"💸 <b>Required Investment:</b> {campaign.get('requiredPrincipalExposure')}\n"
+                
+        # Additional bonus information
+        if campaign.get('additionalBonusEnabled'):
+            message += f"✨ <b>Extra Bonus:</b> {campaign.get('bonusCoefficient', '?')}%"
+            if campaign.get('additionalBonusDays'):
+                message += f" (for first {campaign.get('additionalBonusDays')} days)\n"
+            else:
+                message += "\n"
+                
+        # Description if available
+        if campaign.get('shortDescription'):
+            # Clean HTML tags and entities
+            description = campaign.get('shortDescription', '')
+            description = (description
+                .replace('\u003C', '<')
+                .replace('\u003E', '>')
+                .replace('&#39;', "'")
+                .replace('&rsquo;', "'")
+                .replace('&euro;', '€')
+                .replace('&nbsp;', ' ')
+                .replace('<br>', '\n')
+                .replace('<br/>', '\n')
+                .replace('<br />', '\n')
+                .replace('<p>', '')
+                .replace('</p>', '\n')
+                .strip())
+            message += f"\n📝 <b>Description:</b>\n{description}\n"
+            
+        # Terms & Conditions link
+        if campaign.get('termsConditionsLink'):
+            message += f"\n📄 <a href='{campaign.get('termsConditionsLink')}'>Terms & Conditions</a>"
+            
+        # Add link to Mintos website
+        message += "\n\n🔗 <a href='https://www.mintos.com/en/'>View on Mintos</a>"
+        
+        return message.strip()
 
     async def check_updates(self) -> None:
         try:
-            logger.info("Starting update check...")
+            now = datetime.now()
+            logger.info(f"Starting update check at {now.strftime('%Y-%m-%d %H:%M:%S')}...")
+            
+            # Get cache file age before update
+            try:
+                if os.path.exists(UPDATES_FILE):
+                    before_update_time = os.path.getmtime(UPDATES_FILE)
+                    cache_age_hours = (time.time() - before_update_time) / 3600
+                    logger.info(f"Cache file age before update: {cache_age_hours:.1f} hours (last modified: {datetime.fromtimestamp(before_update_time).strftime('%Y-%m-%d %H:%M:%S')})")
+            except Exception as e:
+                logger.error(f"Error checking cache file age before update: {e}")
+            
+            # Load previous updates
             previous_updates = self.data_manager.load_previous_updates()
+            logger.info(f"Loaded {len(previous_updates)} previous updates")
+            
+            # Fetch new updates
             lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
+            logger.info(f"Fetching updates for {len(lender_ids)} lender IDs")
             new_updates = self.mintos_client.fetch_all_updates(lender_ids)
+            logger.info(f"Fetched {len(new_updates)} new updates from API")
 
             # Ensure both lists are of the correct type
             previous_updates = cast(List[CompanyUpdate], previous_updates)
             new_updates = cast(List[CompanyUpdate], new_updates)
 
+            # Compare updates
             added_updates = self.data_manager.compare_updates(new_updates, previous_updates)
+            logger.info(f"Found {len(added_updates)} new updates after comparison")
 
             if added_updates:
                 users = self.user_manager.get_all_users()
-                logger.info(f"Found {len(added_updates)} new updates to process")
+                logger.info(f"Found {len(added_updates)} new updates to process for {len(users)} users")
 
                 today = time.strftime("%Y-%m-%d")
                 new_today_updates = [update for update in added_updates if update.get('date') == today]
+                logger.info(f"Found {len(new_today_updates)} updates for today ({today})")
 
                 if new_today_updates:
                     unsent_updates = [
                         update for update in new_today_updates 
                         if not self.data_manager.is_update_sent(update)
                     ]
+                    logger.info(f"Found {len(unsent_updates)} unsent updates for today")
 
                     if unsent_updates:
                         logger.info(f"Sending {len(unsent_updates)} unsent updates to {len(users)} users")
-                        for update in unsent_updates:
+                        for i, update in enumerate(unsent_updates):
                             message = self.format_update_message(update)
                             for user_id in users:
                                 try:
                                     await self.send_message(user_id, message)
                                     self.data_manager.save_sent_update(update)
+                                    logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
                                 except Exception as e:
                                     logger.error(f"Failed to send update to user {user_id}: {e}")
                     else:
                         logger.info("No new unsent updates to send")
+                else:
+                    logger.info(f"No new updates found for today ({today})")
 
-            self.data_manager.save_updates(new_updates)
-            logger.info(f"Update check completed. Found {len(added_updates)} new updates.")
+            # Save updates to file
+            try:
+                before_size = os.path.getsize(UPDATES_FILE) if os.path.exists(UPDATES_FILE) else 0
+                self.data_manager.save_updates(new_updates)
+                after_size = os.path.getsize(UPDATES_FILE) if os.path.exists(UPDATES_FILE) else 0
+                
+                # Check if the file was actually updated
+                if after_size > 0:
+                    modified_time = os.path.getmtime(UPDATES_FILE)
+                    logger.info(f"Cache file updated successfully. Size: {before_size} -> {after_size} bytes")
+                    logger.info(f"New modification time: {datetime.fromtimestamp(modified_time).strftime('%Y-%m-%d %H:%M:%S')}")
+                else:
+                    logger.warning("Cache file may not have been updated properly (size is 0)")
+            except Exception as e:
+                logger.error(f"Error verifying cache file update: {e}")
+                
+            # Check for new campaigns
+            await self.check_campaigns()
+                
+            logger.info(f"Update check completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Found {len(added_updates)} new updates.")
 
         except Exception as e:
             logger.error(f"Error during update check: {e}", exc_info=True)
@@ -671,6 +813,72 @@ class MintosBot:
                     await self.send_message(user_id, "⚠️ Error occurred while checking for updates")
                 except Exception as nested_e:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
+                    
+    async def check_campaigns(self) -> None:
+        """Check for new Mintos campaigns"""
+        try:
+            logger.info("Checking for new campaigns...")
+            
+            # Get cache file age before update
+            campaigns_cache_age = self.data_manager.get_campaigns_cache_age()
+            logger.info(f"Campaigns cache age: {campaigns_cache_age/3600:.1f} hours")
+            
+            # Load previous campaigns
+            previous_campaigns = self.data_manager.load_previous_campaigns()
+            logger.info(f"Loaded {len(previous_campaigns)} previous campaigns")
+            
+            # Fetch new campaigns
+            new_campaigns = self.mintos_client.get_campaigns()
+            if not new_campaigns:
+                logger.warning("Failed to fetch campaigns or no campaigns available")
+                return
+                
+            logger.info(f"Fetched {len(new_campaigns)} new campaigns from API")
+                
+            # Compare campaigns
+            added_campaigns = self.data_manager.compare_campaigns(new_campaigns, previous_campaigns)
+            logger.info(f"Found {len(added_campaigns)} new or updated campaigns after comparison")
+            
+            if added_campaigns:
+                users = self.user_manager.get_all_users()
+                logger.info(f"Found {len(added_campaigns)} new campaigns to process for {len(users)} users")
+                
+                unsent_campaigns = [
+                    campaign for campaign in added_campaigns 
+                    if not self.data_manager.is_campaign_sent(campaign)
+                ]
+                logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
+                
+                if unsent_campaigns:
+                    logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns to {len(users)} users")
+                    for i, campaign in enumerate(unsent_campaigns):
+                        message = self.format_campaign_message(campaign)
+                        for user_id in users:
+                            try:
+                                await self.send_message(user_id, message)
+                                self.data_manager.save_sent_campaign(campaign)
+                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
+                            except Exception as e:
+                                logger.error(f"Failed to send campaign to user {user_id}: {e}")
+                else:
+                    logger.info("No new unsent campaigns to send")
+            
+            # Save campaigns to file
+            try:
+                self.data_manager.save_campaigns(new_campaigns)
+                logger.info(f"Successfully saved {len(new_campaigns)} campaigns")
+            except Exception as e:
+                logger.error(f"Error saving campaigns: {e}")
+                
+            logger.info(f"Campaign check completed. Found {len(added_campaigns)} new campaigns.")
+            
+        except Exception as e:
+            logger.error(f"Error during campaign check: {e}", exc_info=True)
+            for user_id in self.user_manager.get_all_users():
+                try:
+                    await self.send_message(user_id, "⚠️ Error occurred while checking for campaigns")
+                except Exception as nested_e:
+                    logger.error(f"Failed to send campaign error notification to user {user_id}: {nested_e}")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /today command to show today's updates"""
@@ -688,13 +896,29 @@ class MintosBot:
                 await update.message.delete()
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
-
+                
+            # Check cache age and refresh if needed
+            cache_age = self.data_manager.get_cache_age()
+            cache_age_minutes = int(cache_age / 60) if not math.isinf(cache_age) else float('inf')
+            
+            # If cache is older than 6 hours (360 minutes), do a fresh check
+            if cache_age_minutes > 360:
+                logger.info(f"Cache is old ({cache_age_minutes} minutes), doing a fresh update check")
+                await self.send_message(chat_id, "🔄 Cache is old, refreshing updates...")
+                try:
+                    # Do a fresh update check regardless of current hour
+                    await self._safe_update_check()
+                    logger.info("Cache refreshed successfully")
+                except Exception as e:
+                    logger.error(f"Failed to refresh cache: {e}")
+            
             updates = self.data_manager.load_previous_updates()
             if not updates:
                 logger.warning("No updates found in cache")
                 await self.send_message(chat_id, "No cached updates found. Try /refresh first.")
                 return
 
+            # Get the (possibly new) cache age
             cache_age = self.data_manager.get_cache_age()
             logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
 
@@ -746,10 +970,27 @@ class MintosBot:
                     cache_message = "Cache age unknown"
                 else:
                     minutes_old = max(0, int(cache_age / 60))
-                    cache_message = f"Cache last updated {minutes_old} minutes ago"
+                    hours_old = minutes_old // 60
+                    remaining_minutes = minutes_old % 60
+                    
+                    if hours_old > 0:
+                        cache_message = f"Cache last updated {hours_old}h {remaining_minutes}m ago"
+                    else:
+                        cache_message = f"Cache last updated {minutes_old} minutes ago"
 
                 logger.info(f"No updates found for today. {cache_message}")
-                await self.send_message(chat_id, f"No updates found for today ({cache_message}).")
+                
+                # Create a message with a refresh button if cache is old
+                if minutes_old > 120:  # If cache is older than 2 hours
+                    keyboard = [[InlineKeyboardButton("🔄 Refresh Now", callback_data="refresh_cache")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    await self.send_message(
+                        chat_id, 
+                        f"No updates found for today ({cache_message}).\nWould you like to check for new updates?",
+                        reply_markup=reply_markup
+                    )
+                else:
+                    await self.send_message(chat_id, f"No updates found for today ({cache_message}).")
                 return
 
             # Send header message with total count
@@ -777,6 +1018,9 @@ class MintosBot:
     async def should_check_updates(self) -> bool:
         """Check if updates should be checked based on current time"""
         now = datetime.now()
+        # Enhanced logging of server time
+        logger.debug(f"Current server time: {now.strftime('%Y-%m-%d %H:%M:%S')} (weekday: {now.weekday()}, hour: {now.hour})")
+        
         # Schedule updates for working days (Monday = 0, Sunday = 6)
         # at specific hours (15:00, 16:00, 1700 UTC)
         should_check = (
@@ -784,10 +1028,22 @@ class MintosBot:
             now.hour in [15, 16, 17]  # 3 PM, 4 PM, 5 PM UTC
         )
 
+        # Check for any update file operations issue
+        try:
+            if os.path.exists(UPDATES_FILE):
+                cache_age_hours = self.data_manager.get_cache_age() / 3600
+                logger.debug(f"Cache file age: {cache_age_hours:.1f} hours")
+                
+                # If cache is more than 24 hours old on a weekday, log a warning
+                if cache_age_hours > 24 and now.weekday() < 5:
+                    logger.warning(f"Cache file is {cache_age_hours:.1f} hours old on a weekday - may indicate missed updates")
+        except Exception as e:
+            logger.error(f"Error checking cache file status: {e}")
+
         if not should_check:
-            logger.debug(f"Skipping updatecheck - outside scheduled hours (current hour: {now.hour})")
+            logger.debug(f"Skipping updatecheck - outside scheduled hours (weekday: {now.weekday()}, hour: {now.hour})")
         else:
-            logger.info(f"Update check scheduled for current hour ({now.hour:02d}:00)")
+            logger.info(f"Update check scheduled for current time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
         return should_check
 
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -803,6 +1059,114 @@ class MintosBot:
         except Exception as e:
             logger.error(f"Error in refresh command: {e}")
             await self.send_message(chat_id, "⚠️ Error checking for updates")
+            
+    async def campaigns_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /campaigns command to show active Mintos campaigns"""
+        if not update.effective_chat:
+            return
+
+        chat_id = update.effective_chat.id
+        try:
+            # Try to delete the command message, continue if not possible
+            try:
+                if update.message:
+                    await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+                
+            logger.info(f"Processing /campaigns command for chat_id: {chat_id}")
+            
+            # Check if campaigns cache exists and age
+            cache_age = self.data_manager.get_campaigns_cache_age()
+            cache_age_minutes = int(cache_age / 60) if not math.isinf(cache_age) else float('inf')
+            
+            # If cache is older than 6 hours (360 minutes) or doesn't exist, do a fresh check
+            if cache_age_minutes > 360:
+                logger.info(f"Campaigns cache is old ({cache_age_minutes} minutes), doing a fresh campaigns check")
+                await self.send_message(chat_id, "🔄 Fetching latest campaigns...")
+                
+                try:
+                    # Fetch new campaigns directly
+                    new_campaigns = self.mintos_client.get_campaigns()
+                    if not new_campaigns:
+                        await self.send_message(chat_id, "⚠️ No campaigns available right now.")
+                        return
+                    
+                    # Save for future use
+                    self.data_manager.save_campaigns(new_campaigns)
+                    logger.info(f"Fetched and saved {len(new_campaigns)} campaigns")
+                except Exception as e:
+                    logger.error(f"Error fetching campaigns: {e}")
+                    await self.send_message(chat_id, "⚠️ Error fetching campaigns. Please try again later.")
+                    return
+            else:
+                # Load from cache
+                new_campaigns = self.data_manager.load_previous_campaigns()
+                logger.info(f"Using cached campaigns data ({cache_age_minutes} minutes old)")
+            
+            if not new_campaigns:
+                await self.send_message(chat_id, "No campaigns found. Try again later.")
+                return
+            
+            # Display header with count of campaigns
+            active_campaigns = []
+            for campaign in new_campaigns:
+                if self._is_campaign_active(campaign):
+                    active_campaigns.append(campaign)
+            
+            if not active_campaigns:
+                await self.send_message(chat_id, "No active campaigns found at this time.")
+                return
+                
+            # Sort campaigns by order field (if available) or by validity date
+            sorted_campaigns = sorted(
+                active_campaigns, 
+                key=lambda c: (c.get('order', 999), c.get('validTo', '9999-12-31'))
+            )
+            
+            await self.send_message(
+                chat_id, 
+                f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(sorted_campaigns)} active campaigns:"
+            )
+            
+            # Send each campaign with a small delay between messages
+            for i, campaign in enumerate(sorted_campaigns, 1):
+                try:
+                    message = self.format_campaign_message(campaign)
+                    await self.send_message(chat_id, message)
+                    logger.debug(f"Successfully sent campaign {i}/{len(sorted_campaigns)} to {chat_id}")
+                    await asyncio.sleep(1)  # Small delay between messages
+                except Exception as e:
+                    logger.error(f"Error sending campaign {i}/{len(sorted_campaigns)}: {e}", exc_info=True)
+                    continue
+                    
+        except Exception as e:
+            error_msg = f"Error in campaigns_command: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            if chat_id:
+                await self.send_message(chat_id, "⚠️ Error getting campaigns. Please try again.")
+            
+    def _is_campaign_active(self, campaign: Dict[str, Any]) -> bool:
+        """Check if a campaign is currently active based on its validity dates"""
+        try:
+            # Use UTC time for comparison
+            now = datetime.now().replace(tzinfo=timezone.utc)
+            
+            valid_from = campaign.get('validFrom')
+            valid_to = campaign.get('validTo')
+            
+            if not valid_from or not valid_to:
+                return False
+                
+            # Parse dates (format example: "2025-01-31T22:00:00.000000Z")
+            from_date = datetime.fromisoformat(valid_from.replace('Z', '+00:00'))
+            to_date = datetime.fromisoformat(valid_to.replace('Z', '+00:00'))
+            
+            return from_date <= now <= to_date
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error parsing campaign dates: {e}")
+            # If we can't parse dates, consider the campaign active by default
+            return True
 
     async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Trigger an update check for today's updates"""

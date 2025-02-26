@@ -13,9 +13,11 @@ REQUEST_TIMEOUT = 30  # seconds
 # Data Storage
 DATA_DIR = "data"
 UPDATES_FILE = os.path.join(DATA_DIR, "recovery_updates.json")
+CAMPAIGNS_FILE = os.path.join(DATA_DIR, "campaigns.json")
 
 # API Configuration
 MINTOS_API_BASE = "https://www.mintos.com/webapp/api/marketplace-api/v1"
+MINTOS_CAMPAIGNS_URL = "https://www.mintos.com/webapp/api/en/webapp-api/user/campaigns"
 REQUEST_DELAY = 0.1  # seconds between requests
 
 # Logging Configuration
