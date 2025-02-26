@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import hashlib
 import pandas as pd
 from .logger import setup_logger
 from .config import DATA_DIR, UPDATES_FILE
@@ -48,30 +49,70 @@ class DataManager:
 
     def _create_update_id(self, update):
         """Create a unique identifier for an update"""
-        return f"{update.get('lender_id')}_{update.get('date')}_{hash(update.get('description', ''))}"
+        # Use MD5 hash for consistent results across program runs
+        lender_id = str(update.get('lender_id', ''))
+        date = str(update.get('date', ''))
+        year = str(update.get('year', ''))
+        description = str(update.get('description', ''))
+        
+        # Create a consistent string to hash
+        hash_content = f"{lender_id}_{date}_{year}_{description}"
+        # Generate a stable, unique hash
+        return hashlib.md5(hash_content.encode()).hexdigest()
 
     def _load_sent_updates(self):
-        """Load set of already sent update IDs"""
+        """Load set of already sent update IDs with verification and backup handling"""
         self.sent_updates_file = os.path.join(DATA_DIR, 'sent_updates.json')
+        self.backup_sent_updates_file = os.path.join(DATA_DIR, 'sent_updates.json.bak')
+        
         try:
+            # First try to load from the main file
             if os.path.exists(self.sent_updates_file):
                 with open(self.sent_updates_file, 'r') as f:
-                    self.sent_updates = set(json.load(f))
+                    data = json.load(f)
+                    self.sent_updates = set(data)
+                logger.info(f"Loaded {len(self.sent_updates)} sent update IDs from main file")
+                
+                # Create backup if it doesn't exist
+                if not os.path.exists(self.backup_sent_updates_file):
+                    with open(self.backup_sent_updates_file, 'w') as f:
+                        json.dump(list(self.sent_updates), f)
+                    logger.info(f"Created backup of sent updates with {len(self.sent_updates)} IDs")
+                    
+            # If main file doesn't exist, try to load from backup
+            elif os.path.exists(self.backup_sent_updates_file):
+                logger.warning("Main sent updates file not found, loading from backup")
+                with open(self.backup_sent_updates_file, 'r') as f:
+                    data = json.load(f)
+                    self.sent_updates = set(data)
+                logger.info(f"Loaded {len(self.sent_updates)} sent update IDs from backup file")
+                
+                # Recreate the main file
+                with open(self.sent_updates_file, 'w') as f:
+                    json.dump(list(self.sent_updates), f)
+                logger.info("Recreated main sent updates file from backup")
             else:
+                logger.info("No sent updates files found, starting with empty set")
                 self.sent_updates = set()
-            logger.info(f"Loaded {len(self.sent_updates)} sent update IDs")
         except Exception as e:
             logger.error(f"Error loading sent updates: {e}", exc_info=True)
             self.sent_updates = set()
 
     def save_sent_update(self, update):
-        """Mark an update as sent"""
+        """Mark an update as sent with backup"""
         try:
             update_id = self._create_update_id(update)
             self.sent_updates.add(update_id)
+            
+            # Save to main file
             with open(self.sent_updates_file, 'w') as f:
                 json.dump(list(self.sent_updates), f)
-            logger.debug(f"Saved sent update ID: {update_id}")
+                
+            # Also save to backup file
+            with open(self.backup_sent_updates_file, 'w') as f:
+                json.dump(list(self.sent_updates), f)
+                
+            logger.info(f"Saved sent update ID: {update_id} (total: {len(self.sent_updates)})")
         except Exception as e:
             logger.error(f"Error saving sent update: {e}", exc_info=True)
 
