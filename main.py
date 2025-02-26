@@ -121,114 +121,29 @@ class DashboardManager:
         )
 
     def _apply_custom_css(self) -> None:
-        """Apply custom CSS styling"""
+        """Apply minimal CSS for formatting"""
         st.markdown("""
             <style>
-            /* Force light mode for better readability */
-            html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
-                background-color: white !important;
-                color: #111 !important;
-            }
-            
-            .stTabs [data-baseweb="tab-list"] {
-                background-color: white !important;
-            }
-            
-            .stTabs [data-baseweb="tab"] {
-                color: #333 !important;
-            }
-            
-            /* Company header styling */
             .company-header {
-                color: #1E88E5 !important;
-                padding: 12px 0;
-                font-weight: bold;
                 font-size: 24px;
-                border-bottom: 2px solid #E0E0E0;
-                margin-bottom: 15px;
+                font-weight: bold;
+                margin: 10px 0;
             }
-            
-            /* Date formatting */
             .update-date {
-                color: #333333 !important;
                 font-size: 0.9em;
-                font-weight: 600;
-                margin: 10px 0;
             }
-            
-            /* Description card */
             .update-description {
-                background-color: #f7f9fc !important;
-                padding: 20px;
-                border-radius: 8px;
-                margin: 15px 0;
-                border-left: 4px solid #1E88E5;
-                color: #111111 !important;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-                font-size: 16px;
-                line-height: 1.6;
-            }
-            
-            /* Override for all text to ensure visibility */
-            .stMarkdown, .stMarkdown p, .stMarkdown div, .stMarkdown span,
-            p, h1, h2, h3, h4, h5, h6, li, span, div {
-                color: #111111 !important;
-            }
-            
-            /* Expander styling */
-            .streamlit-expanderHeader {
-                background-color: #f0f7ff !important;
-                color: #0b5394 !important;
-                border-radius: 6px;
-                padding: 10px 15px;
-                font-weight: 600;
-                border: 1px solid #e1ecf7;
-                margin: 10px 0;
-            }
-            
-            /* Metrics */
-            .stMetric label {
-                color: #333 !important;
-                font-weight: 600;
-            }
-            
-            .stMetric > div {
-                color: #111 !important;
-            }
-            
-            /* Info boxes */
-            .stAlert > div {
-                background-color: #e1f5fe !important;
-                color: #01579b !important;
-                border-color: #b3e5fc !important;
-            }
-            
-            /* Sidebar */
-            .stSidebar .stMarkdown h1 {
-                color: #0b5394 !important;
-                font-size: 20px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            
-            /* Select box */
-            .stSelectbox > div > div {
-                background-color: white !important;
-                color: #333 !important;
-                border: 1px solid #ddd !important;
+                padding: 10px;
+                border-radius: 5px;
+                margin: 5px 0;
             }
             </style>
         """, unsafe_allow_html=True)
 
     def _render_header(self) -> None:
         """Render dashboard header"""
-        st.markdown("""
-        <div style="background-color: #f0f7ff; padding: 20px; border-radius: 10px; 
-                   border-left: 5px solid #1E88E5; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <h1 style="color: #0b5394; margin: 0; padding: 0; font-size: 32px;">🏦 Mintos Updates Dashboard</h1>
-            <p style="color: #333; font-size: 18px; margin-top: 10px;">Real-time monitoring of lending company updates from Mintos</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.title("🏦 Mintos Updates Dashboard")
+        st.markdown("Real-time monitoring of lending company updates from Mintos")
 
     def _render_no_updates_message(self) -> None:
         """Render message when no updates are available"""
@@ -237,12 +152,7 @@ class DashboardManager:
 
     def _render_company_filter(self) -> str:
         """Render company filter sidebar"""
-        st.sidebar.markdown("""
-        <div style="background-color: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h2 style="color: #0b5394; margin: 0 0 10px 0; font-size: 22px;">⚙️ Filter Options</h2>
-            <p style="color: #333; font-size: 14px;">Select a specific company to view detailed updates</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.sidebar.title("Filter Options")
         
         companies = ["All Companies"] + sorted(
             set(update.company_name for update in self.updates)
