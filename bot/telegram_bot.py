@@ -635,7 +635,8 @@ class MintosBot:
             message += f"\n📝 Details:\n{description}\n"
 
         if 'lender_id' in update:
-            message += f"\n🔗 <a href='https://www.mintos.com/en/loan-companies/{update['lender_id']}'>View on Mintos</a>"
+            # Link directly to campaigns page
+            message += f"\n🔗 <a href='https://www.mintos.com/en/campaigns/'>View on Mintos</a>"
 
         return message.strip()
         
@@ -767,8 +768,8 @@ class MintosBot:
         if campaign.get('termsConditionsLink'):
             message += f"\n📄 <a href='{campaign.get('termsConditionsLink')}'>Terms & Conditions</a>"
             
-        # Add link to Mintos website
-        message += "\n\n🔗 <a href='https://www.mintos.com/en/'>View on Mintos</a>"
+        # Add link to Mintos campaigns page
+        message += "\n\n🔗 <a href='https://www.mintos.com/en/campaigns/'>View on Mintos</a>"
         
         return message.strip()
 
