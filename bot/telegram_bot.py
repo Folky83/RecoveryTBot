@@ -705,12 +705,38 @@ class MintosBot:
                 .replace('&rsquo;', "'")
                 .replace('&euro;', '€')
                 .replace('&nbsp;', ' ')
+                # Handle common HTML tags
                 .replace('<br>', '\n')
                 .replace('<br/>', '\n')
                 .replace('<br />', '\n')
                 .replace('<p>', '')
                 .replace('</p>', '\n')
+                # Remove unsupported HTML tags that might cause Telegram errors
+                .replace('<ul>', '')
+                .replace('</ul>', '')
+                .replace('<li>', '• ')
+                .replace('</li>', '\n')
+                .replace('<strong>', '')
+                .replace('</strong>', '')
+                .replace('<b>', '')
+                .replace('</b>', '')
+                .replace('<i>', '')
+                .replace('</i>', '')
+                .replace('<em>', '')
+                .replace('</em>', '')
+                .replace('<u>', '')
+                .replace('</u>', '')
+                .replace('<div>', '')
+                .replace('</div>', '\n')
+                .replace('<span>', '')
+                .replace('</span>', '')
+                # Clean up excessive whitespace
                 .strip())
+            
+            # Remove multiple consecutive newlines and whitespace between sentences
+            import re
+            description = re.sub(r'\n{3,}', '\n\n', description)  # Replace 3+ newlines with 2
+            description = re.sub(r'\s{2,}', ' ', description)      # Replace multiple spaces with one
             message += f"\n📝 <b>Description:</b>\n{description}\n"
             
         # Terms & Conditions link
