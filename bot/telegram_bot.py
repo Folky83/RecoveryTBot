@@ -676,7 +676,36 @@ class MintosBot:
         
         # Bonus amount
         if campaign.get('bonusAmount'):
-            message += f"🎁 <b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
+            try:
+                # Handle European number formatting (period as thousands separator)
+                bonus_text = campaign.get('bonusAmount')
+                
+                # Try to convert to float and handle formatting properly
+                try:
+                    # If it's a number with thousands separator like "50.000"
+                    if '.' in bonus_text and not bonus_text.endswith('0'):
+                        # Check if it's likely a thousands separator (should end with 3 digits after period)
+                        parts = bonus_text.split('.')
+                        if len(parts) == 2 and len(parts[1]) == 3:
+                            # This is likely a thousands separator, replace with empty string
+                            bonus_value = float(bonus_text.replace('.', ''))
+                            message += f"🎁 <b>Bonus:</b> €{int(bonus_value)}\n"
+                        else:
+                            # Keep as is
+                            message += f"🎁 <b>Bonus:</b> €{bonus_text}\n"
+                    else:
+                        # Normal case - try to convert to float
+                        bonus_value = float(bonus_text)
+                        if bonus_value.is_integer():
+                            message += f"🎁 <b>Bonus:</b> €{int(bonus_value)}\n"
+                        else:
+                            message += f"🎁 <b>Bonus:</b> €{bonus_value:.2f}\n"
+                except (ValueError, TypeError):
+                    # If conversion fails, use original text
+                    message += f"🎁 <b>Bonus:</b> €{bonus_text}\n"
+            except Exception:
+                # Fallback to original value if any error occurs
+                message += f"🎁 <b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
             
         # Required investment
         if campaign.get('requiredPrincipalExposure'):
