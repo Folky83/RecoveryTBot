@@ -10,6 +10,10 @@ MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
 REQUEST_TIMEOUT = 30  # seconds
 
+# Cache Configuration
+CACHE_MAX_AGE_MINUTES = 360  # 6 hours - threshold to consider cache as old
+CACHE_REFRESH_THRESHOLD_MINUTES = 120  # 2 hours - threshold to show refresh button
+
 # Data Storage
 DATA_DIR = "data"
 UPDATES_FILE = os.path.join(DATA_DIR, "recovery_updates.json")
