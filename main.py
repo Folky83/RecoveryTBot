@@ -172,19 +172,42 @@ class DashboardManager:
                 with st.expander(f"📅 {item.year} - {item.status or 'No Status'}"):
                     st.markdown(f"<p class='update-date'>🕒 {item.date}</p>", 
                               unsafe_allow_html=True)
-                    st.markdown(f"<div class='update-description'>{item.description}</div>",
+                    
+                    # Clean HTML content in description
+                    clean_description = (item.description or "")
+                    clean_description = (clean_description
+                        .replace('\u003C', '<')
+                        .replace('\u003E', '>')
+                        .replace('&#39;', "'")
+                        .replace('&rsquo;', "'")
+                        .replace('&euro;', '€')
+                        .replace('&nbsp;', ' ')
+                        .replace('<br>', '\n')
+                        .replace('<br/>', '\n')
+                        .replace('<br />', '\n')
+                        .replace('<p>', '')
+                        .replace('</p>', '\n')
+                        .strip())
+                    
+                    st.markdown(f"<div class='update-description'>{clean_description}</div>",
                               unsafe_allow_html=True)
 
                     if item.recovered_amount or item.remaining_amount:
                         col1, col2 = st.columns(2)
                         with col1:
-                            if item.recovered_amount:
-                                st.metric("Recovered Amount", 
-                                        f"€{item.recovered_amount:,.2f}")
+                            if item.recovered_amount is not None:
+                                try:
+                                    st.metric("Recovered Amount", 
+                                            f"€{float(item.recovered_amount):,.2f}")
+                                except (ValueError, TypeError):
+                                    st.metric("Recovered Amount", "€0.00")
                         with col2:
-                            if item.remaining_amount:
-                                st.metric("Remaining Amount", 
-                                        f"€{item.remaining_amount:,.2f}")
+                            if item.remaining_amount is not None:
+                                try:
+                                    st.metric("Remaining Amount", 
+                                            f"€{float(item.remaining_amount):,.2f}")
+                                except (ValueError, TypeError):
+                                    st.metric("Remaining Amount", "€0.00")
 
                     if item.recovery_year_from and item.recovery_year_to:
                         st.info(f"Expected Recovery Timeline: "

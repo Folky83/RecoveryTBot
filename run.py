@@ -57,18 +57,25 @@ class ProcessManager:
     async def kill_port_process(self, port: int) -> None:
         """Kill any process using the specified port"""
         try:
-            for proc in psutil.process_iter(['pid', 'name']):
+            # Get all connections first
+            for conn in psutil.net_connections(kind='inet'):
                 try:
-                    proc_with_connections = Process(proc.pid)
-                    for conn in proc_with_connections.net_connections():
-                        if conn.laddr.port == port:
-                            self.logger.info(f"Killing process {proc.pid} using port {port}")
-                            proc.kill()
-                            await asyncio.sleep(PROCESS_KILL_WAIT)
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    continue
+                    if (hasattr(conn, 'laddr') and 
+                        isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
+                        conn.laddr[1] == port):
+                        pid = conn.pid
+                        if pid and psutil.pid_exists(pid):
+                            self.logger.info(f"Killing process {pid} using port {port}")
+                            try:
+                                proc = psutil.Process(pid)
+                                proc.kill()
+                                await asyncio.sleep(PROCESS_KILL_WAIT)
+                            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                                self.logger.warning(f"Could not kill process {pid}")
+                except (AttributeError, TypeError) as e:
+                    self.logger.debug(f"Skipping malformed connection: {e}")
         except Exception as e:
-            self.logger.error(f"Error killing port process: {e}")
+            self.logger.error(f"Error killing port process: {e}", exc_info=True)
 
     async def cleanup_processes(self) -> None:
         """Clean up all related processes"""
@@ -103,18 +110,21 @@ class ProcessManager:
                 raise RuntimeError("Streamlit process terminated unexpectedly")
 
             try:
-                for proc in psutil.process_iter(['pid', 'name']):
+                # Check all network connections
+                for conn in psutil.net_connections(kind='inet'):
                     try:
-                        proc_with_connections = Process(proc.pid)
-                        for conn in proc_with_connections.net_connections():
-                            if conn.laddr.port == STREAMLIT_PORT and conn.status == 'LISTEN':
-                                self.logger.info(f"Streamlit running on port {STREAMLIT_PORT}")
-                                await asyncio.sleep(2)  # Give it a moment to fully initialize
-                                return
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        continue
+                        # Check if this connection is our streamlit server
+                        if (hasattr(conn, 'laddr') and 
+                            isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
+                            conn.laddr[1] == STREAMLIT_PORT and 
+                            hasattr(conn, 'status') and conn.status == 'LISTEN'):
+                            self.logger.info(f"Streamlit running on port {STREAMLIT_PORT}")
+                            await asyncio.sleep(2)  # Give it a moment to fully initialize
+                            return
+                    except (AttributeError, TypeError) as e:
+                        self.logger.debug(f"Skipping malformed connection while checking Streamlit: {e}")
             except Exception as e:
-                self.logger.error(f"Error checking Streamlit status: {e}")
+                self.logger.error(f"Error checking Streamlit status: {e}", exc_info=True)
 
             await asyncio.sleep(1)
 

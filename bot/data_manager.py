@@ -20,15 +20,31 @@ class DataManager:
 
     def _load_company_names(self):
         try:
+            # Ensure attached_assets directory exists
+            if not os.path.exists('attached_assets'):
+                os.makedirs('attached_assets')
+                logger.info("Created attached_assets directory")
+                
             # Load company names from CSV in attached_assets directory
-            df = pd.read_csv('attached_assets/lo_names.csv')
-            self.company_names = df.set_index('id')['name'].to_dict()
-            logger.info(f"Loaded {len(self.company_names)} company names")
-            logger.debug(f"Company IDs loaded: {list(self.company_names.keys())}")
+            csv_path = 'attached_assets/lo_names.csv'
+            if os.path.exists(csv_path):
+                try:
+                    df = pd.read_csv(csv_path)
+                    self.company_names = df.set_index('id')['name'].to_dict()
+                    logger.info(f"Loaded {len(self.company_names)} company names")
+                    logger.debug(f"Company IDs loaded: {list(self.company_names.keys())}")
+                except pd.errors.EmptyDataError:
+                    logger.warning(f"CSV file {csv_path} is empty. Using empty company names dictionary")
+                    self.company_names = {}
+                except pd.errors.ParserError:
+                    logger.warning(f"Could not parse CSV file {csv_path}. Using empty company names dictionary")
+                    self.company_names = {}
+            else:
+                logger.warning(f"CSV file {csv_path} not found. Using empty company names dictionary")
+                self.company_names = {}
         except Exception as e:
             logger.error(f"Error loading company names: {e}", exc_info=True)
             self.company_names = {}
-            raise
 
     def _create_update_id(self, update):
         """Create a unique identifier for an update"""

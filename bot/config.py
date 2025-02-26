@@ -2,7 +2,7 @@ import os
 import json
 
 # Telegram Bot Configuration
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', 'YOUR_BOT_TOKEN')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')  # Remove default value to ensure proper error handling
 USERS_FILE = os.path.join('data', 'users.json')
 
 # Application Configuration
