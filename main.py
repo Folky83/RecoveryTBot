@@ -127,16 +127,39 @@ class DashboardManager:
             .company-header {
                 color: #1E88E5;
                 padding: 10px 0;
+                font-weight: bold;
             }
             .update-date {
-                color: #666;
+                color: #555555;
                 font-size: 0.9em;
+                font-weight: 500;
             }
             .update-description {
                 background-color: #f5f5f5;
-                padding: 10px;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 10px 0;
+                border-left: 4px solid #1E88E5;
+                color: #333333;
+            }
+            /* Fix for dark mode contrast issues */
+            .stApp {
+                color: #262730;
+            }
+            .stMarkdown, .stMarkdown p, .stMarkdown div {
+                color: #262730 !important;
+            }
+            /* Improve expander visibility */
+            .streamlit-expanderHeader {
+                background-color: #f0f2f6;
                 border-radius: 5px;
-                margin: 5px 0;
+                padding: 5px 10px;
+                font-weight: 500;
+                color: #262730 !important;
+            }
+            /* Ensure text is visible */
+            p, h1, h2, h3, h4, h5, h6, li, span, div {
+                color: #262730 !important;
             }
             </style>
         """, unsafe_allow_html=True)

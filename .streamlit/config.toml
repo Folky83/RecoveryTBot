@@ -5,3 +5,10 @@ enableCORS = false
 enableXsrfProtection = false
 baseUrlPath = ""
 headless = true
+
+[theme]
+primaryColor="#1E88E5"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#F0F2F6"
+textColor="#262730"
+font="sans serif"
