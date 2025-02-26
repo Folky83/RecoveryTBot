@@ -9,10 +9,7 @@ from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, Retry
 import math
 
 from .logger import setup_logger
-from .config import (
-    TELEGRAM_TOKEN, UPDATES_FILE, CAMPAIGNS_FILE,
-    CACHE_MAX_AGE_MINUTES, CACHE_REFRESH_THRESHOLD_MINUTES
-)
+from .config import TELEGRAM_TOKEN, UPDATES_FILE, CAMPAIGNS_FILE
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
@@ -69,71 +66,6 @@ class MintosBot:
             self.user_manager = UserManager()
             self._initialized = True
             logger.info("Bot instance created")
-            
-    def _is_cache_too_old(self, cache_age_seconds: float, threshold_minutes: int = CACHE_MAX_AGE_MINUTES) -> bool:
-        """Check if cache age exceeds the threshold in minutes"""
-        if math.isinf(cache_age_seconds):
-            return True
-        
-        cache_age_minutes = int(cache_age_seconds / 60)
-        return cache_age_minutes > threshold_minutes
-    
-    def _format_cache_age_message(self, cache_age_seconds: float) -> str:
-        """Format cache age into a human-readable message"""
-        if math.isinf(cache_age_seconds):
-            return "Cache age unknown"
-        
-        minutes_old = max(0, int(cache_age_seconds / 60))
-        hours_old = minutes_old // 60
-        remaining_minutes = minutes_old % 60
-        
-        if hours_old > 0:
-            return f"Cache last updated {hours_old}h {remaining_minutes}m ago"
-        else:
-            return f"Cache last updated {minutes_old} minutes ago"
-            
-    async def _fetch_campaigns(self, chat_id: Union[int, str] = None, force_refresh: bool = False) -> List[Dict[str, Any]]:
-        """Fetch campaigns with consistent caching logic
-        
-        Args:
-            chat_id: Optional chat ID to send status messages to
-            force_refresh: Force refresh regardless of cache age
-            
-        Returns:
-            List of campaign dictionaries
-        """
-        try:
-            cache_age = self.data_manager.get_campaigns_cache_age()
-            is_too_old = self._is_cache_too_old(cache_age)
-            
-            if force_refresh or is_too_old:
-                logger.info(f"Campaigns cache is old ({int(cache_age/60)} minutes) or forced refresh")
-                
-                if chat_id:
-                    await self.send_message(chat_id, "🔄 Fetching latest campaigns...")
-                
-                # Fetch new campaigns directly
-                new_campaigns = self.mintos_client.get_campaigns()
-                if not new_campaigns:
-                    logger.warning("Failed to fetch campaigns or no campaigns available")
-                    if chat_id:
-                        await self.send_message(chat_id, "⚠️ No campaigns available right now.")
-                    return []
-                
-                # Save for future use
-                self.data_manager.save_campaigns(new_campaigns)
-                logger.info(f"Fetched and saved {len(new_campaigns)} campaigns")
-                return new_campaigns
-            else:
-                # Load from cache
-                campaigns = self.data_manager.load_previous_campaigns()
-                logger.info(f"Using cached campaigns data ({int(cache_age/60)} minutes old)")
-                return campaigns
-        except Exception as e:
-            logger.error(f"Error fetching campaigns: {e}", exc_info=True)
-            if chat_id:
-                await self.send_message(chat_id, "⚠️ Error fetching campaigns. Please try again later.")
-            return []
 
     async def cleanup(self) -> None:
         """Cleanup bot resources and tasks"""
