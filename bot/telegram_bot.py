@@ -843,9 +843,10 @@ class MintosBot:
                 users = self.user_manager.get_all_users()
                 logger.info(f"Found {len(added_campaigns)} new campaigns to process for {len(users)} users")
                 
+                # Filter out Special Promotion (type 4) campaigns and unsent campaigns
                 unsent_campaigns = [
                     campaign for campaign in added_campaigns 
-                    if not self.data_manager.is_campaign_sent(campaign)
+                    if not self.data_manager.is_campaign_sent(campaign) and campaign.get('type') != 4
                 ]
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
                 
@@ -1111,7 +1112,8 @@ class MintosBot:
             # Display header with count of campaigns
             active_campaigns = []
             for campaign in new_campaigns:
-                if self._is_campaign_active(campaign):
+                # Filter out "Special Promotion" campaigns (type 4) and check if active
+                if self._is_campaign_active(campaign) and campaign.get('type') != 4:
                     active_campaigns.append(campaign)
             
             if not active_campaigns:
