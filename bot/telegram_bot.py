@@ -205,23 +205,69 @@ class MintosBot:
                 await self.initialize()
 
     async def scheduled_updates(self) -> None:
-        """Handle scheduled update checks"""
+        """Handle scheduled update checks with improved resilience"""
+        consecutive_errors = 0
+        max_consecutive_errors = 3
+        normal_sleep = 5 * 60  # Regular 5-minute check interval
+        error_sleep = 3 * 60   # Shorter 3-minute retry after errors
+        long_sleep = 55 * 60   # 55-minute wait after successful update
+        
         while True:
             try:
-                if await self.should_check_updates():
+                # Check the current time and stale cache situation
+                should_check = await self.should_check_updates()
+                
+                if should_check:
                     logger.info("Running scheduled update")
-                    await self._safe_update_check()
-                    # Try to resend any failed messages
-                    await self.retry_failed_messages()
-                    await asyncio.sleep(55 * 60)  # Wait 55 minutes
+                    try:
+                        await self._safe_update_check()
+                        # Reset error counter after successful update
+                        consecutive_errors = 0
+                        logger.info("Scheduled update completed successfully")
+                        
+                        # Try to resend any failed messages
+                        await self.retry_failed_messages()
+                        
+                        # Use longer sleep interval after successful update
+                        await asyncio.sleep(long_sleep)
+                        continue  # Skip the normal sleep at the end
+                    except Exception as e:
+                        consecutive_errors += 1
+                        logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
+                        
+                        # Implement exponential backoff for repeated errors
+                        if consecutive_errors >= max_consecutive_errors:
+                            logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
+                            await asyncio.sleep(error_sleep * consecutive_errors)
+                        else:
+                            await asyncio.sleep(error_sleep)
+                        continue  # Skip the normal sleep at the end
                 else:
-                    await asyncio.sleep(5 * 60)  # Check every 5 minutes
+                    # Check for stale cache during business hours
+                    try:
+                        cache_age_hours = self.data_manager.get_cache_age() / 3600
+                        now = datetime.now()
+                        # If more than 30 hours old on a weekday during business hours, force an update
+                        if (cache_age_hours > 30 and now.weekday() < 5 and 
+                            9 <= now.hour <= 18):  # Business hours (9 AM to 6 PM)
+                            logger.warning(f"Cache file is {cache_age_hours:.1f} hours old - forcing emergency update")
+                            await self._safe_update_check()
+                            consecutive_errors = 0
+                            await asyncio.sleep(long_sleep)
+                            continue
+                    except Exception as e:
+                        logger.error(f"Error checking cache age: {e}")
+                
+                # Normal sleep interval between checks
+                await asyncio.sleep(normal_sleep)
+                
             except asyncio.CancelledError:
                 logger.info("Scheduled updates cancelled")
                 break
             except Exception as e:
-                logger.error(f"Scheduled update error: {e}", exc_info=True)
-                await asyncio.sleep(60)
+                logger.error(f"Scheduled update loop error: {e}", exc_info=True)
+                # Use shorter sleep time when we encounter errors
+                await asyncio.sleep(error_sleep)
 
     async def _safe_update_check(self) -> None:
         """Safely perform update check with error handling"""
@@ -1075,20 +1121,30 @@ class MintosBot:
         
         # Schedule updates for working days (Monday = 0, Sunday = 6)
         # at specific hours (15:00, 16:00, 1700 UTC)
-        should_check = (
+        is_scheduled_time = (
             now.weekday() < 5 and  # Monday to Friday
             now.hour in [15, 16, 17]  # 3 PM, 4 PM, 5 PM UTC
         )
-
-        # Check for any update file operations issue
+        
+        # By default, check based on schedule
+        should_check = is_scheduled_time
+        
+        # Add a recovery mechanism for missed updates
         try:
+            # Check for stale cache on weekdays
             if os.path.exists(UPDATES_FILE):
                 cache_age_hours = self.data_manager.get_cache_age() / 3600
                 logger.debug(f"Cache file age: {cache_age_hours:.1f} hours")
                 
-                # If cache is more than 24 hours old on a weekday, log a warning
+                # If cache is more than 24 hours old on a weekday, log a warning and trigger an update
                 if cache_age_hours > 24 and now.weekday() < 5:
                     logger.warning(f"Cache file is {cache_age_hours:.1f} hours old on a weekday - may indicate missed updates")
+                    
+                    # Force an update during business hours even if outside scheduled update times
+                    # This helps recover from missed updates
+                    if 9 <= now.hour <= 18:  # Business hours (9 AM to 6 PM)
+                        logger.info("Forcing update check due to stale cache during business hours")
+                        should_check = True
         except Exception as e:
             logger.error(f"Error checking cache file status: {e}")
 
