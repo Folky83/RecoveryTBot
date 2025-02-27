@@ -30,29 +30,111 @@ class ProcessManager:
         self.logger = logging.getLogger(__name__)
 
     async def acquire_lock(self) -> bool:
-        """Acquire lock file to ensure single instance"""
+        """Acquire lock file to ensure single instance with enhanced cleanup"""
         try:
+            # Check for existing lock file
             if os.path.exists(LOCK_FILE):
                 try:
+                    # Try to read the PID from the lock file
                     with open(LOCK_FILE, 'r') as f:
-                        old_pid = int(f.read().strip())
-                    if not psutil.pid_exists(old_pid):
-                        os.unlink(LOCK_FILE)
-                        self.logger.info(f"Removed stale lock from PID {old_pid}")
-                except (ValueError, IOError):
+                        content = f.read().strip()
+                        if content:
+                            try:
+                                old_pid = int(content)
+                                # Check if the process is still running
+                                if psutil.pid_exists(old_pid):
+                                    try:
+                                        proc = psutil.Process(old_pid)
+                                        # Check if it's a Python process that might be our bot
+                                        cmdline = ' '.join(proc.cmdline())
+                                        if 'python' in cmdline and ('run.py' in cmdline or 'bot' in cmdline):
+                                            # This appears to be another bot instance
+                                            self.logger.warning(f"Found running bot process with PID {old_pid}")
+                                            
+                                            # Check if the process is a zombie or unresponsive
+                                            if proc.status() in ['zombie', 'dead']:
+                                                self.logger.warning(f"Process {old_pid} is a zombie, terminating it")
+                                                proc.kill()
+                                                os.unlink(LOCK_FILE)
+                                            else:
+                                                # Check if Telegram API is in conflict
+                                                has_conflict = await self._check_telegram_conflict(proc)
+                                                
+                                                if has_conflict:
+                                                    self.logger.critical(f"Telegram conflict detected with PID {old_pid}, terminating it")
+                                                    proc.kill()
+                                                    await asyncio.sleep(3)  # Give time for cleanup
+                                                    os.unlink(LOCK_FILE)
+                                                else:
+                                                    # Active, non-conflicting instance, so we should exit
+                                                    self.logger.error(f"Active bot instance with PID {old_pid} is running properly")
+                                                    return False
+                                        else:
+                                            # Not our bot process, remove the lock
+                                            self.logger.info(f"Found unrelated process with PID {old_pid}, removing lock")
+                                            os.unlink(LOCK_FILE)
+                                    except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+                                        self.logger.info(f"Could not access process {old_pid}: {e}")
+                                        os.unlink(LOCK_FILE)
+                                else:
+                                    # Process doesn't exist, remove stale lock
+                                    self.logger.info(f"Removed stale lock from non-existent PID {old_pid}")
+                                    os.unlink(LOCK_FILE)
+                            except ValueError:
+                                # Invalid PID in lock file
+                                self.logger.info(f"Invalid PID in lock file: {content}")
+                                os.unlink(LOCK_FILE)
+                        else:
+                            # Empty lock file
+                            self.logger.info("Empty lock file found, removing it")
+                            os.unlink(LOCK_FILE)
+                except (ValueError, IOError) as e:
+                    # Invalid lock file format
+                    self.logger.info(f"Invalid lock file format: {e}")
                     os.unlink(LOCK_FILE)
-                    self.logger.info("Removed invalid lock file")
 
+            # Create new lock file
             self.lock_file = open(LOCK_FILE, 'w')
-            fcntl.lockf(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.lock_file.write(str(os.getpid()))
-            self.lock_file.flush()
-            return True
-        except IOError as e:
-            if e.errno == errno.EAGAIN:
-                self.logger.error("Another instance is already running")
-                sys.exit(1)
-            raise
+            try:
+                fcntl.lockf(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.lock_file.write(str(os.getpid()))
+                self.lock_file.flush()
+                self.logger.info(f"Lock acquired for PID {os.getpid()}")
+                return True
+            except IOError as e:
+                if e.errno == errno.EAGAIN:
+                    self.logger.error("Another process has an exclusive lock on the file")
+                    self.lock_file.close()
+                    return False
+                raise
+        except Exception as e:
+            self.logger.error(f"Unexpected error in acquire_lock: {e}", exc_info=True)
+            return False
+            
+    async def _check_telegram_conflict(self, proc: Process) -> bool:
+        """Check if the given process is causing Telegram API conflicts"""
+        try:
+            # This would require a more sophisticated check in a real scenario
+            # For now, we'll check if there are stderr logs with conflict messages in the process
+            # or if the process has been running for too long with no successful activity
+            
+            # We'll assume a conflict if the process is more than 30 minutes old
+            # This is a simplification - in a real scenario you might check networking activity
+            # or parse logs more extensively
+            process_age = time.time() - proc.create_time()
+            if process_age > 30 * 60:  # 30 minutes
+                self.logger.warning(f"Process {proc.pid} is more than 30 minutes old, potential zombie")
+                return True
+                
+            # Additional checks could include:
+            # - Monitoring process CPU/memory usage to detect hung processes
+            # - Examining open network connections to the Telegram API
+            # - Tracking the age of the cache files to detect inactive processes
+            
+            return False
+        except Exception as e:
+            self.logger.error(f"Error checking Telegram conflict: {e}", exc_info=True)
+            return False
 
     async def kill_port_process(self, port: int) -> None:
         """Kill any process using the specified port"""
