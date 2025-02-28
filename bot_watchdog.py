@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Watchdog script to ensure the Telegram bot stays running.
-Checks if the bot process is active and restarts it if necessary.
-"""
 import os
 import sys
 import time
@@ -64,7 +59,7 @@ def is_bot_running():
         for proc in psutil.process_iter(['pid', 'cmdline']):
             try:
                 cmdline = proc.cmdline()
-                if cmdline and BOT_SCRIPT in ' '.join(cmdline) and 'watchdog.py' not in ' '.join(cmdline):
+                if cmdline and BOT_SCRIPT in ' '.join(cmdline) and 'bot_watchdog.py' not in ' '.join(cmdline):
                     logger.debug(f"Found bot process: PID {proc.pid}")
                     return True
             except (psutil.NoSuchProcess, psutil.AccessDenied):
