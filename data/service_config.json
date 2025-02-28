@@ -1,0 +1,7 @@
+{
+  "service_name": "mintos_telegram_bot",
+  "auto_start": true,
+  "last_start": "2025-02-28T20:09:33.307469",
+  "restart_count": 0,
+  "enabled": true
+}

@@ -189,22 +189,38 @@ async def managed_bot():
             
             # Verify token is available with multiple retries
             token = None
-            for token_attempt in range(3):
+            for token_attempt in range(5):  # Increased retries
                 token = os.getenv('TELEGRAM_BOT_TOKEN')
-                if token:
-                    logger.info(f"Token found on attempt {token_attempt+1}")
+                if token and len(token) > 20:  # Basic validation that token looks reasonable
+                    logger.info(f"Valid token found on attempt {token_attempt+1}")
+                    # Print first few characters for debugging
+                    logger.info(f"Token starts with: {token[:5]}...")
                     break
                     
-                logger.warning(f"TELEGRAM_BOT_TOKEN not found (attempt {token_attempt+1}/3), waiting 10 seconds...")
+                logger.warning(f"TELEGRAM_BOT_TOKEN not found or invalid (attempt {token_attempt+1}/5), waiting 10 seconds...")
                 await asyncio.sleep(10)  # Longer wait for deployment environment variables
+                
+                # Try to read token directly from secrets for Replit deployment
+                if 'REPL_SLUG' in os.environ and token_attempt >= 2:
+                    try:
+                        with open('/home/runner/mintosbot/.env', 'r') as f:
+                            for line in f:
+                                if 'TELEGRAM_BOT_TOKEN' in line:
+                                    parts = line.strip().split('=', 1)
+                                    if len(parts) == 2:
+                                        token = parts[1].strip()
+                                        logger.info("Found token in .env file")
+                                        break
+                    except Exception as e:
+                        logger.warning(f"Failed to read .env file: {e}")
             
-            if not token:
+            if not token or len(token) < 20:
                 # In deployment, we want to continue anyway as the variable might become available later
-                logger.error("TELEGRAM_BOT_TOKEN environment variable is not set after retries")
+                logger.error("TELEGRAM_BOT_TOKEN environment variable is not set or invalid after retries")
                 if 'REPL_SLUG' in os.environ:  # Check if we're in Replit deployment
-                    logger.warning("Running in deployment environment - continuing despite missing token")
+                    logger.warning("Running in deployment environment - continuing despite missing/invalid token")
                 else:
-                    raise ValueError("Bot token is missing after retry")
+                    raise ValueError("Bot token is missing or invalid after retry")
             
             logger.info("Creating bot instance...")
             bot = MintosBot()
@@ -300,37 +316,76 @@ async def main():
     logger = logging.getLogger(__name__)
 
     process_manager = ProcessManager()
-    try:
-        # Acquire lock and clean up existing processes
-        await process_manager.acquire_lock()
-        logger.info(f"Lock acquired for PID {os.getpid()}")
-        await process_manager.cleanup()
+    max_restarts = 3
+    restart_count = 0
+    
+    while restart_count < max_restarts:
+        try:
+            # Acquire lock and clean up existing processes
+            await process_manager.acquire_lock()
+            logger.info(f"Lock acquired for PID {os.getpid()}")
+            await process_manager.cleanup()
 
-        # Start Streamlit
-        logger.info("Starting Streamlit process...")
-        process_manager.streamlit_process = subprocess.Popen([
-            sys.executable, "-m", "streamlit", "run",
-            "main.py", "--server.address", "0.0.0.0",
-            "--server.port", str(STREAMLIT_PORT)
-        ])
+            # Start Streamlit
+            logger.info("Starting Streamlit process...")
+            process_manager.streamlit_process = subprocess.Popen([
+                sys.executable, "-m", "streamlit", "run",
+                "main.py", "--server.address", "0.0.0.0",
+                "--server.port", str(STREAMLIT_PORT)
+            ])
 
-        # Wait for Streamlit and start bot
-        await process_manager.wait_for_streamlit()
-        logger.info("Streamlit started successfully")
+            # Wait for Streamlit and start bot
+            await process_manager.wait_for_streamlit()
+            logger.info("Streamlit started successfully")
 
-        async with managed_bot() as bot:
-            logger.info("Initializing Telegram bot...")
+            # Verify environment is properly set
+            token = os.getenv('TELEGRAM_BOT_TOKEN')
+            logger.info(f"Current token status: {'Set and valid' if token and len(token) > 20 else 'Missing or invalid'}")
+            
+            if 'REPL_SLUG' in os.environ:
+                logger.info(f"Running in Replit deployment environment: {os.environ.get('REPL_SLUG')}")
+
+            async with managed_bot() as bot:
+                logger.info("Initializing Telegram bot...")
+                try:
+                    # Add explicit check that bot can connect to Telegram before running
+                    if hasattr(bot, 'application') and bot.application and hasattr(bot.application, 'bot'):
+                        try:
+                            logger.info("Verifying Telegram connection...")
+                            me = await bot.application.bot.get_me()
+                            logger.info(f"Connected to Telegram as @{me.username}")
+                        except Exception as conn_error:
+                            logger.error(f"Failed to connect to Telegram: {conn_error}")
+                            raise
+                    
+                    # Start the bot and wait for it indefinitely
+                    bot_task = asyncio.create_task(bot.run())
+                    logger.info("Bot task created, waiting for completion...")
+                    await bot_task
+                except asyncio.CancelledError:
+                    logger.info("Bot task was cancelled")
+                    raise
+                except Exception as e:
+                    logger.error(f"Bot error: {str(e)}")
+                    raise
+                
+        except Exception as e:
+            logger.error(f"Main loop error: {str(e)}")
+            restart_count += 1
+            
+            if restart_count < max_restarts:
+                wait_time = 30 * restart_count  # Increasing backoff
+                logger.info(f"Restarting in {wait_time} seconds (attempt {restart_count}/{max_restarts})...")
+                await asyncio.sleep(wait_time)
+            else:
+                logger.critical("Maximum restarts exceeded, exiting...")
+                break
+        finally:
+            # Clean up current processes before restart or exit
             try:
-                # Start the bot and wait for it indefinitely
-                bot_task = asyncio.create_task(bot.run())
-                logger.info("Bot task created, waiting for completion...")
-                await bot_task
-            except asyncio.CancelledError:
-                logger.info("Bot task was cancelled")
-                raise
-            except Exception as e:
-                logger.error(f"Bot error: {str(e)}")
-                raise
+                await process_manager.cleanup()
+            except Exception as cleanup_error:
+                logger.error(f"Error during cleanup: {cleanup_error}")
 
     except Exception as e:
         logger.error(f"Application error: {str(e)}")
