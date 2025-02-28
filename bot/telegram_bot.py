@@ -1,7 +1,6 @@
 from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
-import sys
 import time
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -113,62 +112,31 @@ class MintosBot:
         async with self._lock:
             try:
                 logger.info("Starting bot initialization...")
-                
-                # Force a more thorough cleanup
                 await self.cleanup()
-                await asyncio.sleep(3)  # Increased wait time for cleanup
-                
-                # Check token twice with delay to handle deployment issues
-                if not TELEGRAM_TOKEN:
-                    logger.error("TELEGRAM_BOT_TOKEN not set, waiting 5 seconds and retrying...")
-                    await asyncio.sleep(5)
-                    if not TELEGRAM_TOKEN:
-                        logger.error("TELEGRAM_BOT_TOKEN still not set after retry")
-                        return False
-                    logger.info("TELEGRAM_BOT_TOKEN found after delay")
+                await asyncio.sleep(2)  # Wait for cleanup to complete
 
-                # Build application with more connection timeout
-                logger.info("Creating application instance with increased timeouts...")
+                if not TELEGRAM_TOKEN:
+                    logger.error("TELEGRAM_BOT_TOKEN not set")
+                    return False
+
+                logger.info("Creating application instance...")
                 self.application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-                # Verify bot connection with retry
-                max_retries = 3
-                retry_delay = 5
-                
-                for retry in range(max_retries):
-                    try:
-                        logger.info(f"Verifying bot connection (attempt {retry+1}/{max_retries})...")
-                        bot_info = await self.application.bot.get_me()
-                        logger.info(f"Connected as bot: {bot_info.username}")
-                        break
-                    except Exception as e:
-                        logger.error(f"Failed to connect to Telegram (attempt {retry+1}): {e}")
-                        if retry < max_retries - 1:
-                            logger.info(f"Retrying in {retry_delay} seconds...")
-                            await asyncio.sleep(retry_delay)
-                        else:
-                            return False
-
-                logger.info("Preparing for polling mode...")
+                # Verify bot connection
                 try:
-                    # Clear any webhook configuration with retry
-                    for retry in range(max_retries):
-                        try:
-                            await self.application.bot.delete_webhook(drop_pending_updates=True)
-                            await self.application.bot.get_updates(offset=-1)
-                            break
-                        except Exception as e:
-                            logger.error(f"Error clearing webhook (attempt {retry+1}): {e}")
-                            if retry < max_retries - 1:
-                                await asyncio.sleep(retry_delay)
-                            else:
-                                raise
-                    
-                    logger.info("Successfully prepared for polling mode")
+                    bot_info = await self.application.bot.get_me()
+                    logger.info(f"Connected as bot: {bot_info.username}")
                 except Exception as e:
-                    logger.error(f"Polling mode setup failed: {e}")
-                    # Continue anyway with a warning in deployment
-                    logger.warning("Continuing despite polling setup issues")
+                    logger.error(f"Failed to connect to Telegram: {e}")
+                    return False
+
+                logger.info("Setting up webhook...")
+                try:
+                    await self.application.bot.delete_webhook(drop_pending_updates=True)
+                    await self.application.bot.get_updates(offset=-1)
+                except Exception as e:
+                    logger.error(f"Webhook setup failed: {e}")
+                    return False
 
                 logger.info("Registering command handlers...")
                 self._register_handlers()
@@ -177,21 +145,14 @@ class MintosBot:
                 for handler in self.application.handlers[0]:
                     logger.debug(f"- {handler.__class__.__name__}")
 
-                # Initialize the application with retry
-                for retry in range(max_retries):
-                    try:
-                        logger.info(f"Initializing application (attempt {retry+1}/{max_retries})...")
-                        await self.application.initialize()
-                        await self.application.start()
-                        logger.info("Application started successfully")
-                        break
-                    except Exception as e:
-                        logger.error(f"Application startup failed (attempt {retry+1}): {e}")
-                        if retry < max_retries - 1:
-                            logger.info(f"Retrying in {retry_delay} seconds...")
-                            await asyncio.sleep(retry_delay)
-                        else:
-                            return False
+                # Initialize the application
+                try:
+                    await self.application.initialize()
+                    await self.application.start()
+                    logger.info("Application started successfully")
+                except Exception as e:
+                    logger.error(f"Application startup failed: {e}")
+                    return False
 
                 self._initialized = True
                 logger.info("Bot initialization completed successfully")
@@ -244,96 +205,58 @@ class MintosBot:
                 await self.initialize()
 
     async def scheduled_updates(self) -> None:
-        """Handle scheduled update checks with improved resilience for deployment"""
+        """Handle scheduled update checks with improved resilience"""
         consecutive_errors = 0
-        max_consecutive_errors = 5  # Increased for deployment
+        max_consecutive_errors = 3
         normal_sleep = 5 * 60  # Regular 5-minute check interval
         error_sleep = 3 * 60   # Shorter 3-minute retry after errors
-        long_sleep = 40 * 60   # Reduced to 40-minute wait after successful update (avoid too long wait in deployment)
-        last_successful_update = 0
-        
-        # Log service startup
-        logger.info("Scheduled updates service started")
+        long_sleep = 55 * 60   # 55-minute wait after successful update
         
         while True:
             try:
-                current_time = time.time()
-                
-                # Force an update if it's been too long since last successful one (deployment safeguard)
-                force_update = False
-                if last_successful_update > 0 and current_time - last_successful_update > 3 * 60 * 60:  # 3 hours
-                    logger.warning(f"It's been {(current_time - last_successful_update)/3600:.1f} hours since last successful update - forcing update")
-                    force_update = True
-                
                 # Check the current time and stale cache situation
-                should_check = await self.should_check_updates() or force_update
+                should_check = await self.should_check_updates()
                 
                 if should_check:
                     logger.info("Running scheduled update")
-                    update_success = False
-                    
-                    # Try up to 3 times immediately if this is a scheduled update
-                    for attempt in range(3):
-                        try:
-                            await self._safe_update_check()
-                            # Reset error counter after successful update
-                            consecutive_errors = 0
-                            last_successful_update = time.time()
-                            update_success = True
-                            logger.info(f"Scheduled update completed successfully (attempt {attempt+1})")
-                            break  # Exit retry loop on success
-                        except Exception as e:
-                            logger.error(f"Update check failed (attempt {attempt+1}/3): {e}", exc_info=True)
-                            await asyncio.sleep(5)  # Short wait between immediate retries
-                    
-                    if update_success:
+                    try:
+                        await self._safe_update_check()
+                        # Reset error counter after successful update
+                        consecutive_errors = 0
+                        logger.info("Scheduled update completed successfully")
+                        
                         # Try to resend any failed messages
-                        try:
-                            await self.retry_failed_messages()
-                        except Exception as e:
-                            logger.error(f"Error retrying failed messages: {e}")
+                        await self.retry_failed_messages()
                         
                         # Use longer sleep interval after successful update
-                        logger.info(f"Sleeping for {long_sleep//60} minutes after successful update")
                         await asyncio.sleep(long_sleep)
                         continue  # Skip the normal sleep at the end
-                    else:
-                        # All immediate retries failed
+                    except Exception as e:
                         consecutive_errors += 1
-                        logger.error(f"All update attempts failed ({consecutive_errors}/{max_consecutive_errors})")
+                        logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
                         
                         # Implement exponential backoff for repeated errors
                         if consecutive_errors >= max_consecutive_errors:
-                            backoff_time = error_sleep * min(consecutive_errors, 10)  # Cap at 10x to avoid excessive waits
-                            logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for {backoff_time//60} minutes.")
-                            await asyncio.sleep(backoff_time)
+                            logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
+                            await asyncio.sleep(error_sleep * consecutive_errors)
                         else:
-                            logger.warning(f"Sleeping for {error_sleep//60} minutes after failed update")
                             await asyncio.sleep(error_sleep)
                         continue  # Skip the normal sleep at the end
                 else:
-                    # Not time for scheduled update - check for stale cache during business hours
+                    # Check for stale cache during business hours
                     try:
                         cache_age_hours = self.data_manager.get_cache_age() / 3600
                         now = datetime.now()
-                        
-                        # More aggressive cache checking in deployment (20 hours instead of 30)
-                        if (cache_age_hours > 20 and now.weekday() < 5):
+                        # If more than 30 hours old on a weekday during business hours, force an update
+                        if (cache_age_hours > 30 and now.weekday() < 5 and 
+                            9 <= now.hour <= 18):  # Business hours (9 AM to 6 PM)
                             logger.warning(f"Cache file is {cache_age_hours:.1f} hours old - forcing emergency update")
-                            try:
-                                await self._safe_update_check()
-                                consecutive_errors = 0
-                                last_successful_update = time.time()
-                                logger.info("Emergency update completed successfully")
-                                await asyncio.sleep(long_sleep)
-                                continue
-                            except Exception as e:
-                                logger.error(f"Emergency update failed: {e}", exc_info=True)
+                            await self._safe_update_check()
+                            consecutive_errors = 0
+                            await asyncio.sleep(long_sleep)
+                            continue
                     except Exception as e:
                         logger.error(f"Error checking cache age: {e}")
-                
-                # Log current status periodically
-                logger.debug(f"Bot health: last update {(time.time() - last_successful_update)/60:.1f} minutes ago, errors: {consecutive_errors}")
                 
                 # Normal sleep interval between checks
                 await asyncio.sleep(normal_sleep)
@@ -358,88 +281,46 @@ class MintosBot:
     async def run(self) -> None:
         """Run the bot with polling and scheduled updates"""
         logger.info("Starting Mintos Update Bot")
-        logger.info("Bot version: 1.2.2")  # Version bumped to reflect changes
-        logger.info(f"Python version: {sys.version}")
-        max_retries = 5  # Increased max retries for deployment
+        max_retries = 3
         retry_count = 0
-        last_error_time = 0
 
-        while True:  # Changed to infinite loop with smarter retry logic for deployment
+        while retry_count < max_retries:
             try:
                 # Ensure clean state
                 await self.cleanup()
-                await asyncio.sleep(3)  # Increased sleep time
+                await asyncio.sleep(2)
 
                 # Initialize bot
-                logger.info(f"Initializing bot (attempt {retry_count + 1})...")
                 if not await self.initialize():
                     logger.error("Bot initialization failed")
                     raise RuntimeError("Bot initialization failed")
 
-                # Start polling in background with improved error handling and longer timeouts
-                logger.info("Starting polling...")
+                # Start polling in background
                 self._polling_task = asyncio.create_task(
                     self.application.updater.start_polling(
                         drop_pending_updates=True,
-                        allowed_updates=["message", "callback_query"],
-                        read_timeout=45,        # Even longer read timeout
-                        write_timeout=45,       # Even longer write timeout
-                        connect_timeout=45,     # Even longer connect timeout
-                        bootstrap_retries=10,   # More retries when bootstrapping
-                        pool_timeout=5.0,       # Longer pool timeout
-                        timeout=60              # Longer overall timeout
+                        allowed_updates=["message", "callback_query"]
                     )
                 )
 
-                # Start scheduled updates with error monitoring
-                logger.info("Starting scheduled updates...")
+                # Start scheduled updates
                 self._update_task = asyncio.create_task(self.scheduled_updates())
 
-                # Wait for both tasks with health monitoring
-                while True:
-                    if self._polling_task.done():
-                        if self._polling_task.exception():
-                            raise RuntimeError(f"Polling task failed: {self._polling_task.exception()}")
-                        else:
-                            raise RuntimeError("Polling task completed unexpectedly")
-                    
-                    if self._update_task.done():
-                        if self._update_task.exception():
-                            raise RuntimeError(f"Update task failed: {self._update_task.exception()}")
-                        else:
-                            raise RuntimeError("Update task completed unexpectedly")
-                    
-                    # Periodically log a heartbeat to confirm the bot is still running
-                    logger.debug("Bot heartbeat check - still running")
-                    await asyncio.sleep(60)  # Check health every minute
+                # Wait for both tasks
+                await asyncio.gather(self._polling_task, self._update_task)
+                return
 
             except Exception as e:
-                current_time = time.time()
                 logger.error(f"Runtime error: {e}", exc_info=True)
-                
-                # Smart retry backoff based on error frequency
-                if current_time - last_error_time > 300:  # If last error was more than 5 minutes ago
-                    retry_count = 0  # Reset retry count for sporadic errors
-                
-                last_error_time = current_time
                 retry_count += 1
-                
-                # Calculate backoff time
-                backoff_time = min(5 * retry_count, 60)  # Max backoff of 60 seconds
-                
-                logger.info(f"Retrying in {backoff_time} seconds (attempt {retry_count})...")
-                await asyncio.sleep(backoff_time)
-                
-                # In deployment, we keep trying indefinitely with increasing backoff
-                if retry_count >= max_retries:
-                    logger.warning(f"Max retries ({max_retries}) reached, continuing with longer delay")
-                    await asyncio.sleep(120)  # 2 minute delay after max retries
+                if retry_count < max_retries:
+                    logger.info(f"Retrying (attempt {retry_count + 1}/{max_retries})...")
+                    await asyncio.sleep(5)
+                else:
+                    logger.error("Max retries reached")
+                    raise
             finally:
-                # Always clean up, but don't exit the loop
-                try:
-                    await self.cleanup()
-                except Exception as cleanup_error:
-                    logger.error(f"Error during cleanup: {cleanup_error}")
+                await self.cleanup()
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /start command"""
@@ -688,8 +569,7 @@ class MintosBot:
                     chat_id=chat_id,
                     text=text,
                     parse_mode='HTML',
-                    reply_markup=reply_markup,
-                    disable_web_page_preview=True
+                    reply_markup=reply_markup
                 )
                 logger.debug(f"Message sent successfully to {chat_id} (length: {message_length} chars)")
 

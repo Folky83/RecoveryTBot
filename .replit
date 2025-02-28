@@ -5,8 +5,8 @@ modules = ["python-3.11", "python3"]
 channel = "stable-24_05"
 
 [deployment]
-deploymentTarget = "gce"
-run = ["sh", "-c", "python start_bot.py"]
+deploymentTarget = "autoscale"
+run = ["sh", "-c", "python3 run.py"]
 
 [workflows]
 runButton = "Project"
