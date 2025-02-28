@@ -64,7 +64,7 @@ class ProcessManager:
                 self.logger.error(f"Failed to create lock file: {e}")
                 # Continue anyway in deployment
                 return True
-                
+
         except IOError as e:
             if e.errno == errno.EAGAIN:
                 self.logger.warning("Another instance appears to be running, forcing start anyway")
@@ -182,11 +182,11 @@ async def managed_bot():
     bot = None
     logger = logging.getLogger(__name__)
     max_attempts = 5  # Increased for deployment
-    
+
     for attempt in range(max_attempts):
         try:
             logger.info(f"Starting bot initialization (attempt {attempt+1}/{max_attempts})...")
-            
+
             # Verify token is available with multiple retries
             token = None
             for token_attempt in range(5):  # Increased retries
@@ -196,10 +196,10 @@ async def managed_bot():
                     # Print first few characters for debugging
                     logger.info(f"Token starts with: {token[:5]}...")
                     break
-                    
+
                 logger.warning(f"TELEGRAM_BOT_TOKEN not found or invalid (attempt {token_attempt+1}/5), waiting 10 seconds...")
                 await asyncio.sleep(10)  # Longer wait for deployment environment variables
-                
+
                 # Try to read token directly from secrets for Replit deployment
                 if 'REPL_SLUG' in os.environ and token_attempt >= 2:
                     try:
@@ -213,7 +213,7 @@ async def managed_bot():
                                         break
                     except Exception as e:
                         logger.warning(f"Failed to read .env file: {e}")
-            
+
             if not token or len(token) < 20:
                 # In deployment, we want to continue anyway as the variable might become available later
                 logger.error("TELEGRAM_BOT_TOKEN environment variable is not set or invalid after retries")
@@ -221,39 +221,39 @@ async def managed_bot():
                     logger.warning("Running in deployment environment - continuing despite missing/invalid token")
                 else:
                     raise ValueError("Bot token is missing or invalid after retry")
-            
+
             logger.info("Creating bot instance...")
             bot = MintosBot()
-            
+
             # Wait for initialization with extended timeout for deployment
             start_time = time.time()
             init_timeout = BOT_STARTUP_TIMEOUT * 2 if 'REPL_SLUG' in os.environ else BOT_STARTUP_TIMEOUT
             init_phase = "checking token"
-            
+
             while time.time() - start_time < init_timeout:
                 try:
                     if not hasattr(bot, 'token'):
                         logger.warning(f"Waiting for bot token initialization... ({int(time.time() - start_time)}s)")
                         await asyncio.sleep(2)  # Longer sleep for deployment
                         continue
-                    
+
                     # Once token is set, check application
                     if init_phase == "checking token":
                         init_phase = "checking application"
                         logger.info("Token initialized, waiting for application...")
-                    
+
                     if not hasattr(bot, 'application') or not bot.application:
                         logger.warning(f"Waiting for application initialization... ({int(time.time() - start_time)}s)")
                         await asyncio.sleep(2)  # Longer sleep for deployment
                         continue
-                    
+
                     # Bot is fully initialized
                     logger.info(f"Bot fully initialized after {int(time.time() - start_time)} seconds")
                     break
                 except Exception as init_error:
                     logger.error(f"Error during initialization check: {init_error}")
                     await asyncio.sleep(2)
-            
+
             # More lenient verification for deployment
             if 'REPL_SLUG' in os.environ:  # If in deployment
                 # Give the bot instance to caller even if not fully initialized
@@ -264,14 +264,14 @@ async def managed_bot():
                 # In development, enforce strict checks
                 if not hasattr(bot, 'token'):
                     raise RuntimeError("Bot failed to initialize token within timeout")
-                
+
                 if not hasattr(bot, 'application') or not bot.application:
                     raise RuntimeError("Bot application not initialized within timeout")
-                
+
                 logger.info("Bot instance created successfully with valid configuration")
                 yield bot
                 return  # Success, exit the retry loop
-            
+
         except ImportError as e:
             logger.error(f"Failed to import required modules: {str(e)}")
             if attempt < max_attempts - 1:
@@ -319,7 +319,7 @@ async def main():
     process_manager = ProcessManager()
     max_restarts = 5  # Increased for more resilience
     restart_count = 0
-    
+
     # Print environment information for debugging
     try:
         logger.info(f"Python version: {sys.version}")
@@ -334,7 +334,7 @@ async def main():
                     logger.info(f"Environment: {key}={value}")
     except Exception as env_error:
         logger.error(f"Error reading environment: {env_error}")
-    
+
     while restart_count < max_restarts:
         try:
             # Acquire lock and clean up existing processes
@@ -383,7 +383,7 @@ async def main():
                     raise ValueError("TELEGRAM_BOT_TOKEN environment variable is not set properly")
             else:
                 logger.info(f"TELEGRAM_BOT_TOKEN is set and appears valid (length: {len(token)})")
-            
+
             if 'REPL_SLUG' in os.environ:
                 logger.info(f"Running in Replit deployment environment: {os.environ.get('REPL_SLUG')}")
 
@@ -394,10 +394,10 @@ async def main():
                     # Add explicit check that bot can connect to Telegram before running
                     if not hasattr(bot, 'application') or not bot.application:
                         raise RuntimeError("Bot application not properly initialized")
-                    
+
                     if not hasattr(bot.application, 'bot'):
                         raise RuntimeError("Bot.application.bot attribute missing")
-                        
+
                     try:
                         logger.info("Verifying Telegram connection...")
                         me = await bot.application.bot.get_me()
@@ -408,12 +408,12 @@ async def main():
                             logger.warning("In deployment environment - will attempt to continue despite connection error")
                         else:
                             raise RuntimeError(f"Failed to connect to Telegram API: {conn_error}")
-                    
+
                     # Start the bot and wait for it indefinitely
                     logger.info("Creating bot task...")
                     bot_task = asyncio.create_task(bot.run())
                     logger.info("Bot task created, waiting for completion...")
-                    
+
                     # Monitor the task status periodically
                     monitoring_interval = 60  # check every minute
                     while True:
@@ -424,23 +424,23 @@ async def main():
                             else:
                                 logger.warning("Bot task completed unexpectedly without exception")
                                 break
-                        
+
                         logger.info("Bot task still running (heartbeat check)")
                         await asyncio.sleep(monitoring_interval)
-                    
+
                     await bot_task  # This will re-raise any exception if the task failed
-                    
+
                 except asyncio.CancelledError:
                     logger.info("Bot task was cancelled")
                     raise
                 except Exception as e:
                     logger.error(f"Bot error: {str(e)}", exc_info=True)
                     raise
-                
+
         except Exception as e:
             logger.error(f"Main loop error: {str(e)}", exc_info=True)
             restart_count += 1
-            
+
             if restart_count < max_restarts:
                 wait_time = 30 * restart_count  # Increasing backoff
                 logger.info(f"Restarting in {wait_time} seconds (attempt {restart_count}/{max_restarts})...")
