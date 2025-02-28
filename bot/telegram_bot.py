@@ -569,7 +569,8 @@ class MintosBot:
                     chat_id=chat_id,
                     text=text,
                     parse_mode='HTML',
-                    reply_markup=reply_markup
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=True
                 )
                 logger.debug(f"Message sent successfully to {chat_id} (length: {message_length} chars)")
 
