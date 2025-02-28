@@ -457,16 +457,15 @@ async def main():
                 logger.error(f"Error during cleanup: {cleanup_error}")
 
     # Clean up before exit
-    finally:
-        if process_manager.streamlit_process:
-            logger.info("Terminating Streamlit...")
-            process_manager.streamlit_process.terminate()
-            try:
-                process_manager.streamlit_process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                logger.warning("Force killing Streamlit process")
-                process_manager.streamlit_process.kill()
-        await process_manager.cleanup()
+    if process_manager.streamlit_process:
+        logger.info("Terminating Streamlit...")
+        process_manager.streamlit_process.terminate()
+        try:
+            process_manager.streamlit_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            logger.warning("Force killing Streamlit process")
+            process_manager.streamlit_process.kill()
+    await process_manager.cleanup()
 
 def signal_handler(sig, frame):
     logging.info("Received shutdown signal")
