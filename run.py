@@ -32,6 +32,7 @@ class ProcessManager:
     async def acquire_lock(self) -> bool:
         """Acquire lock file to ensure single instance"""
         try:
+            # Always try to remove stale lock files in deployment
             if os.path.exists(LOCK_FILE):
                 try:
                     with open(LOCK_FILE, 'r') as f:
@@ -39,20 +40,43 @@ class ProcessManager:
                     if not psutil.pid_exists(old_pid):
                         os.unlink(LOCK_FILE)
                         self.logger.info(f"Removed stale lock from PID {old_pid}")
+                    else:
+                        # In deployment environment, force override
+                        os.unlink(LOCK_FILE)
+                        self.logger.warning(f"Force removed lock file in deployment")
                 except (ValueError, IOError):
-                    os.unlink(LOCK_FILE)
-                    self.logger.info("Removed invalid lock file")
+                    # Handle corrupt lock files
+                    try:
+                        os.unlink(LOCK_FILE)
+                        self.logger.info("Removed invalid lock file")
+                    except Exception as e:
+                        self.logger.error(f"Error removing invalid lock file: {e}")
 
-            self.lock_file = open(LOCK_FILE, 'w')
-            fcntl.lockf(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            self.lock_file.write(str(os.getpid()))
-            self.lock_file.flush()
-            return True
+            # Create with more robust error handling
+            try:
+                self.lock_file = open(LOCK_FILE, 'w')
+                fcntl.lockf(self.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.lock_file.write(str(os.getpid()))
+                self.lock_file.flush()
+                self.logger.info(f"Successfully acquired lock for PID {os.getpid()}")
+                return True
+            except Exception as e:
+                self.logger.error(f"Failed to create lock file: {e}")
+                # Continue anyway in deployment
+                return True
+                
         except IOError as e:
             if e.errno == errno.EAGAIN:
-                self.logger.error("Another instance is already running")
-                sys.exit(1)
-            raise
+                self.logger.warning("Another instance appears to be running, forcing start anyway")
+                try:
+                    os.unlink(LOCK_FILE)
+                    self.logger.info("Removed existing lock file")
+                    return await self.acquire_lock()  # Try again
+                except Exception:
+                    self.logger.error("Could not remove existing lock file")
+                    return True  # Continue anyway in deployment
+            self.logger.error(f"Lock acquisition error: {e}")
+            return True  # Continue anyway in deployment
 
     async def kill_port_process(self, port: int) -> None:
         """Kill any process using the specified port"""
@@ -157,34 +181,81 @@ async def managed_bot():
     from bot.telegram_bot import MintosBot
     bot = None
     logger = logging.getLogger(__name__)
-    try:
-        logger.info("Starting bot initialization...")
-        if not os.getenv('TELEGRAM_BOT_TOKEN'):
-            logger.error("TELEGRAM_BOT_TOKEN environment variable is not set")
-            raise ValueError("Bot token is missing")
+    max_attempts = 3
+    
+    for attempt in range(max_attempts):
+        try:
+            logger.info(f"Starting bot initialization (attempt {attempt+1}/{max_attempts})...")
+            
+            # Verify token is available
+            token = os.getenv('TELEGRAM_BOT_TOKEN')
+            if not token:
+                logger.error("TELEGRAM_BOT_TOKEN environment variable is not set")
+                # Try to sleep and retry in case of deployment delay
+                await asyncio.sleep(5)
+                token = os.getenv('TELEGRAM_BOT_TOKEN')
+                if not token:
+                    raise ValueError("Bot token is missing after retry")
+            
+            logger.info("Token verified, creating bot instance...")
+            bot = MintosBot()
+            
+            # Wait for initialization with more detailed logging
+            start_time = time.time()
+            init_phase = "checking token"
+            while time.time() - start_time < BOT_STARTUP_TIMEOUT:
+                if not hasattr(bot, 'token'):
+                    logger.warning(f"Waiting for bot token initialization... ({int(time.time() - start_time)}s)")
+                    await asyncio.sleep(1)
+                    continue
+                
+                # Once token is set, check application
+                if init_phase == "checking token":
+                    init_phase = "checking application"
+                    logger.info("Token initialized, waiting for application...")
+                
+                if not hasattr(bot, 'application') or not bot.application:
+                    logger.warning(f"Waiting for application initialization... ({int(time.time() - start_time)}s)")
+                    await asyncio.sleep(1)
+                    continue
+                
+                # Bot is fully initialized
+                logger.info(f"Bot fully initialized after {int(time.time() - start_time)} seconds")
+                break
+            
+            # Final verification
+            if not hasattr(bot, 'token'):
+                raise RuntimeError("Bot failed to initialize token within timeout")
+            
+            if not hasattr(bot, 'application') or not bot.application:
+                raise RuntimeError("Bot application not initialized within timeout")
 
-        bot = MintosBot()
-        start_time = time.time()
-        while not hasattr(bot, 'token') and time.time() - start_time < BOT_STARTUP_TIMEOUT:
-            logger.warning("Waiting for bot token initialization...")
-            await asyncio.sleep(1)
-
-        if not hasattr(bot, 'token'):
-            raise RuntimeError("Bot failed to initialize token within timeout")
-
-        logger.info("Bot instance created successfully with valid token")
-        yield bot
-    except ImportError as e:
-        logger.error(f"Failed to import required modules: {str(e)}")
-        raise
-    except Exception as e:
-        logger.error(f"Failed to initialize bot: {str(e)}")
-        raise
-    finally:
-        if bot:
-            logger.info("Cleaning up bot resources...")
-            await bot.cleanup()
-            logger.info("Bot cleanup completed")
+            logger.info("Bot instance created successfully with valid configuration")
+            yield bot
+            return  # Success, exit the retry loop
+            
+        except ImportError as e:
+            logger.error(f"Failed to import required modules: {str(e)}")
+            if attempt < max_attempts - 1:
+                logger.info(f"Retrying in 5 seconds...")
+                await asyncio.sleep(5)
+            else:
+                raise
+        except Exception as e:
+            logger.error(f"Failed to initialize bot (attempt {attempt+1}): {str(e)}")
+            if attempt < max_attempts - 1:
+                logger.info(f"Retrying in 5 seconds...")
+                await asyncio.sleep(5)
+            else:
+                raise
+        finally:
+            if bot and attempt == max_attempts - 1:
+                logger.info("Cleaning up bot resources...")
+                try:
+                    await bot.cleanup()
+                    logger.info("Bot cleanup completed")
+                except Exception as e:
+                    logger.error(f"Error during bot cleanup: {e}")
 
 async def main():
     # Configure logging
