@@ -130,12 +130,15 @@ class MintosBot:
                     logger.error(f"Failed to connect to Telegram: {e}")
                     return False
 
-                logger.info("Setting up webhook...")
+                logger.info("Preparing for polling mode...")
                 try:
+                    # Clear any webhook configuration and ensure we're in polling mode
                     await self.application.bot.delete_webhook(drop_pending_updates=True)
+                    # Clear update queue
                     await self.application.bot.get_updates(offset=-1)
+                    logger.info("Successfully prepared for polling mode")
                 except Exception as e:
-                    logger.error(f"Webhook setup failed: {e}")
+                    logger.error(f"Polling mode setup failed: {e}")
                     return False
 
                 logger.info("Registering command handlers...")
