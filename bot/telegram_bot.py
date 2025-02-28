@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
+import sys
 import time
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -284,6 +285,8 @@ class MintosBot:
     async def run(self) -> None:
         """Run the bot with polling and scheduled updates"""
         logger.info("Starting Mintos Update Bot")
+        logger.info("Bot version: 1.2.1")
+        logger.info(f"Python version: {sys.version}")
         max_retries = 3
         retry_count = 0
 
@@ -298,11 +301,16 @@ class MintosBot:
                     logger.error("Bot initialization failed")
                     raise RuntimeError("Bot initialization failed")
 
-                # Start polling in background
+                # Start polling in background with improved error handling
                 self._polling_task = asyncio.create_task(
                     self.application.updater.start_polling(
                         drop_pending_updates=True,
-                        allowed_updates=["message", "callback_query"]
+                        allowed_updates=["message", "callback_query"],
+                        read_timeout=30,  # Longer read timeout
+                        write_timeout=30,  # Longer write timeout
+                        connect_timeout=30,  # Longer connect timeout
+                        bootstrap_retries=5,  # More retries when bootstrapping
+                        pool_timeout=3.0  # Pool timeout
                     )
                 )
 
