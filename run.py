@@ -456,9 +456,7 @@ async def main():
             except Exception as cleanup_error:
                 logger.error(f"Error during cleanup: {cleanup_error}")
 
-    except Exception as e:
-        logger.error(f"Application error: {str(e)}")
-        raise
+    # Clean up before exit
     finally:
         if process_manager.streamlit_process:
             logger.info("Terminating Streamlit...")
