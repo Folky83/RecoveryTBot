@@ -343,18 +343,57 @@ async def main():
             logger.info(f"Lock acquired for PID {os.getpid()}")
             await process_manager.cleanup()
 
-            # Start Streamlit
+            # Start Streamlit with output capture
             logger.info("Starting Streamlit process...")
+            streamlit_log = open("logs/streamlit.log", "w")
             process_manager.streamlit_process = subprocess.Popen([
                 sys.executable, "-m", "streamlit", "run",
                 "main.py", "--server.address", "0.0.0.0",
                 "--server.port", str(STREAMLIT_PORT)
-            ])
-
+            ], stdout=streamlit_log, stderr=streamlit_log)
+            
+            # Give Streamlit a moment to start up
+            await asyncio.sleep(2)
+            
+            # Check if it's still running before waiting
+            if process_manager.streamlit_process.poll() is not None:
+                exit_code = process_manager.streamlit_process.returncode
+                logger.error(f"Streamlit process exited immediately with code {exit_code}")
+                logger.error("Check logs/streamlit.log for more details")
+                streamlit_log.close()
+                
+                # Try to read the log file
+                try:
+                    with open("logs/streamlit.log", "r") as f:
+                        log_content = f.read()
+                        logger.error(f"Streamlit error log: {log_content}")
+                except Exception as log_error:
+                    logger.error(f"Could not read Streamlit log: {log_error}")
+                
+                # Try running with plain Python to see if it's a Streamlit issue
+                logger.info("Attempting to run main.py directly to check for Python errors...")
+                try:
+                    test_result = subprocess.run([sys.executable, "main.py"], 
+                                               capture_output=True, text=True, timeout=5)
+                    if test_result.returncode != 0:
+                        logger.error(f"Python error in main.py: {test_result.stderr}")
+                    else:
+                        logger.info("main.py runs without errors, issue is specific to Streamlit")
+                except Exception as py_error:
+                    logger.error(f"Error testing main.py: {py_error}")
+                
+                raise RuntimeError(f"Streamlit process failed to start (exit code {exit_code})")
+            
             # Wait for Streamlit and start bot
             logger.info("Waiting for Streamlit to initialize...")
-            await process_manager.wait_for_streamlit()
-            logger.info("Streamlit started successfully")
+            try:
+                await process_manager.wait_for_streamlit()
+                logger.info("Streamlit started successfully")
+                streamlit_log.close()
+            except Exception as e:
+                streamlit_log.close()
+                logger.error(f"Streamlit initialization failed: {e}")
+                raise
 
             # Verify environment is properly set
             token = os.getenv('TELEGRAM_BOT_TOKEN')
