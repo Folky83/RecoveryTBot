@@ -423,7 +423,22 @@ class DocumentScraper:
             for heading in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
                 text = heading.get_text(strip=True).lower()
                 # If the heading contains country-related terms
-                if any(term in text for term in ['country', 'countries', 'region', 'regions', 'location', 'operations']):
+                country_terms = [
+                    'country', 'countries', 'region', 'regions', 'location', 'operations',
+                    'europe', 'asia', 'africa', 'america', 'australia', 'oceania',
+                    'baltic', 'northern europe', 'eastern europe', 'western europe', 'central europe',
+                    'southeast asia', 'latin america', 'north america', 'central america',
+                    'portugal', 'spain', 'france', 'italy', 'germany', 'uk', 'united kingdom',
+                    'norway', 'sweden', 'finland', 'denmark', 'estonia', 'latvia', 'lithuania',
+                    'poland', 'czech', 'slovakia', 'hungary', 'romania', 'bulgaria', 'greece',
+                    'russia', 'ukraine', 'belarus', 'kazakhstan', 'georgia', 'azerbaijan',
+                    'turkey', 'morocco', 'algeria', 'tunisia', 'egypt', 'kenya', 'south africa',
+                    'mexico', 'brazil', 'argentina', 'chile', 'peru', 'colombia', 'venezuela',
+                    'usa', 'united states', 'canada', 'china', 'japan', 'korea', 'singapore',
+                    'vietnam', 'thailand', 'malaysia', 'indonesia', 'philippines', 'india',
+                    'pakistan', 'bangladesh', 'australia', 'new zealand'
+                ]
+                if any(term in text for term in country_terms):
                     # Include both the heading and the content following it
                     section = heading.parent
                     if section:
@@ -466,7 +481,17 @@ class DocumentScraper:
                         if not title or len(title) < 2:
                             # If link text is empty, try to use the filename from URL
                             filename = url.split('/')[-1]
-                            title = filename.replace('-', ' ').replace('_', ' ').replace('.pdf', '')
+                            # Clean up the filename to create a nice title
+                            # Remove file extension
+                            for ext in ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.zip', '.rar']:
+                                if filename.lower().endswith(ext):
+                                    filename = filename[:-len(ext)]
+                            # Replace common separators with spaces
+                            title = filename.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+                            # Clean up multiple spaces
+                            title = ' '.join(title.split())
+                            # Capitalize the title for better appearance
+                            title = title.capitalize()
                             
                         # Extract date or use current date
                         date = datetime.now().strftime("%Y-%m-%d")
@@ -498,7 +523,7 @@ class DocumentScraper:
                     {'tag': 'a', 'class': 'document-item'},
                     {'tag': 'div', 'class': 'file-item'},
                     {'tag': 'div', 'class': 'document-item'},
-                    {'tag': 'a', 'href': lambda href: href and href.lower().endswith('.pdf')}
+                    {'tag': 'a', 'href': lambda href: href and any(href.lower().endswith(ext) for ext in ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.zip', '.rar'])}
                 ]
                 
                 for selector in selectors:
@@ -524,8 +549,9 @@ class DocumentScraper:
                             
                         url = link_element.get('href')
                         
-                        # Skip if not a PDF (to avoid menu links, etc.)
-                        if not url.lower().endswith('.pdf'):
+                        # Skip if not a document file (to avoid menu links, etc.)
+                        supported_extensions = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.zip', '.rar']
+                        if not any(url.lower().endswith(ext) for ext in supported_extensions):
                             continue
                             
                         if not url.startswith('http'):
@@ -556,7 +582,17 @@ class DocumentScraper:
                         if not title or len(title) < 2:
                             # Fallback: Use the filename from the URL
                             filename = url.split('/')[-1]
-                            title = filename.replace('-', ' ').replace('_', ' ').replace('.pdf', '')
+                            # Clean up the filename to create a nice title
+                            # Remove file extension
+                            for ext in ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.zip', '.rar']:
+                                if filename.lower().endswith(ext):
+                                    filename = filename[:-len(ext)]
+                            # Replace common separators with spaces
+                            title = filename.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+                            # Clean up multiple spaces
+                            title = ' '.join(title.split())
+                            # Capitalize the title for better appearance
+                            title = title.capitalize()
                                 
                         # Extract date using multiple approaches
                         date = ""
