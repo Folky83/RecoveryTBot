@@ -551,6 +551,11 @@ class MintosBot:
                 await self._send_today_updates_to_channel(chat_id, target_channel)
                 return
                 
+            elif query.data == "admin_exit":
+                # Close the admin panel
+                await query.edit_message_text("✅ Admin panel closed.", disable_web_page_preview=True)
+                return
+                
             elif query.data == "admin_back":
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
@@ -560,7 +565,8 @@ class MintosBot:
                 # Return to admin panel
                 keyboard = [
                     [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
-                    [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")]
+                    [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+                    [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
                 reply_markup = InlineKeyboardMarkup(keyboard)
@@ -1867,7 +1873,8 @@ class MintosBot:
         # Create admin panel with inline keyboard
         keyboard = [
             [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
-            [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")]
+            [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+            [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
