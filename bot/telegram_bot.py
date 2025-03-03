@@ -1461,41 +1461,47 @@ class MintosBot:
             await self.send_message(chat_id, "⚠️ Error checking today's updates", disable_web_page_preview=True)
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
-        """Validate channel ID format and verify bot permissions"""
-        logger.info(f"Validating channel ID: {channel_identifier}")
+        """Validate channel/user ID format and verify permissions"""
+        logger.info(f"Validating target ID: {channel_identifier}")
 
-        # Only accept channel IDs in the correct format
-        if not channel_identifier.startswith('-100') or not channel_identifier[4:].isdigit():
-            logger.error(f"Invalid channel ID format: {channel_identifier}")
-            raise ValueError(
-                "Invalid channel ID format. Please use the full channel ID\n"
-                "Example: -1001234567890\n"
-                "Note: Channel ID must start with '-100' followed by numbers"
-            )
+        # Check if it's a registered user ID first
+        if channel_identifier in self.user_manager.get_all_users():
+            logger.info(f"Valid registered user ID: {channel_identifier}")
+            return channel_identifier
+            
+        # Check if it's a channel ID (should start with -100)
+        if channel_identifier.startswith('-100') and channel_identifier[4:].isdigit():
+            try:
+                # Verify bot permissions in the channel
+                if await self._verify_bot_permissions(channel_identifier):
+                    logger.info(f"Channel ID validated and permissions verified: {channel_identifier}")
+                    return channel_identifier
 
-        try:
-            # Verify bot permissions in the channel
-            if await self._verify_bot_permissions(channel_identifier):
-                logger.info(f"Channel ID validated and permissions verified: {channel_identifier}")
-                return channel_identifier
-
-            logger.error(f"Bot lacks required permissions in channel: {channel_identifier}")
-            raise ValueError(
-                "Bot lacks required permissions in the channel.\n"
-                "Please ensure the bot:\n"
-                "1. Is added to the channel\n"
-                "2. Has admin rights in the channel"
-            )
-
-        except Exception as e:
-            logger.error(f"Error validating channel ID {channel_identifier}: {e}")
-            logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
-            if isinstance(e, ValueError):
-                raise
-            raise ValueError(
-                f"Could not validate channel {channel_identifier}. "
-                "Please ensure the channel ID is correct and the bot has proper permissions."
-            )
+                logger.error(f"Bot lacks required permissions in channel: {channel_identifier}")
+                raise ValueError(
+                    "Bot lacks required permissions in the channel.\n"
+                    "Please ensure the bot:\n"
+                    "1. Is added to the channel\n"
+                    "2. Has admin rights in the channel"
+                )
+            except Exception as e:
+                logger.error(f"Error validating channel ID {channel_identifier}: {e}")
+                logger.error(f"Full error details - Type: {type(e)}, Message: {str(e)}")
+                if isinstance(e, ValueError):
+                    raise
+                raise ValueError(
+                    f"Could not validate channel {channel_identifier}. "
+                    "Please ensure the channel ID is correct and the bot has proper permissions."
+                )
+        
+        # If we get here, the ID format is invalid
+        logger.error(f"Invalid ID format: {channel_identifier}")
+        raise ValueError(
+            "Invalid ID format. For channels, please use the full channel ID\n"
+            "Example: -1001234567890\n"
+            "Note: Channel IDs must start with '-100' followed by numbers\n\n"
+            "For users, please use a valid registered user ID"
+        )
 
     async def _verify_bot_permissions(self, chat_id: str) -> bool:
         """Verify bot's permissions in the channel"""
