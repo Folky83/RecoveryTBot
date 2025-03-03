@@ -1453,13 +1453,10 @@ class MintosBot:
                 )
                 return
 
-            # Verify bot permissions
+            # Verify bot permissions without sending a message
             try:
-                await self.application.bot.send_message(
-                    chat_id=resolved_channel,
-                    text="🔄 Checking bot permissions...",
-                    parse_mode='HTML'
-                )
+                # Just check if the bot can get chat info instead of sending a message
+                await self.application.bot.get_chat(resolved_channel)
             except Exception as e:
                 error_msg = str(e).lower()
                 logger.error(f"Permission error for channel {resolved_channel}: {error_msg}")
@@ -1478,7 +1475,9 @@ class MintosBot:
                         f"⚠️ Error accessing channel: {str(e)}\n"
                         "Please verify the bot's permissions."
                     )
-                return            # Retrieve today's updates
+                return
+                
+            # Retrieve today's updates
             logger.info("Getting today's updates")
             today = time.strftime("%Y-%m-%d")
             updates = self.data_manager.load_previous_updates()
@@ -1503,22 +1502,18 @@ class MintosBot:
 
             logger.info(f"Found {len(today_updates)} updates for today")
 
-            # Handle no updates case
+            # Handle no updates case - only notify the command sender, not the channel
             if not today_updates:
-                await self.application.bot.send_message(
-                    chat_id=resolved_channel,
-                    text="📝 No updates found for today.",
-                    parse_mode='HTML'
-                )
                 await self.send_message(chat_id, "✅ No updates found for today")
                 return
 
-            # Send header
-            await self.application.bot.send_message(
-                chat_id=resolved_channel,
-                text=f"📊 Found {len(today_updates)} updates for today:",
-                parse_mode='HTML'
-            )
+            # Only send header if there are updates to show
+            if today_updates:
+                await self.application.bot.send_message(
+                    chat_id=resolved_channel,
+                    text=f"📊 Updates for today ({today}):",
+                    parse_mode='HTML'
+                )
 
             # Send updates
             successful_sends = 0
