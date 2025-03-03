@@ -2,6 +2,8 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 import time
+import json
+import os
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -19,7 +21,6 @@ from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
 from .document_scraper import DocumentScraper
-import os
 
 logger = setup_logger(__name__)
 
@@ -876,10 +877,20 @@ class MintosBot:
             Formatted message text
         """
         company_name = document.get('company_name', 'Unknown Company')
-        doc = document.get('document', {})
-        title = doc.get('title', 'Untitled Document')
-        date = doc.get('date', 'Unknown date')
-        url = doc.get('url', '')
+        # Handle both direct and nested document structures
+        title = document.get('title', None)
+        date = document.get('date', None) 
+        url = document.get('url', None)
+        
+        # If values are not direct, try to get from nested 'document' object
+        if title is None or date is None or url is None:
+            doc = document.get('document', {})
+            if not title:
+                title = doc.get('title', 'Untitled Document')
+            if not date:
+                date = doc.get('date', 'Unknown date')
+            if not url:
+                url = doc.get('url', '#')
         
         return (
             f"📄 <b>New Document Published</b>\n\n"
