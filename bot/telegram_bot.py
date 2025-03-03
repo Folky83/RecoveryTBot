@@ -697,7 +697,7 @@ class MintosBot:
         logger.debug(f"Formatting campaign message for ID: {campaign.get('id')}")
 
         # Set up the header
-        message = "🎯 <b>New Mintos Campaign</b>\n\n"
+        message = "🎯 <b>Mintos Campaign</b>\n\n"
 
         # Name (some campaigns have no name)
         if campaign.get('name'):
