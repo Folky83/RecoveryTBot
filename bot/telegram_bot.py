@@ -1429,6 +1429,9 @@ class MintosBot:
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
 
+            # Inform user that command is being processed
+            await self.send_message(chat_id, "Processing command...")
+
             # Parse the channel argument
             args = context.args if context and hasattr(context, 'args') else None
             if not args:
@@ -1507,6 +1510,9 @@ class MintosBot:
                 await self.send_message(chat_id, "✅ No updates found for today")
                 return
 
+            # Send updates to the channel
+            successful_sends = 0
+            
             # Only send header if there are updates to show
             if today_updates:
                 await self.application.bot.send_message(
@@ -1515,24 +1521,24 @@ class MintosBot:
                     parse_mode='HTML'
                 )
 
-            # Send updates
-            successful_sends = 0
-            for update_item in today_updates:
-                try:
-                    message = self.format_update_message(update_item)
-                    await self.application.bot.send_message(
-                        chat_id=resolved_channel,
-                        text=message,
-                        parse_mode='HTML'
-                    )
-                    successful_sends += 1
-                    await asyncio.sleep(0.5)  # Rate limiting
-                except Exception as e:
-                    logger.error(f"Error sending update: {e}")
+                # Send updates
+                for update_item in today_updates:
+                    try:
+                        message = self.format_update_message(update_item)
+                        await self.application.bot.send_message(
+                            chat_id=resolved_channel,
+                            text=message,
+                            parse_mode='HTML'
+                        )
+                        successful_sends += 1
+                        await asyncio.sleep(0.5)  # Rate limiting
+                    except Exception as e:
+                        logger.error(f"Error sending update: {e}")
 
             # After sending updates, also check for campaigns
             logger.info("Checking for active campaigns")
             campaigns = self.data_manager.load_previous_campaigns()
+            campaign_sends = 0
             
             if campaigns:
                 # Filter for active campaigns
@@ -1548,7 +1554,6 @@ class MintosBot:
                     )
                     
                     # Send each campaign
-                    campaign_sends = 0
                     for campaign in active_campaigns:
                         try:
                             message = self.format_campaign_message(campaign)
@@ -1566,9 +1571,9 @@ class MintosBot:
                 else:
                     logger.info("No active campaigns found")
             
-            # Send status including both updates and campaigns
+            # Send status including both updates and campaigns only to the user who triggered the command
             status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates"
-            if 'campaign_sends' in locals():
+            if campaign_sends > 0:
                 status += f" and {campaign_sends} campaigns"
             status += f" to {target_channel}"
             
