@@ -64,6 +64,7 @@ class MintosBot:
             self.data_manager = DataManager()
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
+            self._is_startup_check = True  # Flag to track initial startup
             self._initialized = True
             logger.info("Bot instance created")
 
@@ -939,6 +940,19 @@ class MintosBot:
             if added_campaigns:
                 users = self.user_manager.get_all_users()
                 logger.info(f"Found {len(added_campaigns)} new campaigns to process for {len(users)} users")
+                
+                # Check if this is during app startup
+                is_startup = getattr(self, '_is_startup_check', True)
+                if is_startup:
+                    # During startup, don't send campaigns that might have been sent in previous runs
+                    logger.info("Startup detected - marking campaigns as sent without sending notifications")
+                    for campaign in added_campaigns:
+                        if not self.data_manager.is_campaign_sent(campaign):
+                            self.data_manager.save_sent_campaign(campaign)
+                    # Reset startup flag
+                    self._is_startup_check = False
+                    logger.info("Campaigns marked as sent during startup")
+                    return
                 
                 # Filter out Special Promotion (type 4) campaigns and unsent campaigns
                 unsent_campaigns = [
