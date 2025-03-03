@@ -191,6 +191,7 @@ class DocumentScraper:
             'novaloans': 'https://www.mintos.com/en/loan-originators/novaloans/',
             'kviku': 'https://www.mintos.com/en/loan-originators/kviku/',
             'placet-group': 'https://www.mintos.com/en/loan-originators/placet-group/',
+            'placet': 'https://www.mintos.com/en/lending-companies/placet/',
             
             # Add more company IDs based on the test that worked
             'capitalia': 'https://www.mintos.com/en/loan-originators/capitalia/',
@@ -219,8 +220,10 @@ class DocumentScraper:
         # Try to scrape the web pages as a last resort
         web_urls = [
             "https://www.mintos.com/en/loan-originators/",  # Main loan originators page
+            "https://www.mintos.com/en/lending-companies/",  # New lending companies page
             "https://www.mintos.com/en/investing/current-loan-originators/",
-            "https://www.mintos.com/en/investing/suspended-loan-originators/"
+            "https://www.mintos.com/en/investing/suspended-loan-originators/",
+            "https://www.mintos.com/en/investing/"  # Main investing page that might list companies
         ]
         
         for url in web_urls:

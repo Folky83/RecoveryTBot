@@ -1,6 +1,28 @@
 {
   "aforti": [],
-  "akulaku": [],
+  "akulaku": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/5413B1F4-9415-97FB-ACBC-F50953AB61D3.pdf",
+      "date": "2025-03-03",
+      "id": "6846b79d46947baf22a4029d9b6ea37a",
+      "company_name": "Akulaku"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/75BF16EC-595E-67DE-78E6-E6E6C9749D59.pdf",
+      "date": "2025-03-03",
+      "id": "3cab770269fb099e91e019df59d0f53f",
+      "company_name": "Akulaku"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/F8E92FC0-CCF2-30E1-5FC7-DA767E909FBD.pdf",
+      "date": "2025-03-03",
+      "id": "d7d5bf0b5d1bed694ba52c668db1befd",
+      "company_name": "Akulaku"
+    }
+  ],
   "alexcredit": [],
   "alivio-capital": [],
   "avafin": [],
@@ -37,14 +59,58 @@
   "id-finance-spain": [],
   "iutecredit": [],
   "kredit24": [],
-  "kviku": [],
+  "kviku": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/B8C8F7BA-4C1A-A3E9-13FF-B6E326521417.pdf",
+      "date": "2025-03-03",
+      "id": "e5416683a3a1593640ac77c5135a1de3",
+      "company_name": "Kviku"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/7C71C88B-38FD-38E0-F775-885249D8D35A.pdf",
+      "date": "2025-03-03",
+      "id": "38236e7c0fe93a7213835f2055d8ff1f",
+      "company_name": "Kviku"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/AFC053AB-1D7B-BBA1-F929-56F4BAE849EE.pdf",
+      "date": "2025-03-03",
+      "id": "9f0c17aa35d61a2a54c98f4557b6f97b",
+      "company_name": "Kviku"
+    }
+  ],
   "lime-zaim": [],
   "mfo-onlinekazfinance": [],
   "monego-shpk": [],
   "mikro-kapital-moldova": [],
   "mikro-kapital-romenia": [],
   "mybucks": [],
-  "novaloans": [],
+  "novaloans": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/8D61578F-20C6-C840-2C6F-C29355CF5D08.pdf",
+      "date": "2025-03-03",
+      "id": "9eb0ab8927d92b0d86d8d8e174a28f20",
+      "company_name": "Novaloans"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/F3B64245-707D-D86D-A3B9-C6F91962C1A9.pdf",
+      "date": "2025-03-03",
+      "id": "90b3619a2625d89aca42df6f694f4792",
+      "company_name": "Novaloans"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/6700FC18-D3EF-9EF8-0BC9-9EBCBDBEF734.pdf",
+      "date": "2025-03-03",
+      "id": "d63cb99ea9939566348be64763162876",
+      "company_name": "Novaloans"
+    }
+  ],
   "peachy": [],
   "planet42": [],
   "rapicredit": [],
@@ -52,6 +118,156 @@
   "revo-russia": [],
   "sos-credit": [],
   "unknown-179": [],
-  "wowwo": [],
-  "mikro-kapital-uzbekistan": []
+  "wowwo": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/A75C5337-B295-7FDF-E9DA-35F8FF0CD342.pdf",
+      "date": "2025-03-03",
+      "id": "ffbb5969134190d463a872dc3cf4ecce",
+      "company_name": "Wowwo"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/5EA4A541-FEA0-948D-8FEF-B19767283A3F.pdf",
+      "date": "2025-03-03",
+      "id": "70500a404fd2a030c10901c69cd8b226",
+      "company_name": "Wowwo"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/2852FBA7-D803-CC0E-C0DA-F2BECA3D1A3C.pdf",
+      "date": "2025-03-03",
+      "id": "daeb1d795a54d8759e4bf59225357953",
+      "company_name": "Wowwo"
+    }
+  ],
+  "mikro-kapital-uzbekistan": [],
+  "iuvo": [],
+  "iuvo-group": [],
+  "creditstar": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/685E54EB-4C7D-F8CD-12C7-6DCCC0FF1DBC.pdf",
+      "date": "2025-03-03",
+      "id": "1a640d422d7e4af9a5cf7b8299c4ecc1",
+      "company_name": "Creditstar"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/4C6EEB99-79D1-D775-6385-7274FD59938B.pdf",
+      "date": "2025-03-03",
+      "id": "5e0f4bec4c78cd6e867dd81298a6cc8c",
+      "company_name": "Creditstar"
+    }
+  ],
+  "creditstar-group": [],
+  "delfin-group": [],
+  "placet-group": [],
+  "capitalia": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/9467A418-D901-F6FE-00CC-E3D397394A6D.pdf",
+      "date": "2025-03-03",
+      "id": "216f01376e4e0883449f8c90ef5dc7cb",
+      "company_name": "Capitalia"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/05C0802F-4F76-0F05-42E5-A10D1BB22788.pdf",
+      "date": "2025-03-03",
+      "id": "69aa5702d123c9a75508d0cd45177aea",
+      "company_name": "Capitalia"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/66D07C84-3730-B918-0762-C653DC29949D.pdf",
+      "date": "2025-03-03",
+      "id": "bade3df36701837c685a27015f880fbb",
+      "company_name": "Capitalia"
+    }
+  ],
+  "eleving-group": [],
+  "credius": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/59B260B4-8386-5C9C-D3F5-74077E00F5F8.pdf",
+      "date": "2025-03-03",
+      "id": "75f0703545fd159bf1f022c315d55eff",
+      "company_name": "Credius"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/8CC6B7FC-9380-E740-FF28-7194F2E72392.pdf",
+      "date": "2025-03-03",
+      "id": "c2c91ebfaa87ef325cd5b4c1691075c1",
+      "company_name": "Credius"
+    }
+  ],
+  "sun-finance": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/56EA7465-A351-D3B8-8C4C-B20C820DFDFD.pdf",
+      "date": "2025-03-03",
+      "id": "4199cc445f54e5329de96ec2ce4df336",
+      "company_name": "Sun Finance"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/97CC5FC4-B6BB-787E-CB83-9C5905CA47EC.pdf",
+      "date": "2025-03-03",
+      "id": "87e3fc273396f273e9d384bc4ef13b06",
+      "company_name": "Sun Finance"
+    }
+  ],
+  "mikro-kapital": [],
+  "ims": [],
+  "jet-finance": [],
+  "credissimo": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/8493A3F3-74C3-25CA-A24B-A3B35E3F9083.pdf",
+      "date": "2025-03-03",
+      "id": "aa6b4552fdce0f0d7c8af59069390121",
+      "company_name": "Credissimo"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/447B9E39-CB2B-C7E9-2462-7CC0D82708F9.pdf",
+      "date": "2025-03-03",
+      "id": "5ddcf4a663ee6d52c2482118b5bcee9a",
+      "company_name": "Credissimo"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/36F46B6E-311A-DF24-1C44-10664BC7A91C.pdf",
+      "date": "2025-03-03",
+      "id": "81336d5e9c59f79a7116bd8a6149ddc0",
+      "company_name": "Credissimo"
+    }
+  ],
+  "cash-credit": [],
+  "monego": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/97FBBDFA-1A45-567D-7FF2-D8E7551A7DD1.pdf",
+      "date": "2025-03-03",
+      "id": "3e49e21e949fee47299f102e55949065",
+      "company_name": "Monego"
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/FD8F1C61-184C-8008-FCE2-295F6E13EC98.pdf",
+      "date": "2025-03-03",
+      "id": "d5f0fbe778a9886103230ce3f1b08341",
+      "company_name": "Monego"
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/A8595EA6-1035-907F-A3DC-20E10B7967FC.pdf",
+      "date": "2025-03-03",
+      "id": "85fcac83b5d622c041bdecb2cf250dce",
+      "company_name": "Monego"
+    }
+  ],
+  "axcess": []
 }
