@@ -176,6 +176,7 @@ class MintosBot:
             CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
+            CommandHandler("admin", self.admin_command), #Added admin command
             CallbackQueryHandler(self.handle_callback)
         ]
 
@@ -373,7 +374,7 @@ class MintosBot:
             "• /campaigns - View current Mintos campaigns\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
-            "• /users - View registered users (admin only)\n\n" #Added
+            "• /admin - Admin control panel (admin only)\n\n"
             "You'll receive updates about lending companies automatically. Stay tuned!"
         )
 
@@ -445,6 +446,76 @@ class MintosBot:
                 except Exception as e:
                     logger.error(f"Error during refresh from callback: {e}")
                     await query.edit_message_text("⚠️ Error refreshing updates. Please try again.", disable_web_page_preview=True)
+                return
+                
+            elif query.data == "admin_users":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                    
+                users = self.user_manager.get_all_users()
+                if users:
+                    user_list = []
+                    for chat_id in users:
+                        username = self.user_manager.get_user_info(chat_id)
+                        if username:
+                            user_list.append(f"{chat_id} - {username}")
+                        else:
+                            user_list.append(f"{chat_id}")
+                    
+                    user_text = "👥 <b>Registered users:</b>\n\n" + "\n".join(user_list)
+                else:
+                    user_text = "No users are currently registered."
+                
+                # Add back button
+                keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await query.edit_message_text(user_text, reply_markup=reply_markup, parse_mode='HTML')
+                return
+                
+            elif query.data == "admin_trigger_today":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Ask for channel ID
+                keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await query.edit_message_text(
+                    "🔄 <b>Send Today's Updates</b>\n\n"
+                    "Please send the channel ID where you want to send today's updates.\n"
+                    "Example: <code>-1001234567890</code>",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML'
+                )
+                
+                # Set up conversation state to expect channel ID next
+                context.user_data["expecting_channel_id"] = True
+                return
+                
+            elif query.data == "admin_back":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                    
+                # Return to admin panel
+                keyboard = [
+                    [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
+                    [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")]
+                ]
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await query.edit_message_text(
+                    "🔐 <b>Admin Control Panel</b>\n\nPlease select an admin function:",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
                 return
 
             elif query.data == "cancel":
@@ -1603,13 +1674,19 @@ class MintosBot:
         # Delete the command message
         await update.message.delete()
 
+    async def is_admin(self, user_id: int) -> bool:
+        """Check if user is admin"""
+        return str(user_id) == "114691530"  # This is the admin ID from your logs
+        
     async def users_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Show list of registered users (admin use only)."""
+        if not update.effective_user:
+            return
+            
         user_id = update.effective_user.id
 
-        # Only allow the original chat with the bot to use this command
-        # You can modify this check based on which user should be considered admin
-        if str(user_id) != "114691530":  # This is the ID that appeared in your logs
+        # Only allow admin to use this command
+        if not await self.is_admin(user_id):
             await update.message.reply_text("Sorry, this command is only available to the admin.")
             await update.message.delete()
             return
@@ -1631,6 +1708,43 @@ class MintosBot:
         await update.message.reply_text(user_text)
         # Delete the command message
         await update.message.delete()
+        
+    async def admin_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Admin command panel with various admin functions"""
+        if not update.effective_user or not update.effective_chat or not update.message:
+            return
+            
+        user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
+        
+        # Only allow admin to use this command
+        if not await self.is_admin(user_id):
+            await update.message.reply_text("Sorry, this command is only available to the admin.")
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+            return
+            
+        try:
+            # Try to delete the command message
+            await update.message.delete()
+        except Exception as e:
+            logger.warning(f"Could not delete command message: {e}")
+        
+        # Create admin panel with inline keyboard
+        keyboard = [
+            [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
+            [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")]
+        ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await self.send_message(
+            chat_id,
+            "🔐 <b>Admin Control Panel</b>\n\nPlease select an admin function:",
+            reply_markup=reply_markup,
+            disable_web_page_preview=True
+        )
 
 if __name__ == "__main__":
     bot = MintosBot()
