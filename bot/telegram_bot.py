@@ -1501,8 +1501,48 @@ class MintosBot:
                 except Exception as e:
                     logger.error(f"Error sending update: {e}")
 
-            # Send status
-            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates to {target_channel}"
+            # After sending updates, also check for campaigns
+            logger.info("Checking for active campaigns")
+            campaigns = self.data_manager.load_previous_campaigns()
+            
+            if campaigns:
+                # Filter for active campaigns
+                active_campaigns = [c for c in campaigns if self._is_campaign_active(c) and c.get('type') != 4]
+                
+                if active_campaigns:
+                    logger.info(f"Found {len(active_campaigns)} active campaigns")
+                    # Send campaign header
+                    await self.application.bot.send_message(
+                        chat_id=resolved_channel,
+                        text=f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(active_campaigns)} active campaigns:",
+                        parse_mode='HTML'
+                    )
+                    
+                    # Send each campaign
+                    campaign_sends = 0
+                    for campaign in active_campaigns:
+                        try:
+                            message = self.format_campaign_message(campaign)
+                            await self.application.bot.send_message(
+                                chat_id=resolved_channel,
+                                text=message,
+                                parse_mode='HTML'
+                            )
+                            campaign_sends += 1
+                            await asyncio.sleep(0.5)  # Rate limiting
+                        except Exception as e:
+                            logger.error(f"Error sending campaign: {e}")
+                    
+                    logger.info(f"Sent {campaign_sends} campaigns")
+                else:
+                    logger.info("No active campaigns found")
+            
+            # Send status including both updates and campaigns
+            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates"
+            if 'campaign_sends' in locals():
+                status += f" and {campaign_sends} campaigns"
+            status += f" to {target_channel}"
+            
             logger.info(status)
             await self.send_message(chat_id, status)
 
