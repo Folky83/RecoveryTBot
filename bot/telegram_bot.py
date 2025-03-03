@@ -185,6 +185,9 @@ class MintosBot:
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
+            CommandHandler("documents", self.documents_command), # Show recent documents
+            CommandHandler("check_documents", self.check_documents_command), # Manually check for new documents
+            CommandHandler("help", self.help_command), # Help command
             CallbackQueryHandler(self.handle_callback)
         ]
 
@@ -436,8 +439,11 @@ class MintosBot:
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
             "• /campaigns - View current Mintos campaigns\n"
+            "• /documents - View recent company documents\n"
+            "• /check_documents - Manually check for new documents\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
+            "• /help - Show all available commands\n"
             f"{admin_command}\n"
             "You'll receive notifications about recovery updates, new company documents, and campaigns automatically. Stay tuned!"
         )
@@ -682,6 +688,85 @@ class MintosBot:
                 )
                 return
 
+            elif query.data == "check_documents":
+                # Show checking message
+                await query.edit_message_text("🔄 Checking for new company documents... Please wait.", disable_web_page_preview=True)
+                
+                try:
+                    # Force document check
+                    self._last_document_check = 0  # Reset last check time to force a check
+                    
+                    # Load company mapping from data manager
+                    company_mapping = self.data_manager.load_company_mapping()
+                    
+                    if not company_mapping:
+                        await query.edit_message_text("⚠️ No company mapping available for document scraping.", disable_web_page_preview=True)
+                        return
+                        
+                    # Check for new documents
+                    new_documents = self.document_scraper.check_all_companies(company_mapping)
+                    
+                    if new_documents:
+                        # Send information about new documents
+                        message = f"✅ Found {len(new_documents)} new documents:\n\n"
+                        
+                        for i, document in enumerate(new_documents[:5], 1):  # Show first 5 documents
+                            company = document.get('company_name', 'Unknown Company')
+                            title = document.get('title', 'Untitled Document')
+                            date = document.get('date', 'Unknown Date')
+                            url = document.get('url', '#')
+                            
+                            message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date})\n\n"
+                            
+                        if len(new_documents) > 5:
+                            message += f"... and {len(new_documents) - 5} more documents. Use /documents to see all recent documents.\n\n"
+                            
+                        message += "New document notifications will be sent to all users shortly."
+                        
+                        # Add a button to view all documents
+                        keyboard = [[InlineKeyboardButton("📄 View All Documents", callback_data="view_all_documents")]]
+                        reply_markup = InlineKeyboardMarkup(keyboard)
+                        
+                        await query.edit_message_text(
+                            message,
+                            reply_markup=reply_markup,
+                            parse_mode='HTML',
+                            disable_web_page_preview=False  # Enable preview for document links
+                        )
+                        
+                        # Also trigger sending the notification to all users
+                        for document in new_documents:
+                            if not self.data_manager.is_document_sent(document):
+                                # Format and send the message
+                                notification = self.format_document_message(document)
+                                await self.send_document_notification(notification)
+                                
+                                # Mark this document as sent
+                                self.data_manager.save_sent_document(document)
+                    else:
+                        # Add a button to view all documents
+                        keyboard = [[InlineKeyboardButton("📄 View All Documents", callback_data="view_all_documents")]]
+                        reply_markup = InlineKeyboardMarkup(keyboard)
+                        
+                        await query.edit_message_text(
+                            "✅ Document check completed. No new documents found.",
+                            reply_markup=reply_markup,
+                            disable_web_page_preview=True
+                        )
+                        
+                except Exception as e:
+                    logger.error(f"Error during document check: {e}", exc_info=True)
+                    await query.edit_message_text(
+                        f"⚠️ Error checking documents: {str(e)}",
+                        disable_web_page_preview=True
+                    )
+                return
+
+            elif query.data == "view_all_documents":
+                # Simulate /documents command
+                await self.documents_command(update, context)
+                return
+            
             elif query.data == "cancel":
                 await query.edit_message_text("Operation cancelled.", disable_web_page_preview=True)
                 return
@@ -1957,6 +2042,8 @@ class MintosBot:
             "/company - Check updates for a specific company\n"
             "/today - View all updates from today\n"
             "/campaigns - View current Mintos campaigns\n"
+            "/documents - View recent company documents\n"
+            "/check_documents - Manually check for new documents\n"
             "/trigger_today @channel - Send today's updates to a specified channel\n"
         )
         await update.message.reply_text(help_text)
@@ -2025,6 +2112,7 @@ class MintosBot:
         keyboard = [
             [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
             [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+            [InlineKeyboardButton("📄 Check Company Documents", callback_data="admin_check_documents")],
             [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
@@ -2035,6 +2123,175 @@ class MintosBot:
             reply_markup=reply_markup,
             disable_web_page_preview=True
         )
+
+    async def documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /documents command - show recent company documents"""
+        if not update.effective_chat or not update.message:
+            return
+            
+        chat_id = update.effective_chat.id
+        try:
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+            
+            # Load document data
+            document_data = {}
+            try:
+                document_cache_path = os.path.join(self.document_scraper.CACHE_DIR, self.document_scraper.DOCUMENTS_CACHE_FILE)
+                if os.path.exists(document_cache_path):
+                    with open(document_cache_path, 'r', encoding='utf-8') as f:
+                        document_data = json.load(f)
+            except Exception as e:
+                logger.error(f"Error loading document data: {e}")
+                document_data = {}
+            
+            if not document_data:
+                await self.send_message(
+                    chat_id,
+                    "❓ No document data available. Use /check_documents to fetch the latest documents.",
+                    disable_web_page_preview=True
+                )
+                return
+                
+            # Get most recent documents (last 10)
+            recent_documents = []
+            for company_id, documents in document_data.items():
+                company_name = self.data_manager.get_company_name(company_id) or company_id
+                for doc in documents:
+                    doc['company_name'] = company_name
+                    recent_documents.append(doc)
+            
+            # Sort by date (newest first) and take top 10
+            recent_documents.sort(key=lambda x: x.get('date', ''), reverse=True)
+            recent_documents = recent_documents[:10]
+            
+            if not recent_documents:
+                await self.send_message(
+                    chat_id,
+                    "❓ No documents found in the database. Use /check_documents to fetch the latest documents.",
+                    disable_web_page_preview=True
+                )
+                return
+                
+            # Create message with document list
+            message = "📄 <b>Recent Company Documents</b>\n\n"
+            for i, doc in enumerate(recent_documents, 1):
+                company = doc.get('company_name', 'Unknown Company')
+                title = doc.get('title', 'Untitled Document')
+                date = doc.get('date', 'Unknown Date')
+                url = doc.get('url', '#')
+                
+                message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date})\n\n"
+                
+            # Add check documents button
+            keyboard = [[InlineKeyboardButton("🔄 Check for New Documents", callback_data="check_documents")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await self.send_message(
+                chat_id,
+                message,
+                reply_markup=reply_markup,
+                disable_web_page_preview=False  # Enable preview for document links
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in documents_command: {e}", exc_info=True)
+            await self.send_message(
+                chat_id,
+                "⚠️ Error retrieving documents. Please try again.",
+                disable_web_page_preview=True
+            )
+    
+    async def check_documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /check_documents command - manually trigger document check"""
+        if not update.effective_chat or not update.message:
+            return
+            
+        chat_id = update.effective_chat.id
+        try:
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+                
+            # Show checking message
+            checking_message = await self.send_message(
+                chat_id,
+                "🔄 Checking for new company documents... Please wait.",
+                disable_web_page_preview=True
+            )
+            
+            # Force document check
+            self._last_document_check = 0  # Reset last check time to force a check
+            
+            # Load company mapping from data manager
+            company_mapping = self.data_manager.load_company_mapping()
+            
+            if not company_mapping:
+                await self.send_message(
+                    chat_id,
+                    "⚠️ No company mapping available for document scraping.",
+                    disable_web_page_preview=True
+                )
+                return
+                
+            # Check for new documents
+            new_documents = self.document_scraper.check_all_companies(company_mapping)
+            
+            # Delete checking message
+            if checking_message:
+                await self.application.bot.delete_message(chat_id=chat_id, message_id=checking_message.message_id)
+            
+            if new_documents:
+                # Send information about new documents
+                message = f"✅ Found {len(new_documents)} new documents:\n\n"
+                
+                for i, document in enumerate(new_documents[:5], 1):  # Show first 5 documents
+                    company = document.get('company_name', 'Unknown Company')
+                    title = document.get('title', 'Untitled Document')
+                    date = document.get('date', 'Unknown Date')
+                    url = document.get('url', '#')
+                    
+                    message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date})\n\n"
+                    
+                if len(new_documents) > 5:
+                    message += f"... and {len(new_documents) - 5} more documents. Use /documents to see all recent documents.\n\n"
+                    
+                message += "New document notifications will be sent to all users shortly."
+                
+                await self.send_message(
+                    chat_id,
+                    message,
+                    disable_web_page_preview=False  # Enable preview for document links
+                )
+                
+                # Also trigger sending the notification to all users
+                for document in new_documents:
+                    if not self.data_manager.is_document_sent(document):
+                        # Format and send the message
+                        notification = self.format_document_message(document)
+                        await self.send_document_notification(notification)
+                        
+                        # Mark this document as sent
+                        self.data_manager.save_sent_document(document)
+            else:
+                await self.send_message(
+                    chat_id,
+                    "✅ Document check completed. No new documents found.",
+                    disable_web_page_preview=True
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in check_documents_command: {e}", exc_info=True)
+            await self.send_message(
+                chat_id,
+                f"⚠️ Error checking documents: {str(e)}",
+                disable_web_page_preview=True
+            )
 
 if __name__ == "__main__":
     bot = MintosBot()
