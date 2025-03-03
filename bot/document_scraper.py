@@ -22,13 +22,9 @@ class DocumentScraper:
     CACHE_DIR = "data"
     DOCUMENTS_CACHE_FILE = os.path.join(CACHE_DIR, "documents_cache.json")
     
-    # Multiple URL patterns to try for each company
-    URL_PATTERNS = [
-        "https://www.mintos.com/en/lending-companies/{company_id}",
-        "https://www.mintos.com/en/loan-originators/{company_id}",
-        "https://www.mintos.com/en/loan-originators/{company_id}/documents",
-        "https://www.mintos.com/en/lending-companies/{company_id}/documents"
-    ]
+    # Main Mintos URLs
+    MAIN_URL = "https://www.mintos.com/en/"
+    COMPANIES_URL = "https://www.mintos.com/en/investing/"
     
     REQUEST_TIMEOUT = 10
     
@@ -98,22 +94,183 @@ class DocumentScraper:
         logger.error(f"Max retries reached for {url}")
         return None
         
-    def get_company_documents(self, company_id: str, company_name: str) -> List[Dict[str, Any]]:
+    def fetch_company_urls(self) -> Dict[str, Dict[str, str]]:
+        """Fetch company URLs from the Mintos website
+        
+        Returns:
+            Dictionary mapping company IDs to {name, url} dictionaries
+        """
+        logger.info("Fetching company URLs from Mintos website")
+        company_urls = {}
+        
+        # Try direct URLs that are known to list loan originators
+        urls_to_try = [
+            "https://www.mintos.com/en/investing/",  # Main investing page
+            "https://www.mintos.com/en/loan-originators/",  # Loan originators page
+            "https://www.mintos.com/en/investing/loan-originators/",  # Alternative path
+            "https://www.mintos.com/en/investing/current-loan-originators/",  # Current originators
+            "https://www.mintos.com/en/investing/suspended-loan-originators/",  # Suspended originators
+            "https://www.mintos.com/en/",  # Main page
+        ]
+        
+        all_company_links = []
+        
+        # Try each URL
+        for url in urls_to_try:
+            logger.info(f"Trying to fetch companies from: {url}")
+            html_content = self._make_request(url)
+            if not html_content:
+                logger.warning(f"Failed to fetch content from {url}")
+                continue
+                
+            try:
+                soup = BeautifulSoup(html_content, 'html.parser')
+                
+                # Look for company links - try different approaches
+                company_links = []
+                
+                # Method 1: Look for company cards
+                company_cards = soup.find_all('div', class_=lambda c: c and ('company-card' in c or 'loan-originator' in c))
+                if company_cards:
+                    logger.info(f"Found {len(company_cards)} company cards")
+                    for card in company_cards:
+                        link = card.find('a')
+                        if link and link.get('href'):
+                            company_links.append(link)
+                
+                # Method 2: Look for loan originator list items
+                loan_originator_items = soup.find_all('li', class_=lambda c: c and ('loan-originator' in c or 'company-item' in c))
+                if loan_originator_items:
+                    logger.info(f"Found {len(loan_originator_items)} loan originator list items")
+                    for item in loan_originator_items:
+                        link = item.find('a')
+                        if link and link.get('href'):
+                            company_links.append(link)
+                
+                # Method 3: Look for tables with loan originators
+                tables = soup.find_all('table')
+                for table in tables:
+                    if 'loan' in table.get_text().lower() or 'originator' in table.get_text().lower():
+                        logger.info("Found loan originator table")
+                        for row in table.find_all('tr'):
+                            links = row.find_all('a')
+                            for link in links:
+                                if link.get('href'):
+                                    company_links.append(link)
+                
+                # Method 4: Find any link that contains loan originator paths
+                if not company_links:
+                    logger.info("Using fallback link finder")
+                    for link in soup.find_all('a'):
+                        href = link.get('href', '')
+                        if href and ('loan-originators/' in href or 'lending-companies/' in href):
+                            # Skip category/index pages
+                            if (href.endswith('loan-originators/') or 
+                                href.endswith('lending-companies/') or
+                                'page=' in href or
+                                'category=' in href):
+                                continue
+                            company_links.append(link)
+                
+                logger.info(f"Found {len(company_links)} potential company links on {url}")
+                all_company_links.extend(company_links)
+                
+            except Exception as e:
+                logger.error(f"Error parsing {url}: {e}", exc_info=True)
+        
+        # Process all found links
+        processed_urls = set()  # To avoid duplicates
+        for link in all_company_links:
+            try:
+                href = link.get('href', '')
+                if not href or href in processed_urls:
+                    continue
+                    
+                processed_urls.add(href)
+                
+                # Ensure absolute URL
+                if not href.startswith('http'):
+                    if href.startswith('/'):
+                        href = f"https://www.mintos.com{href}"
+                    else:
+                        href = f"https://www.mintos.com/{href}"
+                
+                # Extract company ID from URL
+                if 'loan-originators/' in href or 'lending-companies/' in href:
+                    url_parts = href.rstrip('/').split('/')
+                    company_id = url_parts[-1]
+                    
+                    # Skip if not a company page
+                    if (company_id in ['loan-originators', 'lending-companies'] or
+                        not company_id or
+                        '?' in company_id or
+                        company_id.isdigit()):  # Likely a page number
+                        continue
+                        
+                    # Get name from link text or fallback to ID
+                    company_name = link.get_text(strip=True)
+                    if not company_name or len(company_name) < 2:
+                        company_name = company_id.replace('-', ' ').title()
+                        
+                    company_urls[company_id] = {
+                        'name': company_name,
+                        'url': href
+                    }
+                    logger.debug(f"Added company: {company_name} ({company_id}) at {href}")
+            except Exception as e:
+                logger.error(f"Error processing link {link}: {e}")
+                
+        logger.info(f"Found {len(company_urls)} total company URLs")
+        return company_urls
+            
+    def get_company_documents(self, company_id: str, company_name: str, company_url: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get documents for a specific company
         
         Args:
             company_id: The ID of the company
             company_name: The name of the company
+            company_url: Optional direct URL to the company page
             
         Returns:
             List of documents for the company
         """
         logger.info(f"Fetching documents for {company_name} (ID: {company_id})")
         
-        # Try multiple URL patterns
-        for pattern in self.URL_PATTERNS:
-            url = pattern.format(company_id=company_id)
-            logger.debug(f"Trying URL pattern: {url}")
+        if company_url:
+            # If we have a direct URL, use it
+            logger.debug(f"Using provided company URL: {company_url}")
+            html_content = self._make_request(company_url)
+            if html_content:
+                logger.info(f"Successfully fetched content from {company_url}")
+                documents = self._parse_documents(html_content, company_name)
+                if documents:
+                    logger.info(f"Found {len(documents)} documents at {company_url}")
+                    return documents
+                    
+                # If no documents found on the main page, try to find a documents subpage
+                if '/' in company_url:
+                    base_url = '/'.join(company_url.split('/')[:-1])
+                    documents_url = f"{base_url}/documents"
+                    logger.debug(f"Trying documents subpage: {documents_url}")
+                    
+                    html_content = self._make_request(documents_url)
+                    if html_content:
+                        logger.info(f"Successfully fetched content from {documents_url}")
+                        documents = self._parse_documents(html_content, company_name)
+                        if documents:
+                            logger.info(f"Found {len(documents)} documents at {documents_url}")
+                            return documents
+        
+        # Fallback to common URL patterns if we don't have a URL or it didn't work
+        common_patterns = [
+            f"https://www.mintos.com/en/lending-companies/{company_id}",
+            f"https://www.mintos.com/en/lending-companies/{company_id}/documents",
+            f"https://www.mintos.com/en/loan-originators/{company_id}",
+            f"https://www.mintos.com/en/loan-originators/{company_id}/documents"
+        ]
+        
+        for url in common_patterns:
+            logger.debug(f"Trying fallback URL: {url}")
             
             html_content = self._make_request(url)
             if html_content:
@@ -125,7 +282,7 @@ class DocumentScraper:
                 else:
                     logger.debug(f"No documents found at {url}, trying next pattern")
         
-        logger.warning(f"Could not find any documents for {company_name} after trying all URL patterns")
+        logger.warning(f"Could not find any documents for {company_name} after trying all URLs")
         return []
         
     def _parse_documents(self, html_content: str, company_name: str) -> List[Dict[str, Any]]:
@@ -361,12 +518,43 @@ class DocumentScraper:
         """
         new_documents = []
         
+        # Try to fetch company URLs directly from Mintos website
+        fetched_company_urls = self.fetch_company_urls()
+        logger.info(f"Fetched {len(fetched_company_urls)} companies directly from Mintos website")
+        
+        # Combine the provided mapping with the fetched URLs
+        combined_companies = {}
+        
+        # Start with the fetched company data (it has URLs)
+        for company_id, company_info in fetched_company_urls.items():
+            combined_companies[company_id] = {
+                'name': company_info['name'],
+                'url': company_info['url']
+            }
+            
+        # Add any companies from the provided mapping that aren't already included
         for company_id, company_name in company_mapping.items():
+            if company_id not in combined_companies:
+                combined_companies[company_id] = {
+                    'name': company_name,
+                    'url': None  # No direct URL, will use fallback patterns
+                }
+            elif not combined_companies[company_id]['name']:
+                # Update name if it's missing in the fetched data
+                combined_companies[company_id]['name'] = company_name
+        
+        logger.info(f"Checking documents for {len(combined_companies)} companies")
+        
+        # Process all companies
+        for company_id, company_info in combined_companies.items():
+            company_name = company_info['name']
+            company_url = company_info['url']
+            
             try:
                 logger.info(f"Checking documents for {company_name}")
                 
                 # Get current documents
-                current_documents = self.get_company_documents(company_id, company_name)
+                current_documents = self.get_company_documents(company_id, company_name, company_url)
                 
                 # Get previous documents for this company
                 previous_documents = self.documents_data.get(company_id, [])

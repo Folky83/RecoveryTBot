@@ -40,18 +40,31 @@ def test_document_scraper():
     
     logger.info(f"Loaded {len(company_mapping)} companies from mapping")
     
-    # Test URL patterns
-    for company_id, company_name in company_mapping.items():
-        for pattern in scraper.URL_PATTERNS:
-            url = pattern.format(company_id=company_id)
-            logger.info(f"URL pattern for {company_name}: {url}")
+    # Test fetching company URLs from Mintos site
+    logger.info("Testing dynamic company URL fetching from Mintos site")
+    fetched_companies = scraper.fetch_company_urls()
+    logger.info(f"Dynamically fetched {len(fetched_companies)} companies from Mintos site")
+    
+    for company_id, company_info in list(fetched_companies.items())[:5]:  # Show first 5
+        logger.info(f"Fetched company: {company_info['name']} (ID: {company_id}, URL: {company_info['url']})")
     
     # Test document scraping for a single company
-    sample_company_id = list(company_mapping.keys())[0]
-    sample_company_name = company_mapping[sample_company_id]
-    
-    logger.info(f"Testing document scraping for {sample_company_name} (ID: {sample_company_id})")
-    documents = scraper.get_company_documents(sample_company_id, sample_company_name)
+    # First try to use a company from the fetched list
+    if fetched_companies:
+        sample_company_id = list(fetched_companies.keys())[0]
+        sample_company_info = fetched_companies[sample_company_id]
+        sample_company_name = sample_company_info['name']
+        sample_company_url = sample_company_info['url']
+        
+        logger.info(f"Testing document scraping for {sample_company_name} (ID: {sample_company_id})")
+        documents = scraper.get_company_documents(sample_company_id, sample_company_name, sample_company_url)
+    else:
+        # Fallback to the mapping if no companies were fetched
+        sample_company_id = list(company_mapping.keys())[0]
+        sample_company_name = company_mapping[sample_company_id]
+        
+        logger.info(f"Testing document scraping for {sample_company_name} (ID: {sample_company_id})")
+        documents = scraper.get_company_documents(sample_company_id, sample_company_name)
     
     if documents:
         logger.info(f"Found {len(documents)} documents for {sample_company_name}")
