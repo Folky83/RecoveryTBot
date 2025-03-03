@@ -352,7 +352,11 @@ class MintosBot:
                 full_name = f"{user.first_name} {user.last_name if user.last_name else ''}".strip() if user else None
                 user_identifier = username or full_name or "Unknown"
                 logger.info(f"Start command from user {user_identifier} (chat_id: {chat_id})")
-                welcome_message = self._create_welcome_message()
+                
+                # Check if user is admin to show admin command
+                is_admin = await self.is_admin(user.id if user else 0)
+                welcome_message = self._create_welcome_message(show_admin=is_admin)
+                
                 # Save username for individual users
                 self.user_manager.add_user(str(chat_id), username)
             await self.send_message(chat_id, welcome_message, disable_web_page_preview=True)
@@ -362,8 +366,10 @@ class MintosBot:
             logger.error(f"Start command error: {e}", exc_info=True)
             await self.send_message(chat_id, "⚠️ Error processing command", disable_web_page_preview=True)
 
-    def _create_welcome_message(self) -> str:
+    def _create_welcome_message(self, show_admin: bool = False) -> str:
         """Create formatted welcome message"""
+        admin_command = "• /admin - Admin control panel\n" if show_admin else ""
+        
         return (
             "🚀 Welcome to Mintos Update Bot!\n\n"
             "📅 Update Schedule:\n"
@@ -374,7 +380,7 @@ class MintosBot:
             "• /campaigns - View current Mintos campaigns\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
-            "• /admin - Admin control panel (admin only)\n\n"
+            f"{admin_command}\n"
             "You'll receive updates about lending companies automatically. Stay tuned!"
         )
 
