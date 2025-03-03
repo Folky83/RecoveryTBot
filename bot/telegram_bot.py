@@ -1178,13 +1178,36 @@ class MintosBot:
             logger.info(f"Update check scheduled for current time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
         return should_check
 
+    # Dictionary to track last refresh command usage per user
+    _refresh_cooldowns = {}
+    _refresh_cooldown_minutes = 10
+
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Force an immediate update check"""
+        """Force an immediate update check with cooldown period"""
         if not update.effective_chat:
             return
 
         chat_id = update.effective_chat.id
+        current_time = datetime.now()
+        
+        # Check if user is in cooldown period
+        if chat_id in self._refresh_cooldowns:
+            last_refresh = self._refresh_cooldowns[chat_id]
+            elapsed_minutes = (current_time - last_refresh).total_seconds() / 60
+            
+            if elapsed_minutes < self._refresh_cooldown_minutes:
+                remaining = round(self._refresh_cooldown_minutes - elapsed_minutes)
+                await self.send_message(
+                    chat_id, 
+                    f"⏳ Command on cooldown. Please wait {remaining} more minute(s) before using /refresh again.",
+                    disable_web_page_preview=True
+                )
+                return
+        
         try:
+            # Update cooldown timestamp
+            self._refresh_cooldowns[chat_id] = current_time
+            
             await self.send_message(chat_id, "🔄 Checking for updates...", disable_web_page_preview=True)
             await self._safe_update_check()
             await self.send_message(chat_id, "✅ Update check completed", disable_web_page_preview=True)
