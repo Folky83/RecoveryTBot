@@ -516,6 +516,24 @@ class MintosBot:
                 )
                 return
                 
+            elif query.data == "trigger_today_custom":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Show instructions for custom channel ID entry
+                await query.edit_message_text(
+                    "Please enter a custom channel ID using the command:\n\n"
+                    "<code>/trigger_today [channel_id]</code>\n\n"
+                    "For example:\n"
+                    "<code>/trigger_today 114691530</code> - for a user\n"
+                    "<code>/trigger_today -1001234567890</code> - for a channel",
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
+                
             elif query.data.startswith("trigger_today_"):
                 # Extract channel ID from callback data
                 target_channel = query.data.split("_")[2]
@@ -1588,19 +1606,18 @@ class MintosBot:
                 
                 # Check if it's a number referencing a user in the list
                 try:
-                    # If arg is a number, use it as an index to choose from registered users
-                    index = int(target_channel) - 1
+                    index = int(target_channel)
                     users = list(self.user_manager.get_all_users())
-                    if 0 <= index < len(users):
-                        target_channel = users[index]
-                        logger.info(f"Selected user by index {index+1}: {target_channel}")
+                    
+                    # If number is between 1 and number of users, use it as a user index
+                    if 1 <= index <= len(users):
+                        target_channel = users[index-1]
+                        logger.info(f"Selected user by index {index}: {target_channel}")
                     else:
-                        await self.send_message(
-                            chat_id,
-                            f"⚠️ Invalid user number. Please select a number between 1 and {len(users)}",
-                            disable_web_page_preview=True
-                        )
-                        return
+                        # If it's a number but not a valid index, use it directly as a channel ID
+                        # This allows entering any channel ID manually
+                        target_channel = str(target_channel)
+                        logger.info(f"Using provided numeric channel ID: {target_channel}")
                 except ValueError:
                     # Not a number, use as is (should be a channel ID)
                     logger.info(f"Using provided channel ID: {target_channel}")
@@ -1613,16 +1630,15 @@ class MintosBot:
             # Get all registered users
             users = self.user_manager.get_all_users()
             
-            if not users:
-                await self.send_message(chat_id, "No registered users found.", disable_web_page_preview=True)
-                return
-            
-            # Create buttons for each user
+            # Create buttons for registered users
             keyboard = []
             for i, user_id in enumerate(users, 1):
                 username = self.user_manager.get_user_info(user_id) or "Unknown"
                 button_text = f"{i}. {username} ({user_id})"
                 keyboard.append([InlineKeyboardButton(button_text, callback_data=f"trigger_today_{user_id}")])
+            
+            # Add button for manual ID entry
+            keyboard.append([InlineKeyboardButton("✏️ Enter custom channel ID", callback_data="trigger_today_custom")])
             
             reply_markup = InlineKeyboardMarkup(keyboard)
             await self.send_message(
