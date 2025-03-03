@@ -481,20 +481,56 @@ class MintosBot:
                     await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
                     return
                 
-                # Ask for channel ID
-                keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
-                reply_markup = InlineKeyboardMarkup(keyboard)
+                # Get all registered users
+                users = self.user_manager.get_all_users()
                 
+                if not users:
+                    # No users found
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    await query.edit_message_text(
+                        "🔄 <b>Send Today's Updates</b>\n\n"
+                        "No registered users found.",
+                        reply_markup=reply_markup,
+                        parse_mode='HTML'
+                    )
+                    return
+                
+                # Create buttons for each user
+                keyboard = []
+                for i, user_id in enumerate(users, 1):
+                    username = self.user_manager.get_user_info(user_id) or "Unknown"
+                    button_text = f"{i}. {username} ({user_id})"
+                    keyboard.append([InlineKeyboardButton(button_text, callback_data=f"trigger_today_{user_id}")])
+                
+                # Add back button
+                keyboard.append([InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")])
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
                 await query.edit_message_text(
                     "🔄 <b>Send Today's Updates</b>\n\n"
-                    "Please send the channel ID where you want to send today's updates.\n"
-                    "Example: <code>-1001234567890</code>",
+                    "Select a channel to send today's updates to:",
                     reply_markup=reply_markup,
                     parse_mode='HTML'
                 )
+                return
                 
-                # Set up conversation state to expect channel ID next
-                context.user_data["expecting_channel_id"] = True
+            elif query.data.startswith("trigger_today_"):
+                # Extract channel ID from callback data
+                target_channel = query.data.split("_")[2]
+                chat_id = update.effective_chat.id
+                
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Edit message to show processing
+                await query.edit_message_text("🔄 Processing, please wait...", disable_web_page_preview=True)
+                
+                # Send updates to the selected channel
+                await self._send_today_updates_to_channel(chat_id, target_channel)
                 return
                 
             elif query.data == "admin_back":
@@ -1514,7 +1550,7 @@ class MintosBot:
             return False
 
     async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /trigger_today @channel command"""
+        """Handle /trigger_today command with user selection"""
         try:
             if not update.message or not update.effective_chat or not update.effective_user:
                 return
@@ -1523,22 +1559,87 @@ class MintosBot:
             user_id = update.effective_user.id
             logger.info(f"Processing trigger_today command from user {user_id}")
 
+            # Only allow admin to use this command
+            if not await self.is_admin(user_id):
+                await update.message.reply_text("Sorry, this command is only available to the admin.")
+                try:
+                    await update.message.delete()
+                except Exception as e:
+                    logger.warning(f"Could not delete command message: {e}")
+                return
+
             # Try to delete the command message
             try:
                 await update.message.delete()
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
 
-            # Inform user that command is being processed
-            await self.send_message(chat_id, "Processing command...", disable_web_page_preview=True)
-
-            # Parse the channel argument
+            # Check if number or user was specified in args
             args = context.args if context and hasattr(context, 'args') else None
-            if not args:
-                await self.send_message(chat_id, "Please specify a channel (e.g., /trigger_today @yourchannel)", disable_web_page_preview=True)
+            if args:
+                # Attempt to use the provided argument (channel ID or number selection)
+                target_channel = args[0]
+                
+                # Check if it's a number referencing a user in the list
+                try:
+                    # If arg is a number, use it as an index to choose from registered users
+                    index = int(target_channel) - 1
+                    users = list(self.user_manager.get_all_users())
+                    if 0 <= index < len(users):
+                        target_channel = users[index]
+                        logger.info(f"Selected user by index {index+1}: {target_channel}")
+                    else:
+                        await self.send_message(
+                            chat_id,
+                            f"⚠️ Invalid user number. Please select a number between 1 and {len(users)}",
+                            disable_web_page_preview=True
+                        )
+                        return
+                except ValueError:
+                    # Not a number, use as is (should be a channel ID)
+                    logger.info(f"Using provided channel ID: {target_channel}")
+                
+                # Continue with sending updates to the target channel
+                await self._send_today_updates_to_channel(chat_id, target_channel)
                 return
+                
+            # No arguments provided, display user selection interface
+            # Get all registered users
+            users = self.user_manager.get_all_users()
+            
+            if not users:
+                await self.send_message(chat_id, "No registered users found.", disable_web_page_preview=True)
+                return
+            
+            # Create buttons for each user
+            keyboard = []
+            for i, user_id in enumerate(users, 1):
+                username = self.user_manager.get_user_info(user_id) or "Unknown"
+                button_text = f"{i}. {username} ({user_id})"
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"trigger_today_{user_id}")])
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await self.send_message(
+                chat_id,
+                "📲 <b>Select a channel to send today's updates to:</b>\n\n"
+                "You can also use <code>/trigger_today [number]</code> or <code>/trigger_today [channel_id]</code>",
+                reply_markup=reply_markup,
+                disable_web_page_preview=True
+            )
 
-            target_channel = args[0]
+        except Exception as e:
+            logger.error(f"Error in trigger_today_command: {e}", exc_info=True)
+            await self.send_message(
+                chat_id,
+                "⚠️ An error occurred while processing your command.",
+                disable_web_page_preview=True
+            )
+            
+    async def _send_today_updates_to_channel(self, admin_chat_id: Union[int, str], target_channel: str) -> None:
+        """Send today's updates to the specified channel"""
+        try:
+            # Inform user that command is being processed
+            await self.send_message(admin_chat_id, "🔄 Processing command...", disable_web_page_preview=True)
             logger.info(f"Target channel specified: {target_channel}")
 
             try:
@@ -1547,7 +1648,7 @@ class MintosBot:
                 logger.info(f"Channel resolved: {resolved_channel}")
             except ValueError as e:
                 await self.send_message(
-                    chat_id,
+                    admin_chat_id,
                     f"⚠️ {str(e)}\n"
                     "Please verify:\n"
                     "1. The channel exists\n"
@@ -1567,7 +1668,7 @@ class MintosBot:
 
                 if 'not enough rights' in error_msg:
                     await self.send_message(
-                        chat_id,
+                        admin_chat_id,
                         "⚠️ Bot needs admin rights. Please:\n"
                         "1. Add the bot as channel admin\n"
                         "2. Enable 'Post Messages' permission\n"
@@ -1576,7 +1677,7 @@ class MintosBot:
                     )
                 else:
                     await self.send_message(
-                        chat_id,
+                        admin_chat_id,
                         f"⚠️ Error accessing channel: {str(e)}\n"
                         "Please verify the bot's permissions.",
                         disable_web_page_preview=True
@@ -1610,7 +1711,7 @@ class MintosBot:
 
             # Handle no updates case - only notify the command sender, not the channel
             if not today_updates:
-                await self.send_message(chat_id, "✅ No updates found for today", disable_web_page_preview=True)
+                await self.send_message(admin_chat_id, "✅ No updates found for today", disable_web_page_preview=True)
                 return
 
             # Send updates to the channel
@@ -1640,15 +1741,24 @@ class MintosBot:
                     except Exception as e:
                         logger.error(f"Error sending update: {e}")
 
+            # Get channel name for the status message
+            channel_name = target_channel
+            try:
+                channel_info = await self.application.bot.get_chat(resolved_channel)
+                if channel_info.title:
+                    channel_name = channel_info.title
+            except:
+                pass  # If we can't get the name, use the ID
+
             # Send status only to the user who triggered the command
-            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates to {target_channel}"
+            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates to {channel_name}"
             logger.info(status)
-            await self.send_message(chat_id, status, disable_web_page_preview=True)
+            await self.send_message(admin_chat_id, status, disable_web_page_preview=True)
 
         except Exception as e:
-            logger.error(f"Error in trigger_today_command: {e}", exc_info=True)
+            logger.error(f"Error sending updates to channel: {e}", exc_info=True)
             await self.send_message(
-                chat_id,
+                admin_chat_id,
                 "⚠️ An error occurred. Please verify:\n"
                 "1. Channel name/ID is correct\n"
                 "2. Bot has proper permissions\n"
