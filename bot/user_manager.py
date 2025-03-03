@@ -7,7 +7,7 @@ logger = setup_logger(__name__)
 
 class UserManager:
     def __init__(self):
-        self.users = set()
+        self.users = {}  # Changed from set to dict to store username with chat_id
         self._ensure_data_directory()
         self.load_users()
 
@@ -22,18 +22,26 @@ class UserManager:
         try:
             if os.path.exists(USERS_FILE):
                 with open(USERS_FILE, 'r') as f:
-                    self.users = set(json.load(f))
-            logger.info(f"Loaded {len(self.users)} users")
+                    data = json.load(f)
+                    # Handle both old format (list of chat_ids) and new format (dict with usernames)
+                    if isinstance(data, list):
+                        # Convert old format to new format
+                        self.users = {chat_id: None for chat_id in data}
+                        logger.info(f"Converted {len(data)} users from old format to new format")
+                    else:
+                        self.users = data
+                logger.info(f"Loaded {len(self.users)} users")
+            else:
+                self.users = {}
         except Exception as e:
             logger.error(f"Error loading users: {e}")
-            self.users = set()  # Reset to empty set on error
+            self.users = {}  # Reset to empty dict on error
 
     def save_users(self):
         try:
-            user_list = list(self.users)
             with open(USERS_FILE, 'w') as f:
-                json.dump(user_list, f)
-            logger.info(f"Users saved successfully: {user_list}")
+                json.dump(self.users, f)
+            logger.info(f"Users saved successfully: {self.users}")
             
             # Verify the file was written correctly
             if os.path.exists(USERS_FILE):
@@ -45,21 +53,35 @@ class UserManager:
         except Exception as e:
             logger.error(f"Error saving users: {e}", exc_info=True)
 
-    def add_user(self, chat_id):
-        self.users.add(str(chat_id))
+    def add_user(self, chat_id, username=None):
+        """Add or update a user with optional username"""
+        chat_id = str(chat_id)
+        self.users[chat_id] = username
         self.save_users()
-        logger.info(f"Added new user: {chat_id}")
+        if username:
+            logger.info(f"Added/updated user: {chat_id} (username: {username})")
+        else:
+            logger.info(f"Added/updated user: {chat_id}")
 
     def remove_user(self, chat_id):
         """Remove a user from the saved users list"""
         chat_id = str(chat_id)
         if chat_id in self.users:
-            self.users.remove(chat_id)
+            username = self.users.pop(chat_id)
             self.save_users()
-            logger.info(f"Removed user: {chat_id}")
+            if username:
+                logger.info(f"Removed user: {chat_id} (username: {username})")
+            else:
+                logger.info(f"Removed user: {chat_id}")
 
     def get_all_users(self):
-        return list(self.users)
+        """Get list of all user chat IDs"""
+        return list(self.users.keys())
+    
+    def get_user_info(self, chat_id):
+        """Get username for a given chat_id"""
+        chat_id = str(chat_id)
+        return self.users.get(chat_id)
 
     def has_user(self, chat_id):
         """Check if a user exists in the saved users list"""

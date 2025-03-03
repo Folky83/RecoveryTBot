@@ -341,13 +341,19 @@ class MintosBot:
             user = update.effective_user
 
             if chat_type in ['channel', 'supergroup', 'group']:
-                logger.info(f"Start command from channel/group {update.effective_chat.title} (chat_id: {chat_id})")
+                chat_title = update.effective_chat.title
+                logger.info(f"Start command from channel/group {chat_title} (chat_id: {chat_id})")
                 welcome_message = "🚀 Bot added to channel/group. Updates will be sent here."
+                # Save chat title as the "username" for channels/groups
+                self.user_manager.add_user(str(chat_id), chat_title)
             else:
-                logger.info(f"Start command from user {user.username} (chat_id: {chat_id})")
+                username = user.username if user else None
+                full_name = f"{user.first_name} {user.last_name if user.last_name else ''}".strip() if user else None
+                user_identifier = username or full_name or "Unknown"
+                logger.info(f"Start command from user {user_identifier} (chat_id: {chat_id})")
                 welcome_message = self._create_welcome_message()
-
-            self.user_manager.add_user(str(chat_id))
+                # Save username for individual users
+                self.user_manager.add_user(str(chat_id), username)
             await self.send_message(chat_id, welcome_message, disable_web_page_preview=True)
             logger.info(f"Chat {chat_id} registered")
 
@@ -1610,7 +1616,15 @@ class MintosBot:
 
         users = self.user_manager.get_all_users()
         if users:
-            user_text = "Registered users:\n" + "\n".join(users)
+            user_list = []
+            for chat_id in users:
+                username = self.user_manager.get_user_info(chat_id)
+                if username:
+                    user_list.append(f"{chat_id} - {username}")
+                else:
+                    user_list.append(f"{chat_id}")
+            
+            user_text = "Registered users:\n" + "\n".join(user_list)
         else:
             user_text = "No users are currently registered."
 
