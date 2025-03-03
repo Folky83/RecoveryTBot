@@ -30,11 +30,20 @@ class UserManager:
 
     def save_users(self):
         try:
+            user_list = list(self.users)
             with open(USERS_FILE, 'w') as f:
-                json.dump(list(self.users), f)
-            logger.info("Users saved successfully")
+                json.dump(user_list, f)
+            logger.info(f"Users saved successfully: {user_list}")
+            
+            # Verify the file was written correctly
+            if os.path.exists(USERS_FILE):
+                with open(USERS_FILE, 'r') as f:
+                    saved_data = f.read().strip()
+                    logger.info(f"Verification - users.json contains: {saved_data}")
+            else:
+                logger.error(f"Verification failed - {USERS_FILE} does not exist after save")
         except Exception as e:
-            logger.error(f"Error saving users: {e}")
+            logger.error(f"Error saving users: {e}", exc_info=True)
 
     def add_user(self, chat_id):
         self.users.add(str(chat_id))

@@ -175,6 +175,7 @@ class MintosBot:
             CommandHandler("refresh", self.refresh_command),
             CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("trigger_today", self.trigger_today_command),
+            CommandHandler("users", self.users_command), #Added
             CallbackQueryHandler(self.handle_callback)
         ]
 
@@ -365,7 +366,8 @@ class MintosBot:
             "• /today - View all updates from today\n"
             "• /campaigns - View current Mintos campaigns\n"
             "• /refresh - Force an immediate update check\n"
-            "• /start - Show this welcome message\n\n"
+            "• /start - Show this welcome message\n"
+            "• /users - View registered users (admin only)\n\n" #Added
             "You'll receive updates about lending companies automatically. Stay tuned!"
         )
 
@@ -758,7 +760,8 @@ class MintosBot:
                     message += f"🎁 <b>Bonus:</b> €{bonus_text}\n"
             except Exception:
                 # Fallback to original value if any error occurs
-                message += f"🎁 <b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
+                message += f"🎁```python
+<b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
 
         # Required investment
         if campaign.get('requiredPrincipalExposure'):
@@ -1189,19 +1192,19 @@ class MintosBot:
 
         chat_id = update.effective_chat.id
         current_time = datetime.now()
-        
+
         # Try to delete the command message, continue if not possible
         try:
             if update.message:
                 await update.message.delete()
         except Exception as e:
             logger.warning(f"Could not delete command message: {e}")
-        
+
         # Check if user is in cooldown period
         if chat_id in self._refresh_cooldowns:
             last_refresh = self._refresh_cooldowns[chat_id]
             elapsed_minutes = (current_time - last_refresh).total_seconds() / 60
-            
+
             if elapsed_minutes < self._refresh_cooldown_minutes:
                 remaining = round(self._refresh_cooldown_minutes - elapsed_minutes)
                 await self.send_message(
@@ -1210,11 +1213,11 @@ class MintosBot:
                     disable_web_page_preview=True
                 )
                 return
-        
+
         try:
             # Update cooldown timestamp
             self._refresh_cooldowns[chat_id] = current_time
-            
+
             await self.send_message(chat_id, "🔄 Checking for updates...", disable_web_page_preview=True)
             await self._safe_update_check()
             await self.send_message(chat_id, "✅ Update check completed", disable_web_page_preview=True)
@@ -1576,6 +1579,45 @@ class MintosBot:
                 "3. Bot can send messages",
                 disable_web_page_preview=True
             )
+
+    async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Send a message with available commands."""
+        help_text = (
+            "Available commands:\n"
+            "/start - Start the bot\n"
+            "/help - Show this help message\n"
+            "/updates - Show lending company updates\n"
+            "/refresh - Force refresh updates data\n"
+            "/users - View registered users (admin only)\n"
+            "/company - Check updates for a specific company\n"
+            "/today - View all updates from today\n"
+            "/campaigns - View current Mintos campaigns\n"
+            "/trigger_today @channel - Send today's updates to a specified channel\n"
+        )
+        await update.message.reply_text(help_text)
+        # Delete the command message
+        await update.message.delete()
+
+    async def users_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Show list of registered users (admin use only)."""
+        user_id = update.effective_user.id
+
+        # Only allow the original chat with the bot to use this command
+        # You can modify this check based on which user should be considered admin
+        if str(user_id) != "114691530":  # This is the ID that appeared in your logs
+            await update.message.reply_text("Sorry, this command is only available to the admin.")
+            await update.message.delete()
+            return
+
+        users = self.user_manager.get_all_users()
+        if users:
+            user_text = "Registered users:\n" + "\n".join(users)
+        else:
+            user_text = "No users are currently registered."
+
+        await update.message.reply_text(user_text)
+        # Delete the command message
+        await update.message.delete()
 
 if __name__ == "__main__":
     bot = MintosBot()
