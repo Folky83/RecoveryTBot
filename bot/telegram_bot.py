@@ -881,6 +881,8 @@ class MintosBot:
         title = document.get('title', None)
         date = document.get('date', None) 
         url = document.get('url', None)
+        document_type = document.get('document_type', None)
+        country_info = document.get('country_info', None)
         
         # If values are not direct, try to get from nested 'document' object
         if title is None or date is None or url is None:
@@ -891,17 +893,28 @@ class MintosBot:
                 date = doc.get('date', 'Unknown date')
             if not url:
                 url = doc.get('url', '#')
+            if not document_type:
+                document_type = doc.get('document_type', None)
+            if not country_info:
+                country_info = doc.get('country_info', None)
                 
-        # Format the document type based on file extension
-        doc_type = "PDF"
-        if url and "." in url:
-            file_ext = url.split(".")[-1].lower()
-            if file_ext in ["xls", "xlsx", "csv"]:
-                doc_type = "Spreadsheet"
-            elif file_ext in ["doc", "docx"]:
-                doc_type = "Word Document"
-            elif file_ext in ["ppt", "pptx"]:
-                doc_type = "Presentation"
+        # Determine document type based on metadata or extension
+        if document_type:
+            # Use the document type from metadata
+            doc_type = document_type.capitalize()
+        else:
+            # Format the document type based on file extension
+            doc_type = "PDF"
+            if url and "." in url:
+                file_ext = url.split(".")[-1].lower()
+                if file_ext in ["xls", "xlsx", "csv"]:
+                    doc_type = "Spreadsheet"
+                elif file_ext in ["doc", "docx"]:
+                    doc_type = "Word Document"
+                elif file_ext in ["ppt", "pptx"]:
+                    doc_type = "Presentation"
+                elif file_ext in ["zip", "rar"]:
+                    doc_type = "Archive"
                 
         # Format date if possible
         formatted_date = date
@@ -931,13 +944,30 @@ class MintosBot:
             emoji = "📑"
             
         # Create a more attractive message with emoji and formatting
-        return (
+        message = (
             f"{emoji} <b>New {doc_type} Document Published</b>\n\n"
             f"🏢 <b>Company:</b> {company_name}\n"
             f"📋 <b>Title:</b> {title}\n"
-            f"📅 <b>Published:</b> {formatted_date}\n\n"
-            f"<a href='{url}'>📥 Download Document</a>"
+            f"📅 <b>Published:</b> {formatted_date}\n"
         )
+        
+        # Add country-specific information if available
+        if country_info and isinstance(country_info, dict) and country_info.get('is_country_specific', False):
+            countries = country_info.get('countries', [])
+            regions = country_info.get('regions', [])
+            
+            if countries:
+                countries_str = ", ".join(country.capitalize() for country in countries)
+                message += f"🌍 <b>Countries:</b> {countries_str}\n"
+                
+            if regions:
+                regions_str = ", ".join(region.capitalize() for region in regions)
+                message += f"🗺️ <b>Regions:</b> {regions_str}\n"
+        
+        # Add download link
+        message += f"\n<a href='{url}'>📥 Download Document</a>"
+        
+        return message
         
     async def send_document_notification(self, message: str) -> None:
         """Send document notification to all registered users
