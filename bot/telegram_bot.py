@@ -9,10 +9,16 @@ from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, Retry
 import math
 
 from .logger import setup_logger
-from .config import TELEGRAM_TOKEN, UPDATES_FILE, CAMPAIGNS_FILE
+from .config import (
+    TELEGRAM_TOKEN, 
+    UPDATES_FILE, 
+    CAMPAIGNS_FILE, 
+    DOCUMENT_CHECK_INTERVAL_HOURS
+)
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
+from .document_scraper import DocumentScraper
 import os
 
 logger = setup_logger(__name__)
@@ -64,7 +70,9 @@ class MintosBot:
             self.data_manager = DataManager()
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
+            self.document_scraper = DocumentScraper()
             self._is_startup_check = True  # Flag to track initial startup
+            self._last_document_check = 0  # Timestamp of last document check
             self._initialized = True
             logger.info("Bot instance created")
 
@@ -277,9 +285,58 @@ class MintosBot:
         try:
             await asyncio.sleep(1)  # Prevent conflicts
             await self.check_updates()
+            
+            # Check for new company documents if it's time
+            await self.check_company_documents()
+            
             logger.info("Update check completed")
         except Exception as e:
             logger.error(f"Update check error: {e}", exc_info=True)
+            
+    async def check_company_documents(self) -> None:
+        """Check for new documents on company pages"""
+        try:
+            current_time = time.time()
+            # Convert hours to seconds for comparison
+            check_interval_seconds = DOCUMENT_CHECK_INTERVAL_HOURS * 3600
+            
+            # Only check once per day or after interval has passed
+            if (current_time - self._last_document_check) >= check_interval_seconds:
+                logger.info("Checking for new company documents")
+                
+                # Load company mapping from data manager
+                company_mapping = self.data_manager.load_company_mapping()
+                
+                if not company_mapping:
+                    logger.warning("No company mapping available for document scraping")
+                    return
+                
+                # Check for new documents
+                new_documents = self.document_scraper.check_all_companies(company_mapping)
+                
+                if new_documents:
+                    logger.info(f"Found {len(new_documents)} new documents")
+                    
+                    # Send notifications for each new document
+                    for document in new_documents:
+                        if not self.data_manager.is_document_sent(document):
+                            # Format and send the message
+                            message = self.format_document_message(document)
+                            await self.send_document_notification(message)
+                            
+                            # Mark this document as sent
+                            self.data_manager.save_sent_document(document)
+                else:
+                    logger.info("No new documents found")
+                
+                # Update last check timestamp
+                self._last_document_check = current_time
+                logger.info("Document check completed")
+            else:
+                logger.debug("Skipping document check - checked recently")
+                
+        except Exception as e:
+            logger.error(f"Error checking company documents: {e}", exc_info=True)
 
     async def run(self) -> None:
         """Run the bot with polling and scheduled updates"""
@@ -373,7 +430,8 @@ class MintosBot:
         return (
             "🚀 Welcome to Mintos Update Bot!\n\n"
             "📅 Update Schedule:\n"
-            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n\n"
+            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n"
+            "• Daily checks for new company documents\n\n"
             "Available Commands:\n"
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
@@ -381,7 +439,7 @@ class MintosBot:
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
             f"{admin_command}\n"
-            "You'll receive updates about lending companies automatically. Stay tuned!"
+            "You'll receive notifications about recovery updates, new company documents, and campaigns automatically. Stay tuned!"
         )
 
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -562,6 +620,45 @@ class MintosBot:
                 await query.edit_message_text("✅ Admin panel closed.", disable_web_page_preview=True)
                 return
                 
+            elif query.data == "admin_check_documents":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Show checking message
+                await query.edit_message_text("🔄 Checking for new company documents...", disable_web_page_preview=True)
+                
+                try:
+                    # Force document check
+                    self._last_document_check = 0  # Reset last check time to force a check
+                    await self.check_company_documents()
+                    
+                    # Return to admin panel with success message
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    await query.edit_message_text(
+                        "✅ Document check completed!\n\n"
+                        "Any new documents found will be sent to all registered users.",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True
+                    )
+                except Exception as e:
+                    logger.error(f"Error during document check: {e}", exc_info=True)
+                    
+                    # Return to admin panel with error message
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    await query.edit_message_text(
+                        f"⚠️ Error checking documents: {str(e)}\n\n"
+                        "Please try again later.",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True
+                    )
+                return
+                
             elif query.data == "admin_back":
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
@@ -572,6 +669,7 @@ class MintosBot:
                 keyboard = [
                     [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
                     [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+                    [InlineKeyboardButton("📄 Check Company Documents", callback_data="admin_check_documents")],
                     [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
@@ -682,6 +780,53 @@ class MintosBot:
             await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
 
     _failed_messages: List[Dict[str, Any]] = []
+    
+    def format_document_message(self, document: Dict[str, Any]) -> str:
+        """Format a notification message for a new document
+        
+        Args:
+            document: Document information dictionary
+            
+        Returns:
+            Formatted message text
+        """
+        company_name = document.get('company_name', 'Unknown Company')
+        doc = document.get('document', {})
+        title = doc.get('title', 'Untitled Document')
+        date = doc.get('date', 'Unknown date')
+        url = doc.get('url', '')
+        
+        return (
+            f"📄 <b>New Document Published</b>\n\n"
+            f"<b>Company:</b> {company_name}\n"
+            f"<b>Document:</b> {title}\n"
+            f"<b>Date:</b> {date}\n\n"
+            f"<a href='{url}'>Click here to view document</a>"
+        )
+        
+    async def send_document_notification(self, message: str) -> None:
+        """Send document notification to all registered users
+        
+        Args:
+            message: Formatted message text
+        """
+        user_ids = self.user_manager.get_all_users()
+        success_count = 0
+        
+        for chat_id in user_ids:
+            try:
+                await self.send_message(
+                    chat_id=chat_id,
+                    text=message,
+                    disable_web_page_preview=False,  # Allow document preview
+                )
+                success_count += 1
+                # Add a small delay to avoid rate limiting
+                await asyncio.sleep(0.1)
+            except Exception as e:
+                logger.error(f"Failed to send document notification to {chat_id}: {e}")
+                
+        logger.info(f"Sent document notification to {success_count}/{len(user_ids)} users")
 
     async def retry_failed_messages(self) -> None:
         """Attempt to resend failed messages"""
