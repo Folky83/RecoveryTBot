@@ -18,16 +18,16 @@ logging.basicConfig(
 
 logger = logging.getLogger('direct_extraction_test')
 
-# Test URLs - Using both URL patterns that Mintos seems to use
+# Test URLs - Based on our findings, Mintos is redirecting from loan-originators to lending-companies
+# So we should use the newer pattern directly to avoid unnecessary redirects
 TEST_URLS = [
-    # Pattern 1: loan-originators (older pattern)
-    ("Wowwo", "https://www.mintos.com/en/loan-originators/wowwo/"),
-    ("Creditstar", "https://www.mintos.com/en/loan-originators/creditstar/"),
-    ("Kviku", "https://www.mintos.com/en/loan-originators/kviku/"),
-    
-    # Pattern 2: lending-companies (newer pattern)
+    # Pattern: lending-companies (newer pattern that all URLs redirect to)
+    ("Wowwo", "https://www.mintos.com/en/lending-companies/wowwo/"),
+    ("Creditstar", "https://www.mintos.com/en/lending-companies/creditstar/"),
+    ("Kviku", "https://www.mintos.com/en/lending-companies/kviku/"),
     ("Placet Group", "https://www.mintos.com/en/lending-companies/placet-group/"),
     ("IuvoGroup", "https://www.mintos.com/en/lending-companies/iuvo-group/"),
+    ("Delfin Group", "https://www.mintos.com/en/lending-companies/delfin-group/"),
 ]
 
 def test_direct_document_extraction():
@@ -49,8 +49,15 @@ def test_direct_document_extraction():
         logger.info(f"Testing document extraction for {company_name} from {url}")
         
         try:
-            response = session.get(url, timeout=10)
+            # Allow redirects to follow from loan-originators to lending-companies
+            response = session.get(url, timeout=10, allow_redirects=True)
             response.raise_for_status()
+            
+            # Log any redirects that happened
+            if response.history:
+                redirect_chain = ' -> '.join([r.url for r in response.history])
+                final_url = response.url
+                logger.info(f"  Redirected: {redirect_chain} -> {final_url}")
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
