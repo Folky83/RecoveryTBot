@@ -375,7 +375,18 @@ class DocumentScraper:
             company_name: Name of the company for logging
             
         Returns:
-            List of document dictionaries with title, date, url
+            List of document dictionaries with title, date, url, and metadata
+            
+        Note:
+            This method implements a multi-stage approach to document extraction:
+            1. Look for direct document links (PDFs, DOCs, etc.)
+            2. Look for document sections by class name
+            3. Look for country-specific sections based on headings
+            4. Look for table sections that might contain documents
+            5. As a fallback, search the entire page for document links
+            
+            Document metadata is enhanced with categorization (financial, presentation, 
+            country-specific, etc.) when possible.
         """
         documents = []
         
@@ -496,6 +507,12 @@ class DocumentScraper:
                         # Extract date or use current date
                         date = datetime.now().strftime("%Y-%m-%d")
                         
+                        # Detect document type/category based on title and context
+                        doc_type = self._detect_document_type(title, url)
+                        
+                        # Detect if this is a country-specific document
+                        country_info = self._detect_country_info(title, url)
+                        
                         # Create document entry
                         doc_id = self._generate_document_id(title, url, date)
                         document = {
@@ -503,7 +520,9 @@ class DocumentScraper:
                             'url': url,
                             'date': date,
                             'id': doc_id,
-                            'company_name': company_name
+                            'company_name': company_name,
+                            'document_type': doc_type,
+                            'country_info': country_info
                         }
                         documents.append(document)
                     except Exception as e:
@@ -613,6 +632,12 @@ class DocumentScraper:
                             # Default to today's date if not found
                             date = datetime.now().strftime("%Y-%m-%d")
                             
+                        # Detect document type/category based on title and context
+                        doc_type = self._detect_document_type(title, url)
+                        
+                        # Detect if this is a country-specific document
+                        country_info = self._detect_country_info(title, url)
+                        
                         # Create document entry
                         doc_id = self._generate_document_id(title, url, date)
                         document = {
@@ -620,7 +645,9 @@ class DocumentScraper:
                             'url': url,
                             'date': date,
                             'id': doc_id,
-                            'company_name': company_name
+                            'company_name': company_name,
+                            'document_type': doc_type,
+                            'country_info': country_info
                         }
                         documents.append(document)
                         
@@ -642,6 +669,116 @@ class DocumentScraper:
             logger.error(f"Error parsing documents for {company_name}: {e}", exc_info=True)
             return []
             
+    def _detect_document_type(self, title: str, url: str) -> str:
+        """Detect the type of document based on title and URL
+        
+        Args:
+            title: Document title
+            url: Document URL
+            
+        Returns:
+            Document type/category as a string
+        """
+        title_lower = title.lower()
+        url_lower = url.lower()
+        
+        # Financial documents
+        if any(term in title_lower for term in ['financial', 'finance', 'statement', 'report', 'balance sheet', 
+                                               'income statement', 'cash flow', 'annual report',
+                                               'quarterly report', 'profit', 'loss']):
+            return 'financial'
+            
+        # Presentation documents
+        if any(term in title_lower for term in ['presentation', 'overview', 'introduction', 'about',
+                                              'company profile', 'investor']):
+            return 'presentation'
+            
+        # Regulatory documents
+        if any(term in title_lower for term in ['regulatory', 'regulation', 'compliance', 'law', 'legal',
+                                              'terms', 'conditions', 'policy', 'procedure']):
+            return 'regulatory'
+            
+        # Agreement documents
+        if any(term in title_lower for term in ['agreement', 'contract', 'terms', 'loan agreement', 
+                                              'assignment', 'guarantee']):
+            return 'agreement'
+            
+        # Default to generic document
+        return 'general'
+        
+    def _detect_country_info(self, title: str, url: str) -> Dict[str, Any]:
+        """Detect country information in document title or URL
+        
+        Args:
+            title: Document title
+            url: Document URL
+            
+        Returns:
+            Dictionary with country information or empty dict if none detected
+        """
+        title_lower = title.lower()
+        url_lower = url.lower()
+        
+        country_data = {}
+        
+        # List of countries to check for
+        countries = [
+            # Europe
+            'latvia', 'estonia', 'lithuania', 'poland', 'germany', 'france', 'spain', 'italy',
+            'uk', 'united kingdom', 'great britain', 'netherlands', 'belgium', 'luxembourg',
+            'sweden', 'norway', 'finland', 'denmark', 'czech', 'slovakia', 'austria', 'switzerland',
+            'hungary', 'romania', 'bulgaria', 'greece', 'croatia', 'slovenia', 'serbia', 'bosnia',
+            'albania', 'macedonia', 'montenegro', 'moldova', 'ukraine', 'belarus', 'russia',
+            
+            # Asia
+            'turkey', 'kazakhstan', 'uzbekistan', 'kyrgyzstan', 'tajikistan', 'turkmenistan',
+            'azerbaijan', 'armenia', 'georgia', 'china', 'japan', 'korea', 'india', 'pakistan',
+            'bangladesh', 'vietnam', 'thailand', 'malaysia', 'indonesia', 'philippines', 'singapore',
+            
+            # Africa
+            'egypt', 'morocco', 'algeria', 'tunisia', 'libya', 'nigeria', 'south africa', 'kenya',
+            'ethiopia', 'ghana', 'tanzania', 'uganda',
+            
+            # Americas
+            'usa', 'united states', 'canada', 'mexico', 'brazil', 'argentina', 'chile', 
+            'colombia', 'peru', 'venezuela', 'ecuador', 'bolivia'
+        ]
+        
+        # Regions
+        regions = [
+            'europe', 'western europe', 'eastern europe', 'central europe', 'northern europe', 'southern europe',
+            'asia', 'east asia', 'south asia', 'southeast asia', 'central asia', 'middle east',
+            'africa', 'north africa', 'sub-saharan africa', 'west africa', 'east africa', 'southern africa',
+            'americas', 'north america', 'south america', 'central america', 'latin america',
+            'oceania', 'australia', 'new zealand', 'pacific'
+        ]
+        
+        # Check for country mentions
+        detected_countries = []
+        for country in countries:
+            if country in title_lower or country in url_lower:
+                detected_countries.append(country)
+                
+        # Check for region mentions
+        detected_regions = []
+        for region in regions:
+            if region in title_lower or region in url_lower:
+                detected_regions.append(region)
+                
+        # If we found country information, return it
+        if detected_countries or detected_regions:
+            country_data = {
+                'is_country_specific': True,
+                'countries': detected_countries,
+                'regions': detected_regions
+            }
+        else:
+            country_data = {
+                'is_country_specific': False
+            }
+            
+        return country_data
+        
     def _generate_document_id(self, title: str, url: str, date: str) -> str:
         """Generate a unique ID for a document based on its properties
         
