@@ -304,19 +304,44 @@ class DocumentScraper:
                     logger.info(f"Found {len(documents)} documents at {company_url}")
                     return documents
                     
-                # If no documents found on the main page, try to find a documents subpage
+                # If no documents found on the main page, try to find documents on alternate paths
                 if '/' in company_url:
-                    base_url = '/'.join(company_url.split('/')[:-1])
-                    documents_url = f"{base_url}/documents"
-                    logger.debug(f"Trying documents subpage: {documents_url}")
+                    # Try multiple potential document page patterns
+                    document_page_patterns = [
+                        "/documents",                  # Standard documents path
+                        "/loan-originator-documents",  # Another common pattern 
+                        "/documents-and-reports",      # Alternative naming
+                        "/company-documents",          # Another possibility
+                        "/investor-documents",         # Investor specific documents
+                        "/financial-reports",          # Financial documents
+                        "/annual-reports",             # Annual reports
+                    ]
                     
-                    html_content = self._make_request(documents_url)
-                    if html_content:
-                        logger.info(f"Successfully fetched content from {documents_url}")
-                        documents = self._parse_documents(html_content, company_name)
-                        if documents:
-                            logger.info(f"Found {len(documents)} documents at {documents_url}")
-                            return documents
+                    base_url = '/'.join(company_url.rstrip('/').split('/')[:-1])
+                    
+                    for pattern in document_page_patterns:
+                        documents_url = f"{base_url}{pattern}"
+                        logger.debug(f"Trying document subpage: {documents_url}")
+                        
+                        html_content = self._make_request(documents_url)
+                        if html_content:
+                            logger.info(f"Successfully fetched content from {documents_url}")
+                            documents = self._parse_documents(html_content, company_name)
+                            if documents:
+                                logger.info(f"Found {len(documents)} documents at {documents_url}")
+                                return documents
+                    
+                    # Also try company page with /documents appended directly
+                    direct_documents_url = f"{company_url.rstrip('/')}/documents"
+                    if direct_documents_url != f"{base_url}/documents":  # Skip if we already tried this
+                        logger.debug(f"Trying direct documents URL: {direct_documents_url}")
+                        html_content = self._make_request(direct_documents_url)
+                        if html_content:
+                            logger.info(f"Successfully fetched content from {direct_documents_url}")
+                            documents = self._parse_documents(html_content, company_name)
+                            if documents:
+                                logger.info(f"Found {len(documents)} documents at {direct_documents_url}")
+                                return documents
         
         # Fallback to common URL patterns if we don't have a URL or it didn't work
         common_patterns = [
@@ -381,18 +406,50 @@ class DocumentScraper:
                 document_sections.extend(tab_sections)
                 
             # Option 5: Look for sections with "document" in their class name or id
-            for element in soup.find_all(class_=lambda c: c and 'document' in c.lower()):
+            for element in soup.find_all(lambda tag: tag.has_attr('class') and any('document' in c.lower() for c in tag['class'])):
+                document_sections.append(element)
+            
+            # Look for elements with "document" in their ID
+            for element in soup.find_all(lambda tag: tag.has_attr('id') and isinstance(tag['id'], str) and 'document' in tag['id'].lower()):
                 document_sections.append(element)
                 
             # Option 6: Look for download sections
-            download_sections = soup.find_all(class_=lambda c: c and ('download' in c.lower() or 'pdf' in c.lower()))
-            if download_sections:
-                document_sections.extend(download_sections)
+            for element in soup.find_all(lambda tag: tag.has_attr('class') and any(any(term in c.lower() for term in ['download', 'pdf']) for c in tag['class'])):
+                document_sections.append(element)
+                
+            # Option 7: Look for country sections that might contain documents
+            country_sections = []
+            # Look for headings that might indicate a country section
+            for heading in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+                text = heading.get_text(strip=True).lower()
+                # If the heading contains country-related terms
+                if any(term in text for term in ['country', 'countries', 'region', 'regions', 'location', 'operations']):
+                    # Include both the heading and the content following it
+                    section = heading.parent
+                    if section:
+                        country_sections.append(section)
+                        
+                        # Also look at siblings after the heading
+                        next_elem = heading.find_next_sibling()
+                        while next_elem:
+                            if next_elem.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                                # Stop if we hit another heading
+                                break
+                            country_sections.append(next_elem)
+                            next_elem = next_elem.find_next_sibling()
+            
+            if country_sections:
+                document_sections.extend(country_sections)
+                
+            # Option 8: Look for sections with tables that might contain documents
+            table_sections = soup.find_all('table')
+            if table_sections:
+                document_sections.extend(table_sections)
                 
             if not document_sections:
                 logger.warning(f"No document section found for {company_name}, falling back to PDF link search")
-                # Fallback: Look for any PDF links throughout the page
-                pdf_links = soup.find_all('a', href=lambda href: href and href.lower().endswith('.pdf'))
+                # Fallback: Look for any document links throughout the page
+                pdf_links = soup.find_all('a', href=lambda href: href and any(href.lower().endswith(ext) for ext in ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.zip', '.rar']))
                 
                 for link in pdf_links:
                     try:
