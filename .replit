@@ -5,7 +5,7 @@ modules = ["python-3.11", "python3"]
 channel = "stable-24_05"
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "gce"
 run = ["sh", "-c", "python3 run.py"]
 
 [workflows]
