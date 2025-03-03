@@ -1,44 +1,97 @@
+#!/usr/bin/env python3
 import os
 import sys
 import logging
-from bot.document_scraper import DocumentScraper
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
 
-# Configure logging
+# Set up logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)
-    ]
 )
-
-logger = logging.getLogger('wowwo_test')
+logger = logging.getLogger('wowwo_documents_test')
 
 def test_wowwo_documents():
     """Test fetching documents specifically for Wowwo company"""
-    logger.info("Testing document scraping for Wowwo company")
+    logger.info("Testing Wowwo company document extraction")
     
-    # Initialize document scraper
-    scraper = DocumentScraper()
+    # Wowwo URL
+    url = "https://www.mintos.com/en/lending-companies/wowwo/"
     
-    # Use the specific URL that worked in our tests
-    company_id = "wowwo"
-    company_name = "Wowwo"
-    company_url = "https://www.mintos.com/en/loan-originators/wowwo/"
-    
-    logger.info(f"Fetching documents for {company_name} using URL: {company_url}")
-    documents = scraper.get_company_documents(company_id, company_name, company_url)
-    
-    if documents:
-        logger.info(f"SUCCESS! Found {len(documents)} documents for {company_name}")
-        for i, doc in enumerate(documents, 1):
-            logger.info(f"Document {i}:")
-            logger.info(f"  Title: {doc.get('title')}")
-            logger.info(f"  Date: {doc.get('date')}")
-            logger.info(f"  URL: {doc.get('url')}")
-            logger.info(f"  ID: {doc.get('id')}")
-    else:
-        logger.error(f"No documents found for {company_name}")
+    try:
+        # Fetch the company page
+        logger.info(f"Fetching Wowwo company page from {url}")
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        html_content = response.text
+        
+        # Parse HTML content
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Find all PDF links on the page
+        pdf_links = []
+        for link in soup.find_all('a'):
+            href = link.get('href', '')
+            if href and href.lower().endswith('.pdf'):
+                title = link.get_text(strip=True)
+                if not title:
+                    # Try to get title from the filename
+                    filename = href.split('/')[-1]
+                    title = filename.replace('-', ' ').replace('_', ' ').replace('.pdf', '')
+                
+                pdf_links.append({
+                    'title': title,
+                    'url': href if href.startswith('http') else f"https://www.mintos.com{href}" if href.startswith('/') else f"https://www.mintos.com/{href}"
+                })
+        
+        # Log results
+        logger.info(f"Found {len(pdf_links)} PDF links on Wowwo page")
+        for i, link in enumerate(pdf_links, 1):
+            logger.info(f"  Link {i}: {link['title']} - {link['url']}")
+            
+        # Analyze document titles for country-specific terms
+        country_terms = [
+            'turkey', 'turkish', 'europe', 'european', 'asia', 'asian',
+            'middle east', 'country', 'region', 'location'
+        ]
+        
+        country_specific_docs = []
+        for link in pdf_links:
+            title_lower = link['title'].lower()
+            if any(term in title_lower for term in country_terms):
+                country_specific_docs.append(link)
+                
+        logger.info(f"Found {len(country_specific_docs)} country-specific documents based on title")
+        for i, doc in enumerate(country_specific_docs, 1):
+            logger.info(f"  Country Document {i}: {doc['title']} - {doc['url']}")
+            
+        # Get company metadata
+        company_info = {}
+        
+        # Try to find company description
+        description_elem = soup.select_one('.company-description') or soup.select_one('.description')
+        if description_elem:
+            company_info['description'] = description_elem.get_text(strip=True)
+            
+        # Try to find company country of operations
+        country_elem = None
+        for elem in soup.find_all(['p', 'div', 'li']):
+            text = elem.get_text(strip=True).lower()
+            if 'country' in text or 'countries' in text or 'operations in' in text:
+                country_elem = elem
+                break
+                
+        if country_elem:
+            company_info['countries'] = country_elem.get_text(strip=True)
+            
+        logger.info("Company metadata:")
+        for key, value in company_info.items():
+            logger.info(f"  {key}: {value}")
+        
+    except Exception as e:
+        logger.error(f"Error: {e}")
         
     logger.info("Test completed")
 
