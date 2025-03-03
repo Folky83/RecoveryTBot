@@ -763,7 +763,8 @@ class MintosBot:
         # Required investment
         if campaign.get('requiredPrincipalExposure'):
             try:
-                required_amount = float(campaign.get('requiredPrincipalExposure'))                message += f"💸 <b>Required Investment:</b> €{required_amount:,.2f}\n"
+                required_amount = float(campaign.get('requiredPrincipalExposure'))
+                message += f"💸 <b>Required Investment:</b> €{required_amount:,.2f}\n"
             except (ValueError, TypeError):
                 message += f"💸 <b>Required Investment:</b> {campaign.get('requiredPrincipalExposure')}\n"
 
