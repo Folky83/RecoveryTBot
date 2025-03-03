@@ -891,13 +891,52 @@ class MintosBot:
                 date = doc.get('date', 'Unknown date')
             if not url:
                 url = doc.get('url', '#')
-        
+                
+        # Format the document type based on file extension
+        doc_type = "PDF"
+        if url and "." in url:
+            file_ext = url.split(".")[-1].lower()
+            if file_ext in ["xls", "xlsx", "csv"]:
+                doc_type = "Spreadsheet"
+            elif file_ext in ["doc", "docx"]:
+                doc_type = "Word Document"
+            elif file_ext in ["ppt", "pptx"]:
+                doc_type = "Presentation"
+                
+        # Format date if possible
+        formatted_date = date
+        try:
+            # Check if the date might be in some standard format
+            if isinstance(date, str) and ("-" in date or "/" in date):
+                # Try to parse the date into a more readable format
+                date_formats = ["%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y", "%d/%m/%Y", "%m/%d/%Y"]
+                for fmt in date_formats:
+                    try:
+                        dt = datetime.strptime(date, fmt)
+                        formatted_date = dt.strftime("%d %B %Y")
+                        break
+                    except ValueError:
+                        continue
+        except Exception:
+            # If date formatting fails, keep original
+            pass
+            
+        # Create an emoji indicator for the document type
+        emoji = "📄"
+        if doc_type == "Spreadsheet":
+            emoji = "📊"
+        elif doc_type == "Word Document":
+            emoji = "📝"
+        elif doc_type == "Presentation":
+            emoji = "📑"
+            
+        # Create a more attractive message with emoji and formatting
         return (
-            f"📄 <b>New Document Published</b>\n\n"
-            f"<b>Company:</b> {company_name}\n"
-            f"<b>Document:</b> {title}\n"
-            f"<b>Date:</b> {date}\n\n"
-            f"<a href='{url}'>Click here to view document</a>"
+            f"{emoji} <b>New {doc_type} Document Published</b>\n\n"
+            f"🏢 <b>Company:</b> {company_name}\n"
+            f"📋 <b>Title:</b> {title}\n"
+            f"📅 <b>Published:</b> {formatted_date}\n\n"
+            f"<a href='{url}'>📥 Download Document</a>"
         )
         
     async def send_document_notification(self, message: str) -> None:

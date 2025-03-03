@@ -21,7 +21,7 @@ class DocumentScraper:
     
     CACHE_DIR = "data"
     DOCUMENTS_CACHE_FILE = os.path.join(CACHE_DIR, "documents_cache.json")
-    BASE_URL = "https://www.mintos.com/en/loan-originators/"
+    BASE_URL = "https://www.mintos.com/en/lending-companies/"  # Updated URL pattern
     REQUEST_TIMEOUT = 10
     
     def __init__(self):
@@ -125,35 +125,46 @@ class DocumentScraper:
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # Find the documents section - this may vary based on the site structure
-            document_sections = soup.find_all('div', class_='document-list')
+            # Try multiple possible document section selectors for the new site structure
+            document_sections = []
             
-            if not document_sections:
-                # Try alternative selectors based on the site structure
-                document_sections = soup.find_all('div', class_='loan-originator-info__documents')
+            # Option 1: Look for document sections with a specific class
+            doc_sections = soup.find_all('div', class_='document-list')
+            if doc_sections:
+                document_sections.extend(doc_sections)
+                
+            # Option 2: Look for alternative document section classes
+            alt_sections = soup.find_all('div', class_='loan-originator-info__documents')
+            if alt_sections:
+                document_sections.extend(alt_sections)
+                
+            # Option 3: Look for accordion sections that might contain documents
+            accordion_sections = soup.find_all('div', class_='accordion')
+            if accordion_sections:
+                document_sections.extend(accordion_sections)
+                
+            # Option 4: Look for tab content areas that might contain documents
+            tab_sections = soup.find_all('div', class_='tab-content')
+            if tab_sections:
+                document_sections.extend(tab_sections)
+                
+            # Option 5: Look for sections with "document" in their class name or id
+            for element in soup.find_all(class_=lambda c: c and 'document' in c.lower()):
+                document_sections.append(element)
+                
+            # Option 6: Look for download sections
+            download_sections = soup.find_all(class_=lambda c: c and ('download' in c.lower() or 'pdf' in c.lower()))
+            if download_sections:
+                document_sections.extend(download_sections)
                 
             if not document_sections:
-                logger.warning(f"No document section found for {company_name}")
-                return []
+                logger.warning(f"No document section found for {company_name}, falling back to PDF link search")
+                # Fallback: Look for any PDF links throughout the page
+                pdf_links = soup.find_all('a', href=lambda href: href and href.lower().endswith('.pdf'))
                 
-            for section in document_sections:
-                document_items = section.find_all('div', class_='document-list__item')
-                
-                if not document_items:
-                    document_items = section.find_all('a', class_='file-item')
-                    
-                if not document_items:
-                    document_items = section.find_all('a')  # Fallback to all links in the section
-                    
-                for doc_item in document_items:
+                for link in pdf_links:
                     try:
-                        # Extract document info based on available structure
-                        link_element = doc_item.find('a') if doc_item.name != 'a' else doc_item
-                        
-                        if not link_element or not link_element.get('href'):
-                            continue
-                            
-                        url = link_element.get('href')
+                        url = link.get('href')
                         if not url.startswith('http'):
                             # Convert relative URL to absolute
                             if url.startswith('/'):
@@ -162,22 +173,116 @@ class DocumentScraper:
                                 url = f"https://www.mintos.com/{url}"
                                 
                         # Get document title
-                        title = link_element.get_text(strip=True)
-                        if not title:
-                            title_element = link_element.find('span', class_='file-item__title')
-                            if title_element:
-                                title = title_element.get_text(strip=True)
+                        title = link.get_text(strip=True)
+                        if not title or len(title) < 2:
+                            # If link text is empty, try to use the filename from URL
+                            filename = url.split('/')[-1]
+                            title = filename.replace('-', ' ').replace('_', ' ').replace('.pdf', '')
+                            
+                        # Extract date or use current date
+                        date = datetime.now().strftime("%Y-%m-%d")
+                        
+                        # Create document entry
+                        doc_id = self._generate_document_id(title, url, date)
+                        document = {
+                            'title': title,
+                            'url': url,
+                            'date': date,
+                            'id': doc_id,
+                            'company_name': company_name
+                        }
+                        documents.append(document)
+                    except Exception as e:
+                        logger.error(f"Error parsing PDF link for {company_name}: {e}")
+                
+                return documents
+                
+            # Process all found document sections
+            for section in document_sections:
+                # Try multiple document item selectors
+                doc_items = []
+                
+                # Try to find document items using different selectors
+                selectors = [
+                    {'tag': 'div', 'class': 'document-list__item'},
+                    {'tag': 'a', 'class': 'file-item'},
+                    {'tag': 'a', 'class': 'document-item'},
+                    {'tag': 'div', 'class': 'file-item'},
+                    {'tag': 'div', 'class': 'document-item'},
+                    {'tag': 'a', 'href': lambda href: href and href.lower().endswith('.pdf')}
+                ]
+                
+                for selector in selectors:
+                    if 'href' in selector:
+                        items = section.find_all(selector['tag'], href=selector['href'])
+                    else:
+                        items = section.find_all(selector['tag'], class_=selector['class'])
+                        
+                    if items:
+                        doc_items.extend(items)
+                
+                # Final fallback: get all links in the section
+                if not doc_items:
+                    doc_items = section.find_all('a')
+                
+                for doc_item in doc_items:
+                    try:
+                        # Get the actual link element if not already a link
+                        link_element = doc_item.find('a') if doc_item.name != 'a' else doc_item
+                        
+                        if not link_element or not link_element.get('href'):
+                            continue
+                            
+                        url = link_element.get('href')
+                        
+                        # Skip if not a PDF (to avoid menu links, etc.)
+                        if not url.lower().endswith('.pdf'):
+                            continue
+                            
+                        if not url.startswith('http'):
+                            # Convert relative URL to absolute
+                            if url.startswith('/'):
+                                url = f"https://www.mintos.com{url}"
+                            else:
+                                url = f"https://www.mintos.com/{url}"
                                 
-                        # Extract date
+                        # Get document title using multiple approaches
+                        title = link_element.get_text(strip=True)
+                        
+                        if not title or len(title) < 2:
+                            # Try to find title in nested elements
+                            title_candidates = [
+                                link_element.find('span', class_='file-item__title'),
+                                link_element.find('span', class_='document-title'),
+                                link_element.find('div', class_='title'),
+                                link_element.parent.find('h3'),
+                                link_element.parent.find('h4')
+                            ]
+                            
+                            for candidate in title_candidates:
+                                if candidate and candidate.get_text(strip=True):
+                                    title = candidate.get_text(strip=True)
+                                    break
+                                    
+                        if not title or len(title) < 2:
+                            # Fallback: Use the filename from the URL
+                            filename = url.split('/')[-1]
+                            title = filename.replace('-', ' ').replace('_', ' ').replace('.pdf', '')
+                                
+                        # Extract date using multiple approaches
                         date = ""
-                        date_element = doc_item.find('span', class_='file-item__date')
-                        if date_element:
-                            date = date_element.get_text(strip=True)
-                        else:
-                            # Try to find date in other formats
-                            date_element = doc_item.find('span', class_='document-list__date')
-                            if date_element:
-                                date = date_element.get_text(strip=True)
+                        date_candidates = [
+                            doc_item.find('span', class_='file-item__date'),
+                            doc_item.find('span', class_='document-list__date'),
+                            doc_item.find('span', class_='date'),
+                            doc_item.find('div', class_='date'),
+                            doc_item.parent.find(class_=lambda c: c and 'date' in c.lower())
+                        ]
+                        
+                        for candidate in date_candidates:
+                            if candidate and candidate.get_text(strip=True):
+                                date = candidate.get_text(strip=True)
+                                break
                                 
                         if not date:
                             # Default to today's date if not found
@@ -189,15 +294,24 @@ class DocumentScraper:
                             'title': title,
                             'url': url,
                             'date': date,
-                            'id': doc_id
+                            'id': doc_id,
+                            'company_name': company_name
                         }
                         documents.append(document)
                         
                     except Exception as e:
                         logger.error(f"Error parsing document item for {company_name}: {e}")
+            
+            # Remove duplicate documents (by URL)
+            unique_docs = []
+            seen_urls = set()
+            for doc in documents:
+                if doc['url'] not in seen_urls:
+                    seen_urls.add(doc['url'])
+                    unique_docs.append(doc)
                         
-            logger.info(f"Found {len(documents)} documents for {company_name}")
-            return documents
+            logger.info(f"Found {len(unique_docs)} documents for {company_name}")
+            return unique_docs
             
         except Exception as e:
             logger.error(f"Error parsing documents for {company_name}: {e}", exc_info=True)
