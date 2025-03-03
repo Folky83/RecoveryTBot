@@ -21,7 +21,15 @@ class DocumentScraper:
     
     CACHE_DIR = "data"
     DOCUMENTS_CACHE_FILE = os.path.join(CACHE_DIR, "documents_cache.json")
-    BASE_URL = "https://www.mintos.com/en/lending-companies/"  # Updated URL pattern
+    
+    # Multiple URL patterns to try for each company
+    URL_PATTERNS = [
+        "https://www.mintos.com/en/lending-companies/{company_id}",
+        "https://www.mintos.com/en/loan-originators/{company_id}",
+        "https://www.mintos.com/en/loan-originators/{company_id}/documents",
+        "https://www.mintos.com/en/lending-companies/{company_id}/documents"
+    ]
+    
     REQUEST_TIMEOUT = 10
     
     def __init__(self):
@@ -100,15 +108,25 @@ class DocumentScraper:
         Returns:
             List of documents for the company
         """
-        url = f"{self.BASE_URL}{company_id}"
         logger.info(f"Fetching documents for {company_name} (ID: {company_id})")
         
-        html_content = self._make_request(url)
-        if not html_content:
-            logger.warning(f"Could not fetch content for {company_name}")
-            return []
+        # Try multiple URL patterns
+        for pattern in self.URL_PATTERNS:
+            url = pattern.format(company_id=company_id)
+            logger.debug(f"Trying URL pattern: {url}")
             
-        return self._parse_documents(html_content, company_name)
+            html_content = self._make_request(url)
+            if html_content:
+                logger.info(f"Successfully fetched content from {url}")
+                documents = self._parse_documents(html_content, company_name)
+                if documents:
+                    logger.info(f"Found {len(documents)} documents at {url}")
+                    return documents
+                else:
+                    logger.debug(f"No documents found at {url}, trying next pattern")
+        
+        logger.warning(f"Could not find any documents for {company_name} after trying all URL patterns")
+        return []
         
     def _parse_documents(self, html_content: str, company_name: str) -> List[Dict[str, Any]]:
         """Parse HTML to extract documents

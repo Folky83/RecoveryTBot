@@ -40,10 +40,11 @@ def test_document_scraper():
     
     logger.info(f"Loaded {len(company_mapping)} companies from mapping")
     
-    # Test URL construction
+    # Test URL patterns
     for company_id, company_name in company_mapping.items():
-        url = f"{scraper.BASE_URL}{company_id}"
-        logger.info(f"URL for {company_name}: {url}")
+        for pattern in scraper.URL_PATTERNS:
+            url = pattern.format(company_id=company_id)
+            logger.info(f"URL pattern for {company_name}: {url}")
     
     # Test document scraping for a single company
     sample_company_id = list(company_mapping.keys())[0]
