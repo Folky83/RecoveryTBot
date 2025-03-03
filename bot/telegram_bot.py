@@ -212,12 +212,12 @@ class MintosBot:
         normal_sleep = 5 * 60  # Regular 5-minute check interval
         error_sleep = 3 * 60   # Shorter 3-minute retry after errors
         long_sleep = 55 * 60   # 55-minute wait after successful update
-        
+
         while True:
             try:
                 # Check the current time and stale cache situation
                 should_check = await self.should_check_updates()
-                
+
                 if should_check:
                     logger.info("Running scheduled update")
                     try:
@@ -225,17 +225,17 @@ class MintosBot:
                         # Reset error counter after successful update
                         consecutive_errors = 0
                         logger.info("Scheduled update completed successfully")
-                        
+
                         # Try to resend any failed messages
                         await self.retry_failed_messages()
-                        
+
                         # Use longer sleep interval after successful update
                         await asyncio.sleep(long_sleep)
                         continue  # Skip the normal sleep at the end
                     except Exception as e:
                         consecutive_errors += 1
                         logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
-                        
+
                         # Implement exponential backoff for repeated errors
                         if consecutive_errors >= max_consecutive_errors:
                             logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
@@ -258,10 +258,10 @@ class MintosBot:
                             continue
                     except Exception as e:
                         logger.error(f"Error checking cache age: {e}")
-                
+
                 # Normal sleep interval between checks
                 await asyncio.sleep(normal_sleep)
-                
+
             except asyncio.CancelledError:
                 logger.info("Scheduled updates cancelled")
                 break
@@ -347,12 +347,12 @@ class MintosBot:
                 welcome_message = self._create_welcome_message()
 
             self.user_manager.add_user(str(chat_id))
-            await self.send_message(chat_id, welcome_message)
+            await self.send_message(chat_id, welcome_message, disable_web_page_preview=True)
             logger.info(f"Chat {chat_id} registered")
 
         except Exception as e:
             logger.error(f"Start command error: {e}", exc_info=True)
-            await self.send_message(chat_id, "⚠️ Error processing command")
+            await self.send_message(chat_id, "⚠️ Error processing command", disable_web_page_preview=True)
 
     def _create_welcome_message(self) -> str:
         """Create formatted welcome message"""
@@ -397,11 +397,12 @@ class MintosBot:
             reply_markup = InlineKeyboardMarkup(company_buttons)
             await update.message.reply_text(
                 "Select a company to view updates:",
-                reply_markup=reply_markup
+                reply_markup=reply_markup,
+                disable_web_page_preview=True
             )
         except Exception as e:
             logger.error(f"Error in company_command: {e}", exc_info=True)
-            await self.send_message(chat_id, "⚠️ Error displaying company list. Please try again.")
+            await self.send_message(chat_id, "⚠️ Error displaying company list. Please try again.", disable_web_page_preview=True)
 
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle callback queries from inline keyboard buttons"""
@@ -420,13 +421,14 @@ class MintosBot:
                 reply_markup = InlineKeyboardMarkup(buttons)
                 await query.edit_message_text(
                     f"Select update type for {company_name}:",
-                    reply_markup=reply_markup
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=True
                 )
 
             elif query.data == "refresh_cache":
                 chat_id = update.effective_chat.id
-                await query.edit_message_text("🔄 Refreshing updates...")
-                
+                await query.edit_message_text("🔄 Refreshing updates...", disable_web_page_preview=True)
+
                 try:
                     # Force update check regardless of hour
                     await self._safe_update_check()
@@ -434,11 +436,11 @@ class MintosBot:
                     await self.today_command(update, context)
                 except Exception as e:
                     logger.error(f"Error during refresh from callback: {e}")
-                    await query.edit_message_text("⚠️ Error refreshing updates. Please try again.")
+                    await query.edit_message_text("⚠️ Error refreshing updates. Please try again.", disable_web_page_preview=True)
                 return
-                
+
             elif query.data == "cancel":
-                await query.edit_message_text("Operation cancelled.")
+                await query.edit_message_text("Operation cancelled.", disable_web_page_preview=True)
                 return
 
             elif query.data.startswith(("latest_", "all_")):
@@ -448,7 +450,7 @@ class MintosBot:
                 page = int(parts[2]) if len(parts) > 2 else 0
                 company_name = self.data_manager.get_company_name(company_id)
 
-                await query.edit_message_text(f"Fetching latest data for {company_name}...")
+                await query.edit_message_text(f"Fetching latest data for {company_name}...", disable_web_page_preview=True)
 
                 company_updates = self.mintos_client.get_recovery_updates(company_id)
                 if company_updates:
@@ -465,7 +467,7 @@ class MintosBot:
                     self.data_manager.save_updates(cached_updates)
 
                 if not company_updates:
-                    await query.edit_message_text(f"No updates found for {company_name}")
+                    await query.edit_message_text(f"No updates found for {company_name}", disable_web_page_preview=True)
                     return
 
                 if update_type == "latest":
@@ -476,7 +478,7 @@ class MintosBot:
                             latest_item = latest_year["items"][0]
                             latest_update.update(latest_item)
                     message = self.format_update_message(latest_update)
-                    await query.edit_message_text(message, parse_mode='HTML')
+                    await query.edit_message_text(message, parse_mode='HTML', disable_web_page_preview=True)
 
                 else:  # all updates
                     messages = []
@@ -509,11 +511,11 @@ class MintosBot:
                         f"Page {page + 1} of {total_pages}\n"
                         f"Showing updates {start_idx + 1}-{end_idx} of {total_updates}"
                     )
-                    await self.send_message(query.message.chat_id, header_message)
+                    await self.send_message(query.message.chat_id, header_message, disable_web_page_preview=True)
 
                     current_page_updates = messages[start_idx:end_idx]
                     for message in current_page_updates:
-                        await self.send_message(query.message.chat_id, message)
+                        await self.send_message(query.message.chat_id, message, disable_web_page_preview=True)
 
                     nav_buttons = []
                     if page > 0:
@@ -526,12 +528,13 @@ class MintosBot:
                         await self.send_message(
                             query.message.chat_id,
                             "Navigate through updates:",
-                            reply_markup=reply_markup
+                            reply_markup=reply_markup,
+                            disable_web_page_preview=True
                         )
 
         except Exception as e:
             logger.error(f"Error in handle_callback: {e}", exc_info=True)
-            await query.edit_message_text("⚠️ Error processing your request. Please try again.")
+            await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
 
     _failed_messages: List[Dict[str, Any]] = []
 
@@ -549,14 +552,15 @@ class MintosBot:
                 await self.send_message(
                     msg['chat_id'],
                     msg['text'],
-                    msg.get('reply_markup')
+                    msg.get('reply_markup'),
+                    disable_web_page_preview=True
                 )
                 logger.info(f"Successfully resent message to {msg['chat_id']}")
             except Exception as e:
                 logger.error(f"Failed to resend message: {e}")
                 self._failed_messages.append(msg)
 
-    async def send_message(self, chat_id: Union[int, str], text: str, reply_markup: Optional[InlineKeyboardMarkup] = None) -> None:
+    async def send_message(self, chat_id: Union[int, str], text: str, reply_markup: Optional[InlineKeyboardMarkup] = None, disable_web_page_preview: bool = False) -> None:
         max_retries = 3
         base_delay = 1.0
 
@@ -570,7 +574,8 @@ class MintosBot:
                     chat_id=chat_id,
                     text=text,
                     parse_mode='HTML',
-                    reply_markup=reply_markup
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=disable_web_page_preview
                 )
                 logger.debug(f"Message sent successfully to {chat_id} (length: {message_length} chars)")
 
@@ -686,18 +691,18 @@ class MintosBot:
             message += f"\n🔗 <a href='https://www.mintos.com/en/campaigns/'>View on Mintos</a>"
 
         return message.strip()
-        
+
     def format_campaign_message(self, campaign: Dict[str, Any]) -> str:
         """Format campaign message with rich information from Mintos API"""
         logger.debug(f"Formatting campaign message for ID: {campaign.get('id')}")
-        
+
         # Set up the header
         message = "🎯 <b>New Mintos Campaign</b>\n\n"
-        
+
         # Name (some campaigns have no name)
         if campaign.get('name'):
             message += f"<b>{campaign.get('name')}</b>\n\n"
-            
+
         # Campaign type information
         campaign_type = campaign.get('type')
         if campaign_type == 1:
@@ -708,7 +713,7 @@ class MintosBot:
             message += "🌟 <b>Type:</b> Special Promotion\n"
         else:
             message += f"📊 <b>Type:</b> Campaign (Type {campaign_type})\n"
-            
+
         # Validity period
         valid_from = campaign.get('validFrom')
         valid_to = campaign.get('validTo')
@@ -721,13 +726,13 @@ class MintosBot:
             except ValueError:
                 # Fallback if date parsing fails
                 message += f"📅 <b>Valid:</b> {valid_from} to {valid_to}\n"
-        
+
         # Bonus amount
         if campaign.get('bonusAmount'):
             try:
                 # Handle European number formatting (period as thousands separator)
                 bonus_text = campaign.get('bonusAmount')
-                
+
                 # Try to convert to float and handle formatting properly
                 try:
                     # If it's a number with thousands separator like "50.000"
@@ -754,15 +759,14 @@ class MintosBot:
             except Exception:
                 # Fallback to original value if any error occurs
                 message += f"🎁 <b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
-            
+
         # Required investment
         if campaign.get('requiredPrincipalExposure'):
             try:
-                required_amount = float(campaign.get('requiredPrincipalExposure'))
-                message += f"💸 <b>Required Investment:</b> €{required_amount:,.2f}\n"
+                required_amount = float(campaign.get('requiredPrincipalExposure'))                message += f"💸 <b>Required Investment:</b> €{required_amount:,.2f}\n"
             except (ValueError, TypeError):
                 message += f"💸 <b>Required Investment:</b> {campaign.get('requiredPrincipalExposure')}\n"
-                
+
         # Additional bonus information
         if campaign.get('additionalBonusEnabled'):
             message += f"✨ <b>Extra Bonus:</b> {campaign.get('bonusCoefficient', '?')}%"
@@ -770,16 +774,16 @@ class MintosBot:
                 message += f" (for first {campaign.get('additionalBonusDays')} days)\n"
             else:
                 message += "\n"
-                
+
         # Description if available
         if campaign.get('shortDescription'):
             # Use regex to completely strip all HTML tags and safely handle entity references
             import re
             description = campaign.get('shortDescription', '')
-            
+
             # First, handle escaped characters
             description = description.replace('\u003C', '<').replace('\u003E', '>')
-            
+
             # Handle common HTML entities
             description = (description
                 .replace('&#39;', "'")
@@ -789,7 +793,7 @@ class MintosBot:
                 .replace('&lt;', '<')
                 .replace('&gt;', '>')
                 .replace('&amp;', '&'))
-            
+
             # Replace common line-breaking tags with newlines first
             description = (description
                 .replace('<br>', '\n')
@@ -798,33 +802,33 @@ class MintosBot:
                 .replace('</p>', '\n')
                 .replace('</div>', '\n')
                 .replace('</li>', '\n'))
-            
+
             # Special handling for list items to preserve formatting
             description = description.replace('<li>', '• ')
-            
+
             # Strip all remaining HTML tags
             description = re.sub(r'<[^>]*>', '', description)
-            
+
             # Clean up whitespace
             description = description.strip()
             description = re.sub(r'\n{3,}', '\n\n', description)  # Replace 3+ newlines with 2
             description = re.sub(r'\s{2,}', ' ', description)      # Replace multiple spaces with one
             message += f"\n📝 <b>Description:</b>\n{description}\n"
-            
+
         # Terms & Conditions link
         if campaign.get('termsConditionsLink'):
             message += f"\n📄 <a href='{campaign.get('termsConditionsLink')}'>Terms & Conditions</a>"
-            
+
         # Add link to Mintos campaigns page
         message += "\n\n🔗 <a href='https://www.mintos.com/en/campaigns/'>View on Mintos</a>"
-        
+
         return message.strip()
 
     async def check_updates(self) -> None:
         try:
             now = datetime.now()
             logger.info(f"Starting update check at {now.strftime('%Y-%m-%d %H:%M:%S')}...")
-            
+
             # Get cache file age before update
             try:
                 if os.path.exists(UPDATES_FILE):
@@ -833,11 +837,11 @@ class MintosBot:
                     logger.info(f"Cache file age before update: {cache_age_hours:.1f} hours (last modified: {datetime.fromtimestamp(before_update_time).strftime('%Y-%m-%d %H:%M:%S')})")
             except Exception as e:
                 logger.error(f"Error checking cache file age before update: {e}")
-            
+
             # Load previous updates
             previous_updates = self.data_manager.load_previous_updates()
             logger.info(f"Loaded {len(previous_updates)} previous updates")
-            
+
             # Fetch new updates
             lender_ids = [int(id) for id in self.data_manager.company_names.keys()]
             logger.info(f"Fetching updates for {len(lender_ids)} lender IDs")
@@ -873,7 +877,7 @@ class MintosBot:
                             message = self.format_update_message(update)
                             for user_id in users:
                                 try:
-                                    await self.send_message(user_id, message)
+                                    await self.send_message(user_id, message, disable_web_page_preview=True)
                                     self.data_manager.save_sent_update(update)
                                     logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
                                 except Exception as e:
@@ -888,7 +892,7 @@ class MintosBot:
                 before_size = os.path.getsize(UPDATES_FILE) if os.path.exists(UPDATES_FILE) else 0
                 self.data_manager.save_updates(new_updates)
                 after_size = os.path.getsize(UPDATES_FILE) if os.path.exists(UPDATES_FILE) else 0
-                
+
                 # Check if the file was actually updated
                 if after_size > 0:
                     modified_time = os.path.getmtime(UPDATES_FILE)
@@ -898,49 +902,49 @@ class MintosBot:
                     logger.warning("Cache file may not have been updated properly (size is 0)")
             except Exception as e:
                 logger.error(f"Error verifying cache file update: {e}")
-                
+
             # Check for new campaigns
             await self.check_campaigns()
-                
+
             logger.info(f"Update check completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Found {len(added_updates)} new updates.")
 
         except Exception as e:
             logger.error(f"Error during update check: {e}", exc_info=True)
             for user_id in self.user_manager.get_all_users():
                 try:
-                    await self.send_message(user_id, "⚠️ Error occurred while checking for updates")
+                    await self.send_message(user_id, "⚠️ Error occurred while checking for updates", disable_web_page_preview=True)
                 except Exception as nested_e:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
-                    
+
     async def check_campaigns(self) -> None:
         """Check for new Mintos campaigns"""
         try:
             logger.info("Checking for new campaigns...")
-            
+
             # Get cache file age before update
             campaigns_cache_age = self.data_manager.get_campaigns_cache_age()
             logger.info(f"Campaigns cache age: {campaigns_cache_age/3600:.1f} hours")
-            
+
             # Load previous campaigns
             previous_campaigns = self.data_manager.load_previous_campaigns()
             logger.info(f"Loaded {len(previous_campaigns)} previous campaigns")
-            
+
             # Fetch new campaigns
             new_campaigns = self.mintos_client.get_campaigns()
             if not new_campaigns:
                 logger.warning("Failed to fetch campaigns or no campaigns available")
                 return
-                
+
             logger.info(f"Fetched {len(new_campaigns)} new campaigns from API")
-                
+
             # Compare campaigns
             added_campaigns = self.data_manager.compare_campaigns(new_campaigns, previous_campaigns)
             logger.info(f"Found {len(added_campaigns)} new or updated campaigns after comparison")
-            
+
             if added_campaigns:
                 users = self.user_manager.get_all_users()
                 logger.info(f"Found {len(added_campaigns)} new campaigns to process for {len(users)} users")
-                
+
                 # Check if this is during app startup
                 is_startup = getattr(self, '_is_startup_check', True)
                 if is_startup:
@@ -953,42 +957,42 @@ class MintosBot:
                     self._is_startup_check = False
                     logger.info("Campaigns marked as sent during startup")
                     return
-                
+
                 # Filter out Special Promotion (type 4) campaigns and unsent campaigns
                 unsent_campaigns = [
                     campaign for campaign in added_campaigns 
                     if not self.data_manager.is_campaign_sent(campaign) and campaign.get('type') != 4
                 ]
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
-                
+
                 if unsent_campaigns:
                     logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns to {len(users)} users")
                     for i, campaign in enumerate(unsent_campaigns):
                         message = self.format_campaign_message(campaign)
                         for user_id in users:
                             try:
-                                await self.send_message(user_id, message)
+                                await self.send_message(user_id, message, disable_web_page_preview=True)
                                 self.data_manager.save_sent_campaign(campaign)
                                 logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
                             except Exception as e:
                                 logger.error(f"Failed to send campaign to user {user_id}: {e}")
                 else:
                     logger.info("No new unsent campaigns to send")
-            
+
             # Save campaigns to file
             try:
                 self.data_manager.save_campaigns(new_campaigns)
                 logger.info(f"Successfully saved {len(new_campaigns)} campaigns")
             except Exception as e:
                 logger.error(f"Error saving campaigns: {e}")
-                
+
             logger.info(f"Campaign check completed. Found {len(added_campaigns)} new campaigns.")
-            
+
         except Exception as e:
             logger.error(f"Error during campaign check: {e}", exc_info=True)
             for user_id in self.user_manager.get_all_users():
                 try:
-                    await self.send_message(user_id, "⚠️ Error occurred while checking for campaigns")
+                    await self.send_message(user_id, "⚠️ Error occurred while checking for campaigns", disable_web_page_preview=True)
                 except Exception as nested_e:
                     logger.error(f"Failed to send campaign error notification to user {user_id}: {nested_e}")
 
@@ -1008,26 +1012,26 @@ class MintosBot:
                 await update.message.delete()
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
-                
+
             # Check cache age and refresh if needed
             cache_age = self.data_manager.get_cache_age()
             cache_age_minutes = int(cache_age / 60) if not math.isinf(cache_age) else float('inf')
-            
+
             # If cache is older than 6 hours (360 minutes), do a fresh check
             if cache_age_minutes > 360:
                 logger.info(f"Cache is old ({cache_age_minutes} minutes), doing a fresh update check")
-                await self.send_message(chat_id, "🔄 Cache is old, refreshing updates...")
+                await self.send_message(chat_id, "🔄 Cache is old, refreshing updates...", disable_web_page_preview=True)
                 try:
                     # Do a fresh update check regardless of current hour
                     await self._safe_update_check()
                     logger.info("Cache refreshed successfully")
                 except Exception as e:
                     logger.error(f"Failed to refresh cache: {e}")
-            
+
             updates = self.data_manager.load_previous_updates()
             if not updates:
                 logger.warning("No updates found in cache")
-                await self.send_message(chat_id, "No cached updates found. Try /refresh first.")
+                await self.send_message(chat_id, "No cached updates found. Try /refresh first.", disable_web_page_preview=True)
                 return
 
             # Get the (possibly new) cache age
@@ -1078,7 +1082,7 @@ class MintosBot:
 
             # First check if we have any updates
             have_updates = len(today_updates) > 0
-            
+
             # Also check for campaigns 
             campaigns = self.data_manager.load_previous_campaigns()
             active_campaigns = []
@@ -1086,9 +1090,9 @@ class MintosBot:
                 # Filter for active campaigns (exclude type 4 which are special promotions)
                 active_campaigns = [c for c in campaigns if self._is_campaign_active(c) and c.get('type') != 4]
                 logger.info(f"Found {len(active_campaigns)} active campaigns")
-            
+
             have_campaigns = len(active_campaigns) > 0
-            
+
             if not have_updates and not have_campaigns:
                 cache_message = ""
                 if math.isinf(cache_age):
@@ -1097,14 +1101,14 @@ class MintosBot:
                     minutes_old = max(0, int(cache_age / 60))
                     hours_old = minutes_old // 60
                     remaining_minutes = minutes_old % 60
-                    
+
                     if hours_old > 0:
                         cache_message = f"Cache last updated {hours_old}h {remaining_minutes}m ago"
                     else:
                         cache_message = f"Cache last updated {minutes_old} minutes ago"
 
                 logger.info(f"No updates or campaigns found for today. {cache_message}")
-                
+
                 # Create a message with a refresh button if cache is old
                 if minutes_old > 120:  # If cache is older than 2 hours
                     keyboard = [[InlineKeyboardButton("🔄 Refresh Now", callback_data="refresh_cache")]]
@@ -1112,42 +1116,44 @@ class MintosBot:
                     await self.send_message(
                         chat_id, 
                         f"No updates found for today ({cache_message}).\nWould you like to check for new updates?",
-                        reply_markup=reply_markup
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True
                     )
                 else:
-                    await self.send_message(chat_id, f"No updates found for today ({cache_message}).")
+                    await self.send_message(chat_id, f"No updates found for today ({cache_message}).", disable_web_page_preview=True)
                 return
 
             # If we have updates, send them
             if have_updates:
                 # Send header message with total count
                 header_message = f"📅 Found {len(today_updates)} updates for today:\n"
-                await self.send_message(chat_id, header_message)
+                await self.send_message(chat_id, header_message, disable_web_page_preview=True)
 
                 # Send each update individually
                 for i, update_item in enumerate(today_updates, 1):
                     try:
                         message = self.format_update_message(update_item)
-                        await self.send_message(chat_id, message)
+                        await self.send_message(chat_id, message, disable_web_page_preview=True)
                         logger.debug(f"Successfully sent update {i}/{len(today_updates)} to {chat_id}")
                         await asyncio.sleep(1)  # Small delay between messages
                     except Exception as e:
                         logger.error(f"Error sending update {i}/{len(today_updates)}: {e}", exc_info=True)
                         continue
-            
+
             # If we have campaigns, send them too
             if have_campaigns:
                 # Send campaign header
                 await self.send_message(
                     chat_id, 
-                    f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(active_campaigns)} active campaigns:"
+                    f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(active_campaigns)} active campaigns:",
+                    disable_web_page_preview=True
                 )
-                
+
                 # Send each campaign with a small delay between messages
                 for i, campaign in enumerate(active_campaigns, 1):
                     try:
                         message = self.format_campaign_message(campaign)
-                        await self.send_message(chat_id, message)
+                        await self.send_message(chat_id, message, disable_web_page_preview=True)
                         logger.debug(f"Successfully sent campaign {i}/{len(active_campaigns)} to {chat_id}")
                         await asyncio.sleep(1)  # Small delay between messages
                     except Exception as e:
@@ -1158,7 +1164,7 @@ class MintosBot:
             error_msg = f"Error in today_command: {str(e)}"
             logger.error(error_msg, exc_info=True)
             if chat_id:
-                await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.")
+                await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.", disable_web_page_preview=True)
             raise
 
     async def should_check_updates(self) -> bool:
@@ -1166,28 +1172,28 @@ class MintosBot:
         now = datetime.now()
         # Enhanced logging of server time
         logger.debug(f"Current server time: {now.strftime('%Y-%m-%d %H:%M:%S')} (weekday: {now.weekday()}, hour: {now.hour})")
-        
+
         # Schedule updates for working days (Monday = 0, Sunday = 6)
         # at specific hours (15:00, 16:00, 1700 UTC)
         is_scheduled_time = (
             now.weekday() < 5 and  # Monday to Friday
             now.hour in [15, 16, 17]  # 3 PM, 4 PM, 5 PM UTC
         )
-        
+
         # By default, check based on schedule
         should_check = is_scheduled_time
-        
+
         # Add a recovery mechanism for missed updates
         try:
             # Check for stale cache on weekdays
             if os.path.exists(UPDATES_FILE):
                 cache_age_hours = self.data_manager.get_cache_age() / 3600
                 logger.debug(f"Cache file age: {cache_age_hours:.1f} hours")
-                
+
                 # If cache is more than 24 hours old on a weekday, log a warning and trigger an update
                 if cache_age_hours > 24 and now.weekday() < 5:
                     logger.warning(f"Cache file is {cache_age_hours:.1f} hours old on a weekday - may indicate missed updates")
-                    
+
                     # Force an update during business hours even if outside scheduled update times
                     # This helps recover from missed updates
                     if 9 <= now.hour <= 18:  # Business hours (9 AM to 6 PM)
@@ -1209,13 +1215,13 @@ class MintosBot:
 
         chat_id = update.effective_chat.id
         try:
-            await self.send_message(chat_id, "🔄 Checking for updates...")
+            await self.send_message(chat_id, "🔄 Checking for updates...", disable_web_page_preview=True)
             await self._safe_update_check()
-            await self.send_message(chat_id, "✅ Update check completed")
+            await self.send_message(chat_id, "✅ Update check completed", disable_web_page_preview=True)
         except Exception as e:
             logger.error(f"Error in refresh command: {e}")
-            await self.send_message(chat_id, "⚠️ Error checking for updates")
-            
+            await self.send_message(chat_id, "⚠️ Error checking for updates", disable_web_page_preview=True)
+
     async def campaigns_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /campaigns command to show active Mintos campaigns"""
         if not update.effective_chat:
@@ -1229,96 +1235,97 @@ class MintosBot:
                     await update.message.delete()
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
-                
+
             logger.info(f"Processing /campaigns command for chat_id: {chat_id}")
-            
+
             # Check if campaigns cache exists and age
             cache_age = self.data_manager.get_campaigns_cache_age()
             cache_age_minutes = int(cache_age / 60) if not math.isinf(cache_age) else float('inf')
-            
+
             # If cache is older than 6 hours (360 minutes) or doesn't exist, do a fresh check
             if cache_age_minutes > 360:
                 logger.info(f"Campaigns cache is old ({cache_age_minutes} minutes), doing a fresh campaigns check")
-                await self.send_message(chat_id, "🔄 Fetching latest campaigns...")
-                
+                await self.send_message(chat_id, "🔄 Fetching latest campaigns...", disable_web_page_preview=True)
+
                 try:
                     # Fetch new campaigns directly
                     new_campaigns = self.mintos_client.get_campaigns()
                     if not new_campaigns:
-                        await self.send_message(chat_id, "⚠️ No campaigns available right now.")
+                        await self.send_message(chat_id, "⚠️ No campaigns available right now.", disable_web_page_preview=True)
                         return
-                    
+
                     # Save for future use
                     self.data_manager.save_campaigns(new_campaigns)
                     logger.info(f"Fetched and saved {len(new_campaigns)} campaigns")
                 except Exception as e:
                     logger.error(f"Error fetching campaigns: {e}")
-                    await self.send_message(chat_id, "⚠️ Error fetching campaigns. Please try again later.")
+                    await self.send_message(chat_id, "⚠️ Error fetching campaigns. Please try again later.", disable_web_page_preview=True)
                     return
             else:
                 # Load from cache
                 new_campaigns = self.data_manager.load_previous_campaigns()
                 logger.info(f"Using cached campaigns data ({cache_age_minutes} minutes old)")
-            
+
             if not new_campaigns:
-                await self.send_message(chat_id, "No campaigns found. Try again later.")
+                await self.send_message(chat_id, "No campaigns found. Try again later.", disable_web_page_preview=True)
                 return
-            
+
             # Display header with count of campaigns
             active_campaigns = []
             for campaign in new_campaigns:
                 # Filter out Special Promotion (type 4) campaigns and check if active
                 if self._is_campaign_active(campaign) and campaign.get('type') != 4:
                     active_campaigns.append(campaign)
-            
+
             if not active_campaigns:
-                await self.send_message(chat_id, "No active campaigns found at this time.")
+                await self.send_message(chat_id, "No active campaigns found at this time.", disable_web_page_preview=True)
                 return
-                
+
             # Sort campaigns by order field (if available) or by validity date
             sorted_campaigns = sorted(
                 active_campaigns, 
                 key=lambda c: (c.get('order', 999), c.get('validTo', '9999-12-31'))
             )
-            
+
             await self.send_message(
                 chat_id, 
-                f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(sorted_campaigns)} active campaigns:"
+                f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(sorted_campaigns)} active campaigns:",
+                disable_web_page_preview=True
             )
-            
+
             # Send each campaign with a small delay between messages
             for i, campaign in enumerate(sorted_campaigns, 1):
                 try:
                     message = self.format_campaign_message(campaign)
-                    await self.send_message(chat_id, message)
+                    await self.send_message(chat_id, message, disable_web_page_preview=True)
                     logger.debug(f"Successfully sent campaign {i}/{len(sorted_campaigns)} to {chat_id}")
                     await asyncio.sleep(1)  # Small delay between messages
                 except Exception as e:
                     logger.error(f"Error sending campaign {i}/{len(sorted_campaigns)}: {e}", exc_info=True)
                     continue
-                    
+
         except Exception as e:
             error_msg = f"Error in campaigns_command: {str(e)}"
             logger.error(error_msg, exc_info=True)
             if chat_id:
-                await self.send_message(chat_id, "⚠️ Error getting campaigns. Please try again.")
-            
+                await self.send_message(chat_id, "⚠️ Error getting campaigns. Please try again.", disable_web_page_preview=True)
+
     def _is_campaign_active(self, campaign: Dict[str, Any]) -> bool:
         """Check if a campaign is currently active based on its validity dates"""
         try:
             # Use UTC time for comparison
             now = datetime.now().replace(tzinfo=timezone.utc)
-            
+
             valid_from = campaign.get('validFrom')
             valid_to = campaign.get('validTo')
-            
+
             if not valid_from or not valid_to:
                 return False
-                
+
             # Parse dates (format example: "2025-01-31T22:00:00.000000Z")
             from_date = datetime.fromisoformat(valid_from.replace('Z', '+00:00'))
             to_date = datetime.fromisoformat(valid_to.replace('Z', '+00:00'))
-            
+
             return from_date <= now <= to_date
         except (ValueError, TypeError) as e:
             logger.error(f"Error parsing campaign dates: {e}")
@@ -1332,11 +1339,11 @@ class MintosBot:
 
         chat_id = update.effective_chat.id
         try:
-            await self.send_message(chat_id, "🔄 Checking today's updates...")
+            await self.send_message(chat_id, "🔄 Checking today's updates...", disable_web_page_preview=True)
             await self.today_command(update, context)
         except Exception as e:
             logger.error(f"Error in trigger_today command: {e}")
-            await self.send_message(chat_id, "⚠️ Error checking today's updates")
+            await self.send_message(chat_id, "⚠️ Error checking today's updates", disable_web_page_preview=True)
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
         """Validate channel ID format and verify bot permissions"""
@@ -1444,12 +1451,12 @@ class MintosBot:
                 logger.warning(f"Could not delete command message: {e}")
 
             # Inform user that command is being processed
-            await self.send_message(chat_id, "Processing command...")
+            await self.send_message(chat_id, "Processing command...", disable_web_page_preview=True)
 
             # Parse the channel argument
             args = context.args if context and hasattr(context, 'args') else None
             if not args:
-                await self.send_message(chat_id, "Please specify a channel (e.g., /trigger_today @yourchannel)")
+                await self.send_message(chat_id, "Please specify a channel (e.g., /trigger_today @yourchannel)", disable_web_page_preview=True)
                 return
 
             target_channel = args[0]
@@ -1466,7 +1473,8 @@ class MintosBot:
                     "Please verify:\n"
                     "1. The channel exists\n"
                     "2. The bot is a member of the channel\n"
-                    "3. You provided the correct channel name/ID"
+                    "3. You provided the correct channel name/ID",
+                    disable_web_page_preview=True
                 )
                 return
 
@@ -1484,16 +1492,18 @@ class MintosBot:
                         "⚠️ Bot needs admin rights. Please:\n"
                         "1. Add the bot as channel admin\n"
                         "2. Enable 'Post Messages' permission\n"
-                        "3. Try again"
+                        "3. Try again",
+                        disable_web_page_preview=True
                     )
                 else:
                     await self.send_message(
                         chat_id,
                         f"⚠️ Error accessing channel: {str(e)}\n"
-                        "Please verify the bot's permissions."
+                        "Please verify the bot's permissions.",
+                        disable_web_page_preview=True
                     )
                 return
-                
+
             # Retrieve today's updates
             logger.info("Getting today's updates")
             today = time.strftime("%Y-%m-%d")
@@ -1521,18 +1531,19 @@ class MintosBot:
 
             # Handle no updates case - only notify the command sender, not the channel
             if not today_updates:
-                await self.send_message(chat_id, "✅ No updates found for today")
+                await self.send_message(chat_id, "✅ No updates found for today", disable_web_page_preview=True)
                 return
 
             # Send updates to the channel
             successful_sends = 0
-            
+
             # Only send header if there are updates to show
             if today_updates:
                 await self.application.bot.send_message(
                     chat_id=resolved_channel,
                     text=f"📊 Updates for today ({today}):",
-                    parse_mode='HTML'
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
                 )
 
                 # Send updates
@@ -1542,7 +1553,8 @@ class MintosBot:
                         await self.application.bot.send_message(
                             chat_id=resolved_channel,
                             text=message,
-                            parse_mode='HTML'
+                            parse_mode='HTML',
+                            disable_web_page_preview=True
                         )
                         successful_sends += 1
                         await asyncio.sleep(0.5)  # Rate limiting
@@ -1553,20 +1565,21 @@ class MintosBot:
             logger.info("Checking for active campaigns")
             campaigns = self.data_manager.load_previous_campaigns()
             campaign_sends = 0
-            
+
             if campaigns:
                 # Filter for active campaigns
                 active_campaigns = [c for c in campaigns if self._is_campaign_active(c) and c.get('type') != 4]
-                
+
                 if active_campaigns:
                     logger.info(f"Found {len(active_campaigns)} active campaigns")
                     # Send campaign header
                     await self.application.bot.send_message(
                         chat_id=resolved_channel,
                         text=f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(active_campaigns)} active campaigns:",
-                        parse_mode='HTML'
+                        parse_mode='HTML',
+                        disable_web_page_preview=True
                     )
-                    
+
                     # Send each campaign
                     for campaign in active_campaigns:
                         try:
@@ -1574,25 +1587,26 @@ class MintosBot:
                             await self.application.bot.send_message(
                                 chat_id=resolved_channel,
                                 text=message,
-                                parse_mode='HTML'
+                                parse_mode='HTML',
+                                disable_web_page_preview=True
                             )
                             campaign_sends += 1
                             await asyncio.sleep(0.5)  # Rate limiting
                         except Exception as e:
                             logger.error(f"Error sending campaign: {e}")
-                    
+
                     logger.info(f"Sent {campaign_sends} campaigns")
                 else:
                     logger.info("No active campaigns found")
-            
+
             # Send status including both updates and campaigns only to the user who triggered the command
             status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates"
             if campaign_sends > 0:
                 status += f" and {campaign_sends} campaigns"
             status += f" to {target_channel}"
-            
+
             logger.info(status)
-            await self.send_message(chat_id, status)
+            await self.send_message(chat_id, status, disable_web_page_preview=True)
 
         except Exception as e:
             logger.error(f"Error in trigger_today_command: {e}", exc_info=True)
@@ -1601,7 +1615,8 @@ class MintosBot:
                 "⚠️ An error occurred. Please verify:\n"
                 "1. Channel name/ID is correct\n"
                 "2. Bot has proper permissions\n"
-                "3. Bot can send messages"
+                "3. Bot can send messages",
+                disable_web_page_preview=True
             )
 
 if __name__ == "__main__":
