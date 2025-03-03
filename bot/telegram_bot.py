@@ -760,8 +760,7 @@ class MintosBot:
                     message += f"🎁 <b>Bonus:</b> €{bonus_text}\n"
             except Exception:
                 # Fallback to original value if any error occurs
-                message += f"🎁```python
-<b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
+                message += f"🎁 <b>Bonus:</b> €{campaign.get('bonusAmount')}\n"
 
         # Required investment
         if campaign.get('requiredPrincipalExposure'):
