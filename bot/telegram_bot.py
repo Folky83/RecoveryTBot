@@ -1111,7 +1111,7 @@ class MintosBot:
                         disable_web_page_preview=True
                     )
                 else:
-                    await self.send_message(chat_id, f"No updates found for today ({cache_message}).", disable_web_page_preview=True)
+                    await self.send_message(chat_id, f"No updates found for today ({cache_message.lower()}).", disable_web_page_preview=True)
                 return
 
             # If we have updates, send them
