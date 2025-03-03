@@ -1190,6 +1190,13 @@ class MintosBot:
         chat_id = update.effective_chat.id
         current_time = datetime.now()
         
+        # Try to delete the command message, continue if not possible
+        try:
+            if update.message:
+                await update.message.delete()
+        except Exception as e:
+            logger.warning(f"Could not delete command message: {e}")
+        
         # Check if user is in cooldown period
         if chat_id in self._refresh_cooldowns:
             last_refresh = self._refresh_cooldowns[chat_id]
