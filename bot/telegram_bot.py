@@ -998,7 +998,7 @@ class MintosBot:
                     logger.error(f"Failed to send campaign error notification to user {user_id}: {nested_e}")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /today command to show today's updates and active campaigns"""
+        """Handle /today command to show today's updates"""
         chat_id = None
         try:
             if not update.message or not update.effective_chat:
@@ -1081,20 +1081,10 @@ class MintosBot:
                             today_updates.append(update_with_company)
                             logger.debug(f"Found update for {company_name} on {today}")
 
-            # First check if we have any updates
+            # Check if we have any updates
             have_updates = len(today_updates) > 0
 
-            # Also check for campaigns 
-            campaigns = self.data_manager.load_previous_campaigns()
-            active_campaigns = []
-            if campaigns:
-                # Filter for active campaigns (exclude type 4 which are special promotions)
-                active_campaigns = [c for c in campaigns if self._is_campaign_active(c) and c.get('type') != 4]
-                logger.info(f"Found {len(active_campaigns)} active campaigns")
-
-            have_campaigns = len(active_campaigns) > 0
-
-            if not have_updates and not have_campaigns:
+            if not have_updates:
                 cache_message = ""
                 if math.isinf(cache_age):
                     cache_message = "Cache age unknown"
@@ -1108,7 +1098,7 @@ class MintosBot:
                     else:
                         cache_message = f"Cache last updated {minutes_old} minutes ago"
 
-                logger.info(f"No updates or campaigns found for today. {cache_message}")
+                logger.info(f"No updates found for today. {cache_message}")
 
                 # Create a message with a refresh button if cache is old
                 if minutes_old > 120:  # If cache is older than 2 hours
@@ -1125,41 +1115,20 @@ class MintosBot:
                 return
 
             # If we have updates, send them
-            if have_updates:
-                # Send header message with total count
-                header_message = f"📅 Found {len(today_updates)} updates for today:\n"
-                await self.send_message(chat_id, header_message, disable_web_page_preview=True)
+            # Send header message with total count
+            header_message = f"📅 Found {len(today_updates)} updates for today:\n"
+            await self.send_message(chat_id, header_message, disable_web_page_preview=True)
 
-                # Send each update individually
-                for i, update_item in enumerate(today_updates, 1):
-                    try:
-                        message = self.format_update_message(update_item)
-                        await self.send_message(chat_id, message, disable_web_page_preview=True)
-                        logger.debug(f"Successfully sent update {i}/{len(today_updates)} to {chat_id}")
-                        await asyncio.sleep(1)  # Small delay between messages
-                    except Exception as e:
-                        logger.error(f"Error sending update {i}/{len(today_updates)}: {e}", exc_info=True)
-                        continue
-
-            # If we have campaigns, send them too
-            if have_campaigns:
-                # Send campaign header
-                await self.send_message(
-                    chat_id, 
-                    f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(active_campaigns)} active campaigns:",
-                    disable_web_page_preview=True
-                )
-
-                # Send each campaign with a small delay between messages
-                for i, campaign in enumerate(active_campaigns, 1):
-                    try:
-                        message = self.format_campaign_message(campaign)
-                        await self.send_message(chat_id, message, disable_web_page_preview=True)
-                        logger.debug(f"Successfully sent campaign {i}/{len(active_campaigns)} to {chat_id}")
-                        await asyncio.sleep(1)  # Small delay between messages
-                    except Exception as e:
-                        logger.error(f"Error sending campaign {i}/{len(active_campaigns)}: {e}", exc_info=True)
-                        continue
+            # Send each update individually
+            for i, update_item in enumerate(today_updates, 1):
+                try:
+                    message = self.format_update_message(update_item)
+                    await self.send_message(chat_id, message, disable_web_page_preview=True)
+                    logger.debug(f"Successfully sent update {i}/{len(today_updates)} to {chat_id}")
+                    await asyncio.sleep(1)  # Small delay between messages
+                except Exception as e:
+                    logger.error(f"Error sending update {i}/{len(today_updates)}: {e}", exc_info=True)
+                    continue
 
         except Exception as e:
             error_msg = f"Error in today_command: {str(e)}"
@@ -1562,50 +1531,8 @@ class MintosBot:
                     except Exception as e:
                         logger.error(f"Error sending update: {e}")
 
-            # After sending updates, also check for campaigns
-            logger.info("Checking for active campaigns")
-            campaigns = self.data_manager.load_previous_campaigns()
-            campaign_sends = 0
-
-            if campaigns:
-                # Filter for active campaigns
-                active_campaigns = [c for c in campaigns if self._is_campaign_active(c) and c.get('type') != 4]
-
-                if active_campaigns:
-                    logger.info(f"Found {len(active_campaigns)} active campaigns")
-                    # Send campaign header
-                    await self.application.bot.send_message(
-                        chat_id=resolved_channel,
-                        text=f"📣 <b>Current Mintos Campaigns</b>\n\nFound {len(active_campaigns)} active campaigns:",
-                        parse_mode='HTML',
-                        disable_web_page_preview=True
-                    )
-
-                    # Send each campaign
-                    for campaign in active_campaigns:
-                        try:
-                            message = self.format_campaign_message(campaign)
-                            await self.application.bot.send_message(
-                                chat_id=resolved_channel,
-                                text=message,
-                                parse_mode='HTML',
-                                disable_web_page_preview=True
-                            )
-                            campaign_sends += 1
-                            await asyncio.sleep(0.5)  # Rate limiting
-                        except Exception as e:
-                            logger.error(f"Error sending campaign: {e}")
-
-                    logger.info(f"Sent {campaign_sends} campaigns")
-                else:
-                    logger.info("No active campaigns found")
-
-            # Send status including both updates and campaigns only to the user who triggered the command
-            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates"
-            if campaign_sends > 0:
-                status += f" and {campaign_sends} campaigns"
-            status += f" to {target_channel}"
-
+            # Send status only to the user who triggered the command
+            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates to {target_channel}"
             logger.info(status)
             await self.send_message(chat_id, status, disable_web_page_preview=True)
 
