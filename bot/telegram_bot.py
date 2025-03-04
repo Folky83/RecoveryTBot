@@ -2233,15 +2233,19 @@ class MintosBot:
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
             
-            # Load document data
+            # Load document data - use direct path to improve reliability
             document_data = {}
             try:
-                document_cache_path = os.path.join(self.document_scraper.CACHE_DIR, self.document_scraper.DOCUMENTS_CACHE_FILE)
+                document_cache_path = "data/documents_cache.json"
+                logger.info(f"Loading documents from {document_cache_path}")
                 if os.path.exists(document_cache_path):
                     with open(document_cache_path, 'r', encoding='utf-8') as f:
                         document_data = json.load(f)
+                        logger.info(f"Successfully loaded document data with {len(document_data)} companies")
+                else:
+                    logger.error(f"Document cache file not found at {document_cache_path}")
             except Exception as e:
-                logger.error(f"Error loading document data: {e}")
+                logger.error(f"Error loading document data: {e}", exc_info=True)
                 document_data = {}
             
             if not document_data:
@@ -2257,8 +2261,12 @@ class MintosBot:
             for company_id, documents in document_data.items():
                 company_name = self.data_manager.get_company_name(company_id) or company_id
                 for doc in documents:
-                    doc['company_name'] = company_name
-                    recent_documents.append(doc)
+                    # Create a copy of the document with company name
+                    doc_with_company = dict(doc)
+                    doc_with_company['company_name'] = company_name
+                    recent_documents.append(doc_with_company)
+            
+            logger.info(f"Found {len(recent_documents)} total documents across all companies")
             
             # Sort by date (newest first) and take top 10
             recent_documents.sort(key=lambda x: x.get('date', ''), reverse=True)
@@ -2279,8 +2287,9 @@ class MintosBot:
                 title = doc.get('title', 'Untitled Document')
                 date = doc.get('date', 'Unknown Date')
                 url = doc.get('url', '#')
+                doc_type = doc.get('document_type', 'document')
                 
-                message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date})\n\n"
+                message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date}) [{doc_type}]\n\n"
                 
             # Add check documents button
             keyboard = [[InlineKeyboardButton("🔄 Check for New Documents", callback_data="check_documents")]]
