@@ -1335,7 +1335,7 @@ class MintosBot:
                     logger.error(f"Failed to send document error notification to user {user_id}: {nested_e}")
     
     def format_document_message(self, document: Dict[str, Any]) -> str:
-        """Format document message with rich information"""
+        """Format document message with rich information and consistent styling"""
         company_name = document.get('company_name', 'Unknown Company')
         document_title = document.get('title', 'Untitled Document')
         document_type = document.get('type', 'Document')
@@ -1362,12 +1362,18 @@ class MintosBot:
         
         emoji = emoji_map.get(document_type.lower(), '📃')
         
+        # Format title case for document type display
+        display_type = document_type.replace('_', ' ').title()
+        
+        # Create a visually appealing, consistently styled message
         message = (
-            f"{emoji} <b>New {document_type}</b> from <b>{company_name}</b>\n\n"
-            f"<b>Title:</b> {document_title}\n"
-            f"<b>Date:</b> {document_date}\n"
-            f"<b>Document:</b> <a href=\"{document_url}\">{document_title}</a>\n"
-            f"<b>Company Page:</b> <a href=\"{company_page_url}\">View on Mintos</a>"
+            f"{emoji} <b>{display_type}</b> from <b>{company_name}</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"📄 <b>Title:</b> {document_title}\n"
+            f"📅 <b>Date:</b> {document_date}\n\n"
+            f"🔗 <b>Links:</b>\n"
+            f"└ <a href=\"{document_url}\">View Document</a>\n"
+            f"└ <a href=\"{company_page_url}\">Company Page</a>"
         )
         
         return message
@@ -1633,7 +1639,9 @@ class MintosBot:
                 
                 await self.send_message(
                     chat_id,
-                    f"📄 <b>Recent Company Documents</b>\n\nShowing the {len(recent_documents)} most recent documents:",
+                    f"📄 <b>Recent Company Documents</b>\n"
+                    f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                    f"Showing the {len(recent_documents)} most recent documents from Mintos loan originators:",
                     disable_web_page_preview=True,
                     parse_mode='HTML'
                 )
@@ -1655,9 +1663,10 @@ class MintosBot:
             # Make the message wider with dashes to match other messages
             await self.send_message(
                 chat_id, 
-                f"📄 <b>Document Information</b>\n\n"
-                f"Document cache is {cache_age_hours:.1f} hours old.\n"
-                f"Use the buttons below to check for new documents or close this menu.",
+                f"📄 <b>Document Information</b>\n"
+                f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+                f"Document cache is {cache_age_hours:.1f} hours old.\n\n"
+                f"<i>Use the buttons below to check for new documents or close this menu.</i>",
                 reply_markup=reply_markup,
                 disable_web_page_preview=True,
                 parse_mode='HTML'
