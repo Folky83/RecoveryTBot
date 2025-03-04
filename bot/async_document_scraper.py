@@ -157,14 +157,20 @@ class AsyncDocumentScraper:
             
         return documents
 
-    async def check_all_companies(self) -> List[Dict[str, Any]]:
+    async def check_all_companies(self, fast_mode: bool = False) -> List[Dict[str, Any]]:
         """Check all companies for new documents
         
+        Args:
+            fast_mode: If True, use optimizations for quicker checking (uses more resources)
+            
         Returns:
             List of newly detected documents
         """
         # Load company mapping and previous documents
         company_mapping = self.data_manager.load_company_mapping()
+        
+        if fast_mode:
+            logger.info("Using fast mode for document checking")
         
         if not company_mapping:
             logger.warning("No company mapping available for document scraping")
@@ -186,9 +192,25 @@ class AsyncDocumentScraper:
         # Track new documents
         new_documents = []
         
-        # Process companies in small batches to avoid overwhelming the server
+        # Process companies in batches - larger batches in fast mode
         company_items = list(company_mapping.items())
-        batch_size = 5
+        
+        # In fast mode, prioritize key companies and use larger batch size
+        if fast_mode:
+            # Common lenders that often publish documents
+            priority_keywords = [
+                'mogo', 'eleving', 'iuvo', 'creditstar', 'finko', 'wowwo', 
+                'sunorat', 'ids', 'delfin', 'dozarplati', 'kviku', 'mikro'
+            ]
+            
+            # Sort company_mapping to check priority companies first
+            company_items = sorted(
+                company_items,
+                key=lambda x: (0 if any(kw in x[0].lower() for kw in priority_keywords) else 1, x[1])
+            )
+            batch_size = 10  # Larger batch size in fast mode
+        else:
+            batch_size = 5  # Standard batch size for regular operation
         
         for i in range(0, len(company_items), batch_size):
             batch = company_items[i:i+batch_size]
@@ -225,7 +247,8 @@ class AsyncDocumentScraper:
                     logger.error(f"Error checking company {company_name}: {e}", exc_info=True)
                     
             # Small delay between batches to avoid overwhelming the server
-            await asyncio.sleep(1)
+            # Shorter delay in fast mode
+            await asyncio.sleep(0.2 if fast_mode else 1)
             
         # Update document cache with all documents
         self._save_documents_data(list(previous_docs_by_id.values()))

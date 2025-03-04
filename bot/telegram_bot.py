@@ -317,16 +317,20 @@ class MintosBot:
         except Exception as e:
             logger.error(f"Update check error: {e}", exc_info=True)
             
-    async def check_company_documents(self) -> None:
-        """Check for new documents on company pages"""
+    async def check_company_documents(self, fast_mode: bool = False) -> None:
+        """Check for new documents on company pages
+        
+        Args:
+            fast_mode: If True, use faster checking mode with more resources
+        """
         try:
             current_time = time.time()
             # Convert hours to seconds for comparison
             check_interval_seconds = DOCUMENT_CHECK_INTERVAL_HOURS * 3600
             
-            # Only check once per day or after interval has passed
-            if (current_time - self._last_document_check) >= check_interval_seconds:
-                logger.info("Checking for new company documents")
+            # Only check once per day or after interval has passed, unless fast_mode is True
+            if fast_mode or (current_time - self._last_document_check) >= check_interval_seconds:
+                logger.info(f"Checking for new company documents (fast_mode={fast_mode})")
                 
                 # Load company mapping from data manager
                 company_mapping = self.data_manager.load_company_mapping()
@@ -340,8 +344,8 @@ class MintosBot:
                 if self._async_document_scraper:
                     logger.info("Using async document scraper")
                     try:
-                        # Use the non-blocking async document scraper
-                        new_documents = await self._async_document_scraper.check_all_companies()
+                        # Use the non-blocking async document scraper with fast mode if requested
+                        new_documents = await self._async_document_scraper.check_all_companies(fast_mode=fast_mode)
                     except Exception as e:
                         logger.error(f"Async document scraping failed: {e}", exc_info=True)
                         # Fall back to sync scraper
@@ -2377,8 +2381,8 @@ class MintosBot:
                 )
                 return
                 
-            # Check for new documents
-            new_documents = self.document_scraper.check_all_companies(company_mapping)
+            # Check for new documents with fast mode enabled
+            new_documents = self.document_scraper.check_all_companies(company_mapping, fast_mode=True)
             
             # Delete checking message
             if checking_message:

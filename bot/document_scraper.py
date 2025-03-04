@@ -219,11 +219,12 @@ class DocumentScraper:
         """
         return self.fetch_company_urls()
     
-    def check_all_companies(self, company_mapping: Dict[str, str]) -> List[Dict[str, Any]]:
+    def check_all_companies(self, company_mapping: Dict[str, str], fast_mode: bool = False) -> List[Dict[str, Any]]:
         """Check all companies for new documents
         
         Args:
             company_mapping: Dictionary mapping company IDs to names
+            fast_mode: If True, use optimizations for quicker checking (uses more resources)
             
         Returns:
             List of new documents detected
@@ -232,13 +233,29 @@ class DocumentScraper:
             logger.warning("No company mapping provided")
             return []
         
-        logger.info(f"Checking documents for {len(company_mapping)} companies")
+        logger.info(f"Checking documents for {len(company_mapping)} companies (fast_mode={fast_mode})")
         
         new_documents = []
         all_documents = []
         
+        # In fast mode, prioritize key companies that frequently publish documents
+        if fast_mode:
+            # Common lenders that often publish documents
+            priority_keywords = [
+                'mogo', 'eleving', 'iuvo', 'creditstar', 'finko', 'wowwo', 
+                'sunorat', 'ids', 'delfin', 'dozarplati', 'kviku', 'mikro'
+            ]
+            
+            # Sort company_mapping to check priority companies first
+            sorted_companies = sorted(
+                company_mapping.items(),
+                key=lambda x: (0 if any(kw in x[0].lower() for kw in priority_keywords) else 1, x[1])
+            )
+        else:
+            sorted_companies = company_mapping.items()
+        
         # Process each company
-        for company_id, company_name in company_mapping.items():
+        for company_id, company_name in sorted_companies:
             try:
                 logger.info(f"Checking documents for {company_name} (ID: {company_id})")
                 

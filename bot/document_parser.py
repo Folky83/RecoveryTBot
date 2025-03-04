@@ -386,6 +386,32 @@ class DocumentParser:
         Returns:
             Date string or None if not found
         """
+        # First, check for "Last Updated" spans or divs nearby
+        # Look in parent, siblings, and nearby elements
+        
+        # Check if we can find any "Last Updated" text nearby
+        parent = element.parent
+        if parent:
+            # Look for elements with text containing "Last Updated"
+            for nearby in parent.find_all(['div', 'span', 'p', 'small']):
+                text = nearby.get_text().strip()
+                if 'last updated' in text.lower():
+                    date_match = self._extract_date_from_text(text)
+                    if date_match:
+                        return date_match
+        
+        # Look for the nearest div that might contain a date
+        current = element
+        for _ in range(3):  # Check up to 3 levels up
+            if current.parent:
+                current = current.parent
+                for date_container in current.find_all(['div', 'span', 'p', 'small']):
+                    text = date_container.get_text().strip()
+                    if 'last updated' in text.lower() or self._looks_like_date(text):
+                        date_match = self._extract_date_from_text(text)
+                        if date_match:
+                            return date_match
+        
         # Check element text first
         element_text = element.get_text().strip()
         date_match = self._extract_date_from_text(element_text)
@@ -425,6 +451,12 @@ class DocumentParser:
         """
         if not text:
             return None
+        
+        # Special pattern for "Last Updated: " format from company pages
+        last_updated_pattern = r'Last Updated:?\s*(\d{1,2}\.\d{1,2}\.\d{4})'
+        match = re.search(last_updated_pattern, text)
+        if match:
+            return match.group(1)  # Return just the date part
         
         # Common date patterns
         date_patterns = [
