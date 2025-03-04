@@ -9,10 +9,17 @@ from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, Retry
 import math
 
 from .logger import setup_logger
-from .config import TELEGRAM_TOKEN, UPDATES_FILE, CAMPAIGNS_FILE
+from .config import (
+    TELEGRAM_TOKEN, 
+    UPDATES_FILE, 
+    CAMPAIGNS_FILE, 
+    DOCUMENT_SCRAPE_INTERVAL_HOURS,
+    DOCUMENT_TYPES
+)
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
+from .document_scraper import DocumentScraper
 import os
 
 logger = setup_logger(__name__)
@@ -64,6 +71,7 @@ class MintosBot:
             self.data_manager = DataManager()
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
+            self.document_scraper = DocumentScraper()
             self._is_startup_check = True  # Flag to track initial startup
             self._initialized = True
             logger.info("Bot instance created")
@@ -276,8 +284,15 @@ class MintosBot:
         """Safely perform update check with error handling"""
         try:
             await asyncio.sleep(1)  # Prevent conflicts
+            
+            # Check for company updates
             await self.check_updates()
             logger.info("Update check completed")
+            
+            # Check for document updates
+            await self.check_documents()
+            logger.info("Document check completed")
+            
         except Exception as e:
             logger.error(f"Update check error: {e}", exc_info=True)
 
