@@ -774,7 +774,8 @@ class MintosBot:
                     msg['chat_id'],
                     msg['text'],
                     msg.get('reply_markup'),
-                    disable_web_page_preview=True
+                    disable_web_page_preview=msg.get('disable_web_page_preview', True),
+                    parse_mode=msg.get('parse_mode', 'HTML')
                 )
                 logger.info(f"Successfully resent message to {msg['chat_id']}")
             except Exception as e:
