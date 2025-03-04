@@ -1346,8 +1346,7 @@ class MintosBot:
             f"{emoji} <b>New {document_type}</b> from <b>{company_name}</b>\n\n"
             f"<b>Title:</b> {document_title}\n"
             f"<b>Date:</b> {document_date}\n"
-            f"<b>Link:</b> <a href=\"{document_url}\">{document_title}</a>\n\n"
-            f"<i>To view all documents, use the Mintos Dashboard.</i>"
+            f"<b>Link:</b> <a href=\"{document_url}\">{document_title}</a>"
         )
         
         return message

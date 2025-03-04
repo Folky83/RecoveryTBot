@@ -1,0 +1,3269 @@
+[
+  {
+    "company_id": "Alexcredit",
+    "company_name": "Alexcredit",
+    "title": "Alexcredit Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Alexcredit/",
+    "date": "2019-06-20",
+    "scraped_at": "2025-03-04 20:24:50"
+  },
+  {
+    "company_id": "Alexcredit",
+    "company_name": "Alexcredit",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/843FAA63-1606-E2D2-2A70-4D0B54CDCC7B.pdf",
+    "date": "2019-06-20",
+    "scraped_at": "2025-03-04 20:24:50"
+  },
+  {
+    "company_id": "Alexcredit",
+    "company_name": "Alexcredit",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/34B20467-6A69-07E9-CEE5-13AC6ABCE6CF.pdf",
+    "date": "2019-06-20",
+    "scraped_at": "2025-03-04 20:24:50"
+  },
+  {
+    "company_id": "Alexcredit",
+    "company_name": "Alexcredit",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/F575D59A-7B60-8694-21E8-B83C6F70C7F0.pdf",
+    "date": "2019-06-20",
+    "scraped_at": "2025-03-04 20:24:50"
+  },
+  {
+    "company_id": "Alexcredit",
+    "company_name": "Alexcredit",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-06-20",
+    "scraped_at": "2025-03-04 20:24:50"
+  },
+  {
+    "company_id": "Alexcredit",
+    "company_name": "Alexcredit",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-06-20",
+    "scraped_at": "2025-03-04 20:24:50"
+  },
+  {
+    "company_id": "Alivio",
+    "company_name": "Alivio",
+    "title": "Alivio Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Alivio/",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:24:51"
+  },
+  {
+    "company_id": "Alivio",
+    "company_name": "Alivio",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/72B2D260-3427-C1A2-D268-BCEB6793476B.pdf",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:24:51"
+  },
+  {
+    "company_id": "Alivio",
+    "company_name": "Alivio",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/A4859CAC-0621-6992-FA83-D0D32835B460.pdf",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:24:51"
+  },
+  {
+    "company_id": "Alivio",
+    "company_name": "Alivio",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/D12537EE-353D-24C0-CDBB-F103AFB68575.pdf",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:24:51"
+  },
+  {
+    "company_id": "Alivio",
+    "company_name": "Alivio",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:24:51"
+  },
+  {
+    "company_id": "Alivio",
+    "company_name": "Alivio",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:24:51"
+  },
+  {
+    "company_id": "Apadundi",
+    "company_name": "Apadundi",
+    "title": "Apadundi Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Apadundi/",
+    "date": "2024-12-02",
+    "scraped_at": "2025-03-04 20:24:53"
+  },
+  {
+    "company_id": "Apadundi",
+    "company_name": "Apadundi",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/B12B4780-3A41-9561-F136-6927C3B0854E.pdf",
+    "date": "2024-12-02",
+    "scraped_at": "2025-03-04 20:24:53"
+  },
+  {
+    "company_id": "Apadundi",
+    "company_name": "Apadundi",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-12-02",
+    "scraped_at": "2025-03-04 20:24:53"
+  },
+  {
+    "company_id": "Apadundi",
+    "company_name": "Apadundi",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-12-02",
+    "scraped_at": "2025-03-04 20:24:53"
+  },
+  {
+    "company_id": "AvaFin",
+    "company_name": "AvaFin",
+    "title": "AvaFin Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/AvaFin/",
+    "date": "2024-07-10",
+    "scraped_at": "2025-03-04 20:24:54"
+  },
+  {
+    "company_id": "AvaFin",
+    "company_name": "AvaFin",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf",
+    "date": "2024-07-10",
+    "scraped_at": "2025-03-04 20:24:54"
+  },
+  {
+    "company_id": "AvaFin",
+    "company_name": "AvaFin",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf",
+    "date": "2024-07-10",
+    "scraped_at": "2025-03-04 20:24:54"
+  },
+  {
+    "company_id": "AvaFin",
+    "company_name": "AvaFin",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf",
+    "date": "2024-07-10",
+    "scraped_at": "2025-03-04 20:24:54"
+  },
+  {
+    "company_id": "AvaFin",
+    "company_name": "AvaFin",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-07-10",
+    "scraped_at": "2025-03-04 20:24:54"
+  },
+  {
+    "company_id": "AvaFin",
+    "company_name": "AvaFin",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-07-10",
+    "scraped_at": "2025-03-04 20:24:54"
+  },
+  {
+    "company_id": "BBFinance",
+    "company_name": "BBFinance",
+    "title": "BBFinance Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/BBFinance/",
+    "date": "2024-07-26",
+    "scraped_at": "2025-03-04 20:24:55"
+  },
+  {
+    "company_id": "BBFinance",
+    "company_name": "BBFinance",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/C65D8781-A776-496F-754D-72283388F197.pdf",
+    "date": "2024-07-26",
+    "scraped_at": "2025-03-04 20:24:55"
+  },
+  {
+    "company_id": "BBFinance",
+    "company_name": "BBFinance",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/E01F3D32-E78E-0B49-F8B8-BD95256C1878.pdf",
+    "date": "2024-07-26",
+    "scraped_at": "2025-03-04 20:24:55"
+  },
+  {
+    "company_id": "BBFinance",
+    "company_name": "BBFinance",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-07-26",
+    "scraped_at": "2025-03-04 20:24:55"
+  },
+  {
+    "company_id": "BBFinance",
+    "company_name": "BBFinance",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-07-26",
+    "scraped_at": "2025-03-04 20:24:55"
+  },
+  {
+    "company_id": "CAPEM",
+    "company_name": "CAPEM",
+    "title": "CAPEM Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/CAPEM/",
+    "date": "2021-09-10",
+    "scraped_at": "2025-03-04 20:24:56"
+  },
+  {
+    "company_id": "CAPEM",
+    "company_name": "CAPEM",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/705A71F5-9EB2-FF4F-3FA2-6E7BEAAF2AEF.pdf",
+    "date": "2021-09-10",
+    "scraped_at": "2025-03-04 20:24:56"
+  },
+  {
+    "company_id": "CAPEM",
+    "company_name": "CAPEM",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/089354A9-5580-6AF1-87AB-545CD14BC106.pdf",
+    "date": "2021-09-10",
+    "scraped_at": "2025-03-04 20:24:56"
+  },
+  {
+    "company_id": "CAPEM",
+    "company_name": "CAPEM",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/326DDDA3-0EA1-6D27-C6DF-860BE496F236.pdf",
+    "date": "2021-09-10",
+    "scraped_at": "2025-03-04 20:24:56"
+  },
+  {
+    "company_id": "CAPEM",
+    "company_name": "CAPEM",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-09-10",
+    "scraped_at": "2025-03-04 20:24:56"
+  },
+  {
+    "company_id": "CAPEM",
+    "company_name": "CAPEM",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-09-10",
+    "scraped_at": "2025-03-04 20:24:56"
+  },
+  {
+    "company_id": "capitalia",
+    "company_name": "capitalia",
+    "title": "capitalia Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/capitalia/",
+    "date": "2019-06-10",
+    "scraped_at": "2025-03-04 20:24:58"
+  },
+  {
+    "company_id": "capitalia",
+    "company_name": "capitalia",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/9467A418-D901-F6FE-00CC-E3D397394A6D.pdf",
+    "date": "2019-06-10",
+    "scraped_at": "2025-03-04 20:24:58"
+  },
+  {
+    "company_id": "capitalia",
+    "company_name": "capitalia",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/05C0802F-4F76-0F05-42E5-A10D1BB22788.pdf",
+    "date": "2019-06-10",
+    "scraped_at": "2025-03-04 20:24:58"
+  },
+  {
+    "company_id": "capitalia",
+    "company_name": "capitalia",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/66D07C84-3730-B918-0762-C653DC29949D.pdf",
+    "date": "2019-06-10",
+    "scraped_at": "2025-03-04 20:24:58"
+  },
+  {
+    "company_id": "capitalia",
+    "company_name": "capitalia",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-06-10",
+    "scraped_at": "2025-03-04 20:24:58"
+  },
+  {
+    "company_id": "capitalia",
+    "company_name": "capitalia",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-06-10",
+    "scraped_at": "2025-03-04 20:24:58"
+  },
+  {
+    "company_id": "capitalservice",
+    "company_name": "capitalservice",
+    "title": "capitalservice Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/capitalservice/",
+    "date": "2018-08-31",
+    "scraped_at": "2025-03-04 20:25:00"
+  },
+  {
+    "company_id": "capitalservice",
+    "company_name": "capitalservice",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/10461955-C2DE-AB2B-FD55-32A855773953.PDF",
+    "date": "2018-08-31",
+    "scraped_at": "2025-03-04 20:25:00"
+  },
+  {
+    "company_id": "capitalservice",
+    "company_name": "capitalservice",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/8A39DA15-F547-4570-460A-6C946B532651.pdf",
+    "date": "2018-08-31",
+    "scraped_at": "2025-03-04 20:25:00"
+  },
+  {
+    "company_id": "capitalservice",
+    "company_name": "capitalservice",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/4A0B703A-C644-4972-77F8-AE20526782B2.pdf",
+    "date": "2018-08-31",
+    "scraped_at": "2025-03-04 20:25:00"
+  },
+  {
+    "company_id": "capitalservice",
+    "company_name": "capitalservice",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2018-08-31",
+    "scraped_at": "2025-03-04 20:25:00"
+  },
+  {
+    "company_id": "capitalservice",
+    "company_name": "capitalservice",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2018-08-31",
+    "scraped_at": "2025-03-04 20:25:00"
+  },
+  {
+    "company_id": "cashcredit",
+    "company_name": "cashcredit",
+    "title": "cashcredit Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/cashcredit/",
+    "date": "2024-04-09",
+    "scraped_at": "2025-03-04 20:25:01"
+  },
+  {
+    "company_id": "cashcredit",
+    "company_name": "cashcredit",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/48E12078-23CA-2E02-5F31-0765A93F1598.pdf",
+    "date": "2024-04-09",
+    "scraped_at": "2025-03-04 20:25:01"
+  },
+  {
+    "company_id": "cashcredit",
+    "company_name": "cashcredit",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/69E52513-1D13-FA04-BCC9-40D5F0A23405.pdf",
+    "date": "2024-04-09",
+    "scraped_at": "2025-03-04 20:25:01"
+  },
+  {
+    "company_id": "cashcredit",
+    "company_name": "cashcredit",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-04-09",
+    "scraped_at": "2025-03-04 20:25:01"
+  },
+  {
+    "company_id": "cashcredit",
+    "company_name": "cashcredit",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-04-09",
+    "scraped_at": "2025-03-04 20:25:01"
+  },
+  {
+    "company_id": "Cashwagon",
+    "company_name": "Cashwagon",
+    "title": "Cashwagon Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Cashwagon/",
+    "date": "2020-04-23",
+    "scraped_at": "2025-03-04 20:25:03"
+  },
+  {
+    "company_id": "Cashwagon",
+    "company_name": "Cashwagon",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/D32742F1-2511-AB77-9DB7-3F0B0805AE35.pdf",
+    "date": "2020-04-23",
+    "scraped_at": "2025-03-04 20:25:03"
+  },
+  {
+    "company_id": "Cashwagon",
+    "company_name": "Cashwagon",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/C4808055-0444-0456-A4D8-0899D8A3B75A.pdf",
+    "date": "2020-04-23",
+    "scraped_at": "2025-03-04 20:25:03"
+  },
+  {
+    "company_id": "Cashwagon",
+    "company_name": "Cashwagon",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-04-23",
+    "scraped_at": "2025-03-04 20:25:03"
+  },
+  {
+    "company_id": "Cashwagon",
+    "company_name": "Cashwagon",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-04-23",
+    "scraped_at": "2025-03-04 20:25:03"
+  },
+  {
+    "company_id": "Conmigo",
+    "company_name": "Conmigo",
+    "title": "Conmigo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Conmigo/",
+    "date": "2021-08-12",
+    "scraped_at": "2025-03-04 20:25:04"
+  },
+  {
+    "company_id": "Conmigo",
+    "company_name": "Conmigo",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/9E02D0C4-A27E-9350-3506-78BE2C88A4F1.pdf",
+    "date": "2021-08-12",
+    "scraped_at": "2025-03-04 20:25:04"
+  },
+  {
+    "company_id": "Conmigo",
+    "company_name": "Conmigo",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/E0C903CB-B6F8-8A64-4296-77EB6ED03955.pdf",
+    "date": "2021-08-12",
+    "scraped_at": "2025-03-04 20:25:04"
+  },
+  {
+    "company_id": "Conmigo",
+    "company_name": "Conmigo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-08-12",
+    "scraped_at": "2025-03-04 20:25:04"
+  },
+  {
+    "company_id": "Conmigo",
+    "company_name": "Conmigo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-08-12",
+    "scraped_at": "2025-03-04 20:25:04"
+  },
+  {
+    "company_id": "Contigo",
+    "company_name": "Contigo",
+    "title": "Contigo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Contigo/",
+    "date": "2022-04-07",
+    "scraped_at": "2025-03-04 20:25:06"
+  },
+  {
+    "company_id": "Contigo",
+    "company_name": "Contigo",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/FEE75FFF-259B-3CFF-D909-E980C9CE45F7.pdf",
+    "date": "2022-04-07",
+    "scraped_at": "2025-03-04 20:25:06"
+  },
+  {
+    "company_id": "Contigo",
+    "company_name": "Contigo",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/AA6C70A7-D7E1-1479-CF6F-46D19DD83645.pdf",
+    "date": "2022-04-07",
+    "scraped_at": "2025-03-04 20:25:06"
+  },
+  {
+    "company_id": "Contigo",
+    "company_name": "Contigo",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/74B45B9D-4ADA-B7C9-DA6C-B71D4EAD234F.pdf",
+    "date": "2022-04-07",
+    "scraped_at": "2025-03-04 20:25:06"
+  },
+  {
+    "company_id": "Contigo",
+    "company_name": "Contigo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2022-04-07",
+    "scraped_at": "2025-03-04 20:25:06"
+  },
+  {
+    "company_id": "Contigo",
+    "company_name": "Contigo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2022-04-07",
+    "scraped_at": "2025-03-04 20:25:06"
+  },
+  {
+    "company_id": "creamfinance",
+    "company_name": "creamfinance",
+    "title": "creamfinance Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/creamfinance/",
+    "date": "2019-08-28",
+    "scraped_at": "2025-03-04 20:25:07"
+  },
+  {
+    "company_id": "creamfinance",
+    "company_name": "creamfinance",
+    "title": "creamfinance reports record \u20ac3.4m net profit for fy 2021",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/creamfinance-reports-record-e3-4m-net-profit-for-fy-2021/",
+    "date": "2019-08-28",
+    "scraped_at": "2025-03-04 20:25:07"
+  },
+  {
+    "company_id": "creamfinance",
+    "company_name": "creamfinance",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/5F53C9F5-9627-7CCC-AB4B-451A50D50CD5.pdf",
+    "date": "2019-08-28",
+    "scraped_at": "2025-03-04 20:25:07"
+  },
+  {
+    "company_id": "creamfinance",
+    "company_name": "creamfinance",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/039DC8DB-580C-FBEA-006B-557DA9C038C0.pdf",
+    "date": "2019-08-28",
+    "scraped_at": "2025-03-04 20:25:07"
+  },
+  {
+    "company_id": "creamfinance",
+    "company_name": "creamfinance",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-08-28",
+    "scraped_at": "2025-03-04 20:25:07"
+  },
+  {
+    "company_id": "creamfinance",
+    "company_name": "creamfinance",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-08-28",
+    "scraped_at": "2025-03-04 20:25:07"
+  },
+  {
+    "company_id": "Credifiel",
+    "company_name": "Credifiel",
+    "title": "Credifiel Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Credifiel/",
+    "date": "2022-04-25",
+    "scraped_at": "2025-03-04 20:25:08"
+  },
+  {
+    "company_id": "Credifiel",
+    "company_name": "Credifiel",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/B137A978-FACA-C744-A333-26183278ADC9.pdf",
+    "date": "2022-04-25",
+    "scraped_at": "2025-03-04 20:25:08"
+  },
+  {
+    "company_id": "Credifiel",
+    "company_name": "Credifiel",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/258AB6FC-CD0C-8F95-77D4-720ACF5C3A5D.pdf",
+    "date": "2022-04-25",
+    "scraped_at": "2025-03-04 20:25:08"
+  },
+  {
+    "company_id": "Credifiel",
+    "company_name": "Credifiel",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/F50B1541-2C4E-C5D9-7CEF-C0C3EABFFE85.pdf",
+    "date": "2022-04-25",
+    "scraped_at": "2025-03-04 20:25:08"
+  },
+  {
+    "company_id": "Credifiel",
+    "company_name": "Credifiel",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2022-04-25",
+    "scraped_at": "2025-03-04 20:25:08"
+  },
+  {
+    "company_id": "Credifiel",
+    "company_name": "Credifiel",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2022-04-25",
+    "scraped_at": "2025-03-04 20:25:08"
+  },
+  {
+    "company_id": "credissimo",
+    "company_name": "credissimo",
+    "title": "credissimo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/credissimo/",
+    "date": "2021-07-22",
+    "scraped_at": "2025-03-04 20:25:10"
+  },
+  {
+    "company_id": "credissimo",
+    "company_name": "credissimo",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/8493A3F3-74C3-25CA-A24B-A3B35E3F9083.pdf",
+    "date": "2021-07-22",
+    "scraped_at": "2025-03-04 20:25:10"
+  },
+  {
+    "company_id": "credissimo",
+    "company_name": "credissimo",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/447B9E39-CB2B-C7E9-2462-7CC0D82708F9.pdf",
+    "date": "2021-07-22",
+    "scraped_at": "2025-03-04 20:25:10"
+  },
+  {
+    "company_id": "credissimo",
+    "company_name": "credissimo",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/36F46B6E-311A-DF24-1C44-10664BC7A91C.pdf",
+    "date": "2021-07-22",
+    "scraped_at": "2025-03-04 20:25:10"
+  },
+  {
+    "company_id": "credissimo",
+    "company_name": "credissimo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-07-22",
+    "scraped_at": "2025-03-04 20:25:10"
+  },
+  {
+    "company_id": "credissimo",
+    "company_name": "credissimo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-07-22",
+    "scraped_at": "2025-03-04 20:25:10"
+  },
+  {
+    "company_id": "creditstar",
+    "company_name": "creditstar",
+    "title": "creditstar Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/creditstar/",
+    "date": "2024-07-09",
+    "scraped_at": "2025-03-04 20:25:11"
+  },
+  {
+    "company_id": "creditstar",
+    "company_name": "creditstar",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/685E54EB-4C7D-F8CD-12C7-6DCCC0FF1DBC.pdf",
+    "date": "2024-07-09",
+    "scraped_at": "2025-03-04 20:25:11"
+  },
+  {
+    "company_id": "creditstar",
+    "company_name": "creditstar",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/4C6EEB99-79D1-D775-6385-7274FD59938B.pdf",
+    "date": "2024-07-09",
+    "scraped_at": "2025-03-04 20:25:11"
+  },
+  {
+    "company_id": "creditstar",
+    "company_name": "creditstar",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-07-09",
+    "scraped_at": "2025-03-04 20:25:11"
+  },
+  {
+    "company_id": "creditstar",
+    "company_name": "creditstar",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-07-09",
+    "scraped_at": "2025-03-04 20:25:11"
+  },
+  {
+    "company_id": "Creditter",
+    "company_name": "Creditter",
+    "title": "Creditter Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Creditter/",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:12"
+  },
+  {
+    "company_id": "Creditter",
+    "company_name": "Creditter",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/C709B55A-570C-E7D3-4CB0-8184308D1EEE.pdf",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:12"
+  },
+  {
+    "company_id": "Creditter",
+    "company_name": "Creditter",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/33A1F2CC-73A8-5ECD-7FEA-EB178EB6A761.pdf",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:12"
+  },
+  {
+    "company_id": "Creditter",
+    "company_name": "Creditter",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/3063C9F2-881F-2DC8-16CB-09CA3FDE7D83.pdf",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:12"
+  },
+  {
+    "company_id": "Creditter",
+    "company_name": "Creditter",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:12"
+  },
+  {
+    "company_id": "Creditter",
+    "company_name": "Creditter",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:12"
+  },
+  {
+    "company_id": "credius",
+    "company_name": "credius",
+    "title": "credius Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/credius/",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:25:14"
+  },
+  {
+    "company_id": "credius",
+    "company_name": "credius",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/59B260B4-8386-5C9C-D3F5-74077E00F5F8.pdf",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:25:14"
+  },
+  {
+    "company_id": "credius",
+    "company_name": "credius",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/8CC6B7FC-9380-E740-FF28-7194F2E72392.pdf",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:25:14"
+  },
+  {
+    "company_id": "credius",
+    "company_name": "credius",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:25:14"
+  },
+  {
+    "company_id": "credius",
+    "company_name": "credius",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-08-09",
+    "scraped_at": "2025-03-04 20:25:14"
+  },
+  {
+    "company_id": "DanaRupiah",
+    "company_name": "DanaRupiah",
+    "title": "DanaRupiah Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/DanaRupiah/",
+    "date": "2021-12-20",
+    "scraped_at": "2025-03-04 20:25:15"
+  },
+  {
+    "company_id": "DanaRupiah",
+    "company_name": "DanaRupiah",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/5F2ED7E3-E664-12C7-AB4E-51D8D3C34BE5.pdf",
+    "date": "2021-12-20",
+    "scraped_at": "2025-03-04 20:25:15"
+  },
+  {
+    "company_id": "DanaRupiah",
+    "company_name": "DanaRupiah",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/11741E90-2796-C12F-8F94-91E5715F93F3.pdf",
+    "date": "2021-12-20",
+    "scraped_at": "2025-03-04 20:25:15"
+  },
+  {
+    "company_id": "DanaRupiah",
+    "company_name": "DanaRupiah",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/FDF6430F-2FB5-6E11-6CD4-BDE12D4246E0.pdf",
+    "date": "2021-12-20",
+    "scraped_at": "2025-03-04 20:25:15"
+  },
+  {
+    "company_id": "DanaRupiah",
+    "company_name": "DanaRupiah",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-12-20",
+    "scraped_at": "2025-03-04 20:25:15"
+  },
+  {
+    "company_id": "DanaRupiah",
+    "company_name": "DanaRupiah",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-12-20",
+    "scraped_at": "2025-03-04 20:25:15"
+  },
+  {
+    "company_id": "debifo",
+    "company_name": "debifo",
+    "title": "debifo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/debifo/",
+    "date": "2019-07-15",
+    "scraped_at": "2025-03-04 20:25:16"
+  },
+  {
+    "company_id": "debifo",
+    "company_name": "debifo",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/FB0334D6-24C3-7970-296C-6A7BE5A0221B.pdf",
+    "date": "2019-07-15",
+    "scraped_at": "2025-03-04 20:25:16"
+  },
+  {
+    "company_id": "debifo",
+    "company_name": "debifo",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/E4B9035E-CD91-C15C-11F0-4D7775DE049C.pdf",
+    "date": "2019-07-15",
+    "scraped_at": "2025-03-04 20:25:16"
+  },
+  {
+    "company_id": "debifo",
+    "company_name": "debifo",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/5B16DAF5-F459-2126-F707-F7A875498457.pdf",
+    "date": "2019-07-15",
+    "scraped_at": "2025-03-04 20:25:16"
+  },
+  {
+    "company_id": "debifo",
+    "company_name": "debifo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-07-15",
+    "scraped_at": "2025-03-04 20:25:16"
+  },
+  {
+    "company_id": "debifo",
+    "company_name": "debifo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-07-15",
+    "scraped_at": "2025-03-04 20:25:16"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "DelfinGroup Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/DelfinGroup/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "delfingroup publishes q1 2023 financial results",
+    "type": "financials",
+    "url": "https://www.mintos.com/blog/delfingroup-publishes-q1-2023-financial-results/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "delfingroup reports 40% profit increase in 2022",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/delfingroup-reports-40-profit-increase-in-2022/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/F5F8B3E2-5464-2FD7-726C-AB487252B67C.pdf",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/1AF4DA95-5404-0356-3B56-D8A1C9C00C9E.pdf",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "DelfinGroup",
+    "company_name": "DelfinGroup",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:25:17"
+  },
+  {
+    "company_id": "dineo_credito",
+    "company_name": "dineo_credito",
+    "title": "dineo_credito Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/dineo_credito/",
+    "date": "2020-04-11",
+    "scraped_at": "2025-03-04 20:25:18"
+  },
+  {
+    "company_id": "dineo_credito",
+    "company_name": "dineo_credito",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/46254619-C884-E020-E3D1-CCD509A9FD12.pdf",
+    "date": "2020-04-11",
+    "scraped_at": "2025-03-04 20:25:18"
+  },
+  {
+    "company_id": "dineo_credito",
+    "company_name": "dineo_credito",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/CEA36DC7-89D1-51AB-8AB8-DAA712030EDF.pdf",
+    "date": "2020-04-11",
+    "scraped_at": "2025-03-04 20:25:18"
+  },
+  {
+    "company_id": "dineo_credito",
+    "company_name": "dineo_credito",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/EDA40A1F-38E2-BF3B-5191-E6AC5F13F9C3.pdf",
+    "date": "2020-04-11",
+    "scraped_at": "2025-03-04 20:25:18"
+  },
+  {
+    "company_id": "dineo_credito",
+    "company_name": "dineo_credito",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-04-11",
+    "scraped_at": "2025-03-04 20:25:18"
+  },
+  {
+    "company_id": "dineo_credito",
+    "company_name": "dineo_credito",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-04-11",
+    "scraped_at": "2025-03-04 20:25:18"
+  },
+  {
+    "company_id": "dinerito",
+    "company_name": "dinerito",
+    "title": "dinerito Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/dinerito/",
+    "date": "2025-01-13",
+    "scraped_at": "2025-03-04 20:25:20"
+  },
+  {
+    "company_id": "dinerito",
+    "company_name": "dinerito",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/DC978F7F-5291-2BAC-177A-DB2F10DC5771.pdf",
+    "date": "2025-01-13",
+    "scraped_at": "2025-03-04 20:25:20"
+  },
+  {
+    "company_id": "dinerito",
+    "company_name": "dinerito",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/162CAC6C-4669-E080-E998-81AF6657D469.pdf",
+    "date": "2025-01-13",
+    "scraped_at": "2025-03-04 20:25:20"
+  },
+  {
+    "company_id": "dinerito",
+    "company_name": "dinerito",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/95026F13-F59A-D82B-CA87-8C99FC959A0D.pdf",
+    "date": "2025-01-13",
+    "scraped_at": "2025-03-04 20:25:20"
+  },
+  {
+    "company_id": "dinerito",
+    "company_name": "dinerito",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2025-01-13",
+    "scraped_at": "2025-03-04 20:25:20"
+  },
+  {
+    "company_id": "dinerito",
+    "company_name": "dinerito",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2025-01-13",
+    "scraped_at": "2025-03-04 20:25:20"
+  },
+  {
+    "company_id": "dozarplati",
+    "company_name": "dozarplati",
+    "title": "dozarplati Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/dozarplati/",
+    "date": "2021-07-26",
+    "scraped_at": "2025-03-04 20:25:21"
+  },
+  {
+    "company_id": "dozarplati",
+    "company_name": "dozarplati",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/E454E91A-6716-F451-8BF1-F558A2E49BA9.pdf",
+    "date": "2021-07-26",
+    "scraped_at": "2025-03-04 20:25:21"
+  },
+  {
+    "company_id": "dozarplati",
+    "company_name": "dozarplati",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-07-26",
+    "scraped_at": "2025-03-04 20:25:21"
+  },
+  {
+    "company_id": "dozarplati",
+    "company_name": "dozarplati",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-07-26",
+    "scraped_at": "2025-03-04 20:25:21"
+  },
+  {
+    "company_id": "Dziesiatka",
+    "company_name": "Dziesiatka",
+    "title": "Dziesiatka Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Dziesiatka/",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:23"
+  },
+  {
+    "company_id": "Dziesiatka",
+    "company_name": "Dziesiatka",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/12981444-92A7-D89B-9FCA-7010CF34448C.pdf",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:23"
+  },
+  {
+    "company_id": "Dziesiatka",
+    "company_name": "Dziesiatka",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/19F48D5E-5486-6121-BD7C-82B26ACE8077.pdf",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:23"
+  },
+  {
+    "company_id": "Dziesiatka",
+    "company_name": "Dziesiatka",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/537A69D4-8091-679D-3628-319F74B2D072.pdf",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:23"
+  },
+  {
+    "company_id": "Dziesiatka",
+    "company_name": "Dziesiatka",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:23"
+  },
+  {
+    "company_id": "Dziesiatka",
+    "company_name": "Dziesiatka",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-04-07",
+    "scraped_at": "2025-03-04 20:25:23"
+  },
+  {
+    "company_id": "e-cash",
+    "company_name": "e-cash",
+    "title": "e-cash Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/e-cash/",
+    "date": "2020-11-09",
+    "scraped_at": "2025-03-04 20:25:24"
+  },
+  {
+    "company_id": "e-cash",
+    "company_name": "e-cash",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/EBE7B83E-266A-EAB3-4F5C-127801D24DA5.pdf",
+    "date": "2020-11-09",
+    "scraped_at": "2025-03-04 20:25:24"
+  },
+  {
+    "company_id": "e-cash",
+    "company_name": "e-cash",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/43107960-1051-C95E-5FD7-60E579B68117.pdf",
+    "date": "2020-11-09",
+    "scraped_at": "2025-03-04 20:25:24"
+  },
+  {
+    "company_id": "e-cash",
+    "company_name": "e-cash",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/366A1F42-4655-55C6-D0F6-4CC347F38D91.PDF",
+    "date": "2020-11-09",
+    "scraped_at": "2025-03-04 20:25:24"
+  },
+  {
+    "company_id": "e-cash",
+    "company_name": "e-cash",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-11-09",
+    "scraped_at": "2025-03-04 20:25:24"
+  },
+  {
+    "company_id": "e-cash",
+    "company_name": "e-cash",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-11-09",
+    "scraped_at": "2025-03-04 20:25:24"
+  },
+  {
+    "company_id": "ecofinance",
+    "company_name": "ecofinance",
+    "title": "ecofinance Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/ecofinance/",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:25"
+  },
+  {
+    "company_id": "ecofinance",
+    "company_name": "ecofinance",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/8DF61B5A-7EE6-57DF-FA6A-46723F4B28E4.pdf",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:25"
+  },
+  {
+    "company_id": "ecofinance",
+    "company_name": "ecofinance",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/66944616-0F1D-6E50-A033-2F1EF5707214.pdf",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:25"
+  },
+  {
+    "company_id": "ecofinance",
+    "company_name": "ecofinance",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/69EB48AC-7F6F-A81F-E230-87502A8D2510.pdf",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:25"
+  },
+  {
+    "company_id": "ecofinance",
+    "company_name": "ecofinance",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:25"
+  },
+  {
+    "company_id": "ecofinance",
+    "company_name": "ecofinance",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:25"
+  },
+  {
+    "company_id": "eiz-ecommerce",
+    "company_name": "eiz-ecommerce",
+    "title": "eiz-ecommerce Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/eiz-ecommerce/",
+    "date": "2024-10-30",
+    "scraped_at": "2025-03-04 20:25:26"
+  },
+  {
+    "company_id": "eiz-ecommerce",
+    "company_name": "eiz-ecommerce",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/5F8830AE-8300-1274-C894-2BB4122F9312.pdf",
+    "date": "2024-10-30",
+    "scraped_at": "2025-03-04 20:25:26"
+  },
+  {
+    "company_id": "eiz-ecommerce",
+    "company_name": "eiz-ecommerce",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-10-30",
+    "scraped_at": "2025-03-04 20:25:26"
+  },
+  {
+    "company_id": "eiz-ecommerce",
+    "company_name": "eiz-ecommerce",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-10-30",
+    "scraped_at": "2025-03-04 20:25:26"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "ESTO Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/ESTO/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "esto reports a 54% revenue increase in q3 2023",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/esto-reports-a-54-revenue-increase-in-q3-2023/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/093A11CF-6117-37C8-2739-BD8B905A947C.pdf",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/5002BECE-B22C-92D8-DED2-7265964D0713.pdf",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/18CAF74C-D12C-666E-ABC7-C2803646836F.pdf",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "ESTO",
+    "company_name": "ESTO",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:25:27"
+  },
+  {
+    "company_id": "Eurocent",
+    "company_name": "Eurocent",
+    "title": "Eurocent Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Eurocent/",
+    "date": "2017-08-17",
+    "scraped_at": "2025-03-04 20:25:29"
+  },
+  {
+    "company_id": "Eurocent",
+    "company_name": "Eurocent",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/8B1A6E03-3C3F-4348-5A16-E0E20A1EC32F.pdf",
+    "date": "2017-08-17",
+    "scraped_at": "2025-03-04 20:25:29"
+  },
+  {
+    "company_id": "Eurocent",
+    "company_name": "Eurocent",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/1E4C43B9-4167-0633-EF78-A6FDA171B7B1.pdf",
+    "date": "2017-08-17",
+    "scraped_at": "2025-03-04 20:25:29"
+  },
+  {
+    "company_id": "Eurocent",
+    "company_name": "Eurocent",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/D3A3AAD6-CE68-8DAC-2D5B-D924FD9091EA.pdf",
+    "date": "2017-08-17",
+    "scraped_at": "2025-03-04 20:25:29"
+  },
+  {
+    "company_id": "Eurocent",
+    "company_name": "Eurocent",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2017-08-17",
+    "scraped_at": "2025-03-04 20:25:29"
+  },
+  {
+    "company_id": "Eurocent",
+    "company_name": "Eurocent",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2017-08-17",
+    "scraped_at": "2025-03-04 20:25:29"
+  },
+  {
+    "company_id": "eurolease",
+    "company_name": "eurolease",
+    "title": "eurolease Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/eurolease/",
+    "date": "2025-03-04",
+    "scraped_at": "2025-03-04 20:25:30"
+  },
+  {
+    "company_id": "eurolease",
+    "company_name": "eurolease",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2025-03-04",
+    "scraped_at": "2025-03-04 20:25:30"
+  },
+  {
+    "company_id": "eurolease",
+    "company_name": "eurolease",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2025-03-04",
+    "scraped_at": "2025-03-04 20:25:30"
+  },
+  {
+    "company_id": "euroone",
+    "company_name": "euroone",
+    "title": "euroone Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/euroone/",
+    "date": "2019-02-18",
+    "scraped_at": "2025-03-04 20:25:32"
+  },
+  {
+    "company_id": "euroone",
+    "company_name": "euroone",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/CB9E6D59-A993-7E5D-980F-2AB9B6F7D7B3.pdf",
+    "date": "2019-02-18",
+    "scraped_at": "2025-03-04 20:25:32"
+  },
+  {
+    "company_id": "euroone",
+    "company_name": "euroone",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/72839AA3-ACA3-08D7-CB83-9E5B41224018.pdf",
+    "date": "2019-02-18",
+    "scraped_at": "2025-03-04 20:25:32"
+  },
+  {
+    "company_id": "euroone",
+    "company_name": "euroone",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-02-18",
+    "scraped_at": "2025-03-04 20:25:32"
+  },
+  {
+    "company_id": "euroone",
+    "company_name": "euroone",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-02-18",
+    "scraped_at": "2025-03-04 20:25:32"
+  },
+  {
+    "company_id": "everest-finanse",
+    "company_name": "everest-finanse",
+    "title": "everest-finanse Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/everest-finanse/",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:33"
+  },
+  {
+    "company_id": "everest-finanse",
+    "company_name": "everest-finanse",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/A8045290-B470-DA80-AAC0-95E3D6621865.pdf",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:33"
+  },
+  {
+    "company_id": "everest-finanse",
+    "company_name": "everest-finanse",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/AE97F352-89C1-1E3E-C6F5-9EE0FC988378.pdf",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:33"
+  },
+  {
+    "company_id": "everest-finanse",
+    "company_name": "everest-finanse",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/2F08EDB7-2166-E804-719A-6A79539DB201.pdf",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:33"
+  },
+  {
+    "company_id": "everest-finanse",
+    "company_name": "everest-finanse",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:33"
+  },
+  {
+    "company_id": "everest-finanse",
+    "company_name": "everest-finanse",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-05-21",
+    "scraped_at": "2025-03-04 20:25:33"
+  },
+  {
+    "company_id": "Evergreen",
+    "company_name": "Evergreen",
+    "title": "Evergreen Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Evergreen/",
+    "date": "2024-11-25",
+    "scraped_at": "2025-03-04 20:25:34"
+  },
+  {
+    "company_id": "Evergreen",
+    "company_name": "Evergreen",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/35FBA387-9918-D49B-DDF8-3FDA83C19921.pdf",
+    "date": "2024-11-25",
+    "scraped_at": "2025-03-04 20:25:34"
+  },
+  {
+    "company_id": "Evergreen",
+    "company_name": "Evergreen",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/8922CBB3-C831-5DE4-8B4B-9EC1573FC6C7.pdf",
+    "date": "2024-11-25",
+    "scraped_at": "2025-03-04 20:25:34"
+  },
+  {
+    "company_id": "Evergreen",
+    "company_name": "Evergreen",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/194EC5D2-DD85-D86A-C093-4A1CC7898BE3.pdf",
+    "date": "2024-11-25",
+    "scraped_at": "2025-03-04 20:25:34"
+  },
+  {
+    "company_id": "Evergreen",
+    "company_name": "Evergreen",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-11-25",
+    "scraped_at": "2025-03-04 20:25:34"
+  },
+  {
+    "company_id": "Evergreen",
+    "company_name": "Evergreen",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-11-25",
+    "scraped_at": "2025-03-04 20:25:34"
+  },
+  {
+    "company_id": "Finclusion",
+    "company_name": "Finclusion",
+    "title": "Finclusion Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Finclusion/",
+    "date": "2021-04-26",
+    "scraped_at": "2025-03-04 20:26:11"
+  },
+  {
+    "company_id": "Finclusion",
+    "company_name": "Finclusion",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/437F6820-708B-60E4-493B-BD554DB89D52.pdf",
+    "date": "2021-04-26",
+    "scraped_at": "2025-03-04 20:26:11"
+  },
+  {
+    "company_id": "Finclusion",
+    "company_name": "Finclusion",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/95470575-769E-A7E9-3549-44CEE9DECBC4.pdf",
+    "date": "2021-04-26",
+    "scraped_at": "2025-03-04 20:26:11"
+  },
+  {
+    "company_id": "Finclusion",
+    "company_name": "Finclusion",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-04-26",
+    "scraped_at": "2025-03-04 20:26:11"
+  },
+  {
+    "company_id": "Finclusion",
+    "company_name": "Finclusion",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-04-26",
+    "scraped_at": "2025-03-04 20:26:11"
+  },
+  {
+    "company_id": "Finko",
+    "company_name": "Finko",
+    "title": "Finko Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Finko/",
+    "date": "2020-03-20",
+    "scraped_at": "2025-03-04 20:26:12"
+  },
+  {
+    "company_id": "Finko",
+    "company_name": "Finko",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/A62AB5F3-14A6-7732-8506-C49FCFFA89F8.pdf",
+    "date": "2020-03-20",
+    "scraped_at": "2025-03-04 20:26:12"
+  },
+  {
+    "company_id": "Finko",
+    "company_name": "Finko",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-03-20",
+    "scraped_at": "2025-03-04 20:26:12"
+  },
+  {
+    "company_id": "Finko",
+    "company_name": "Finko",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-03-20",
+    "scraped_at": "2025-03-04 20:26:12"
+  },
+  {
+    "company_id": "Fireof",
+    "company_name": "Fireof",
+    "title": "Fireof Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Fireof/",
+    "date": "2019-06-12",
+    "scraped_at": "2025-03-04 20:26:14"
+  },
+  {
+    "company_id": "Fireof",
+    "company_name": "Fireof",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/AA05202D-A75A-896F-62E0-90AC527AA1A9.pdf",
+    "date": "2019-06-12",
+    "scraped_at": "2025-03-04 20:26:14"
+  },
+  {
+    "company_id": "Fireof",
+    "company_name": "Fireof",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/56EBCD1B-3234-F1DC-CE8A-A8599BEA17EC.pdf",
+    "date": "2019-06-12",
+    "scraped_at": "2025-03-04 20:26:14"
+  },
+  {
+    "company_id": "Fireof",
+    "company_name": "Fireof",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/C3168A8B-2511-9453-2DCD-BBF145C1D0B4.pdf",
+    "date": "2019-06-12",
+    "scraped_at": "2025-03-04 20:26:14"
+  },
+  {
+    "company_id": "Fireof",
+    "company_name": "Fireof",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-06-12",
+    "scraped_at": "2025-03-04 20:26:14"
+  },
+  {
+    "company_id": "Fireof",
+    "company_name": "Fireof",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-06-12",
+    "scraped_at": "2025-03-04 20:26:14"
+  },
+  {
+    "company_id": "getbucks",
+    "company_name": "getbucks",
+    "title": "getbucks Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/getbucks/",
+    "date": "2020-05-06",
+    "scraped_at": "2025-03-04 20:26:15"
+  },
+  {
+    "company_id": "getbucks",
+    "company_name": "getbucks",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/6F27367E-B20D-EF68-0BA5-51CF44C5D922.pdf",
+    "date": "2020-05-06",
+    "scraped_at": "2025-03-04 20:26:15"
+  },
+  {
+    "company_id": "getbucks",
+    "company_name": "getbucks",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/18FC2CF5-9181-6629-1FE8-515A11B623CF.pdf",
+    "date": "2020-05-06",
+    "scraped_at": "2025-03-04 20:26:15"
+  },
+  {
+    "company_id": "getbucks",
+    "company_name": "getbucks",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-05-06",
+    "scraped_at": "2025-03-04 20:26:15"
+  },
+  {
+    "company_id": "getbucks",
+    "company_name": "getbucks",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-05-06",
+    "scraped_at": "2025-03-04 20:26:15"
+  },
+  {
+    "company_id": "GFM",
+    "company_name": "GFM",
+    "title": "GFM Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/GFM/",
+    "date": "2021-07-05",
+    "scraped_at": "2025-03-04 20:26:17"
+  },
+  {
+    "company_id": "GFM",
+    "company_name": "GFM",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/DDBBC4F2-C92F-6B36-8E6F-6E9BA32F7D01.pdf",
+    "date": "2021-07-05",
+    "scraped_at": "2025-03-04 20:26:17"
+  },
+  {
+    "company_id": "GFM",
+    "company_name": "GFM",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/5F22734F-8C46-87CA-B935-792CEAF4B6EA.PDF",
+    "date": "2021-07-05",
+    "scraped_at": "2025-03-04 20:26:17"
+  },
+  {
+    "company_id": "GFM",
+    "company_name": "GFM",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/01C1E963-BAB0-8D58-D981-3CD154ECE5A4.pdf",
+    "date": "2021-07-05",
+    "scraped_at": "2025-03-04 20:26:17"
+  },
+  {
+    "company_id": "GFM",
+    "company_name": "GFM",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-07-05",
+    "scraped_at": "2025-03-04 20:26:17"
+  },
+  {
+    "company_id": "GFM",
+    "company_name": "GFM",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-07-05",
+    "scraped_at": "2025-03-04 20:26:17"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "GoCredit Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/GoCredit/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "gocredit reports record results for 2021",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/gocredit-reports-record-results-for-2021/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/B8A5539E-CA07-C158-6061-6778B8F89B81.pdf",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/B1A0B86C-F5F0-4AE9-A026-EBCA43E3E4E9.pdf",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/504AB6A6-9633-6E55-2CED-0B86834CB141.pdf",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "GoCredit",
+    "company_name": "GoCredit",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-04-11",
+    "scraped_at": "2025-03-04 20:26:18"
+  },
+  {
+    "company_id": "hypamind",
+    "company_name": "hypamind",
+    "title": "hypamind Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/hypamind/",
+    "date": "2024-03-11",
+    "scraped_at": "2025-03-04 20:26:20"
+  },
+  {
+    "company_id": "hypamind",
+    "company_name": "hypamind",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/62868A68-59E4-5EF3-C8C6-8BE9B1988E4F.pdf",
+    "date": "2024-03-11",
+    "scraped_at": "2025-03-04 20:26:20"
+  },
+  {
+    "company_id": "hypamind",
+    "company_name": "hypamind",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/B2447210-224B-77AA-3EE2-DE92F92263E6.pdf",
+    "date": "2024-03-11",
+    "scraped_at": "2025-03-04 20:26:20"
+  },
+  {
+    "company_id": "hypamind",
+    "company_name": "hypamind",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/170B357C-EE0F-8C41-7C9E-50051E5ED534.pdf",
+    "date": "2024-03-11",
+    "scraped_at": "2025-03-04 20:26:20"
+  },
+  {
+    "company_id": "hypamind",
+    "company_name": "hypamind",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-03-11",
+    "scraped_at": "2025-03-04 20:26:20"
+  },
+  {
+    "company_id": "hypamind",
+    "company_name": "hypamind",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-03-11",
+    "scraped_at": "2025-03-04 20:26:20"
+  },
+  {
+    "company_id": "IDFEURASIA",
+    "company_name": "IDFEURASIA",
+    "title": "IDFEURASIA Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/IDFEURASIA/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:21"
+  },
+  {
+    "company_id": "IDFEURASIA",
+    "company_name": "IDFEURASIA",
+    "title": "idf eurasia kazakhstan entity (solva brand) reports equity investment of $20 million",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/idf-eurasia-kazakhstan-entity-solva-brand-reports-equity-investment-of-20-million/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:21"
+  },
+  {
+    "company_id": "IDFEURASIA",
+    "company_name": "IDFEURASIA",
+    "title": "idf eurasia kazakhstan entity (solva brand) reports a total revenue increase of 43% in 2022",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/idf-eurasia-kazakhstan-entity-solva-brand-reports-a-total-revenue-increase-of-43-in-2022/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:21"
+  },
+  {
+    "company_id": "IDFEURASIA",
+    "company_name": "IDFEURASIA",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/DCE3A682-DC51-5D4A-69A0-91BD5026FD32.pdf",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:21"
+  },
+  {
+    "company_id": "IDFEURASIA",
+    "company_name": "IDFEURASIA",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:21"
+  },
+  {
+    "company_id": "IDFEURASIA",
+    "company_name": "IDFEURASIA",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:21"
+  },
+  {
+    "company_id": "IDFEURASIA2",
+    "company_name": "IDFEURASIA2",
+    "title": "IDFEURASIA2 Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/IDFEURASIA2/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:23"
+  },
+  {
+    "company_id": "IDFEURASIA2",
+    "company_name": "IDFEURASIA2",
+    "title": "idf eurasia kazakhstan entity (solva brand) reports equity investment of $20 million",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/idf-eurasia-kazakhstan-entity-solva-brand-reports-equity-investment-of-20-million/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:23"
+  },
+  {
+    "company_id": "IDFEURASIA2",
+    "company_name": "IDFEURASIA2",
+    "title": "idf eurasia kazakhstan entity (solva brand) reports a total revenue increase of 43% in 2022",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/idf-eurasia-kazakhstan-entity-solva-brand-reports-a-total-revenue-increase-of-43-in-2022/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:23"
+  },
+  {
+    "company_id": "IDFEURASIA2",
+    "company_name": "IDFEURASIA2",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/46C4E06F-46D7-92AD-A80F-E89F8E3B7EE7.pdf",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:23"
+  },
+  {
+    "company_id": "IDFEURASIA2",
+    "company_name": "IDFEURASIA2",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:23"
+  },
+  {
+    "company_id": "IDFEURASIA2",
+    "company_name": "IDFEURASIA2",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-10-23",
+    "scraped_at": "2025-03-04 20:26:23"
+  },
+  {
+    "company_id": "idfinance",
+    "company_name": "idfinance",
+    "title": "idfinance Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/idfinance/",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:26:24"
+  },
+  {
+    "company_id": "idfinance",
+    "company_name": "idfinance",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/EB2A2200-F2D3-EDB2-DEA9-B31058D310B4.pdf",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:26:24"
+  },
+  {
+    "company_id": "idfinance",
+    "company_name": "idfinance",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/804FEC02-C96F-7274-2214-18575BD6E192.pdf",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:26:24"
+  },
+  {
+    "company_id": "idfinance",
+    "company_name": "idfinance",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:26:24"
+  },
+  {
+    "company_id": "idfinance",
+    "company_name": "idfinance",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:26:24"
+  },
+  {
+    "company_id": "iutecredit",
+    "company_name": "iutecredit",
+    "title": "iutecredit Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/iutecredit/",
+    "date": "2025-02-21",
+    "scraped_at": "2025-03-04 20:26:26"
+  },
+  {
+    "company_id": "iutecredit",
+    "company_name": "iutecredit",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/2C100469-B165-0015-F722-F293E233301D.pdf",
+    "date": "2025-02-21",
+    "scraped_at": "2025-03-04 20:26:26"
+  },
+  {
+    "company_id": "iutecredit",
+    "company_name": "iutecredit",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/8AAF0D9A-2CED-CE5C-BD3E-613311855FE7.pdf",
+    "date": "2025-02-21",
+    "scraped_at": "2025-03-04 20:26:26"
+  },
+  {
+    "company_id": "iutecredit",
+    "company_name": "iutecredit",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2025-02-21",
+    "scraped_at": "2025-03-04 20:26:26"
+  },
+  {
+    "company_id": "iutecredit",
+    "company_name": "iutecredit",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2025-02-21",
+    "scraped_at": "2025-03-04 20:26:26"
+  },
+  {
+    "company_id": "JetFinance",
+    "company_name": "JetFinance",
+    "title": "JetFinance Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/JetFinance/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:26:28"
+  },
+  {
+    "company_id": "JetFinance",
+    "company_name": "JetFinance",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/CB860A1E-5401-C01D-6CDD-76AC1D227669.pdf",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:26:28"
+  },
+  {
+    "company_id": "JetFinance",
+    "company_name": "JetFinance",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/90FD9F08-D53E-870D-4668-E017A1415A7E.pdf",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:26:28"
+  },
+  {
+    "company_id": "JetFinance",
+    "company_name": "JetFinance",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/ADF17097-EC0C-D193-6F39-1AD57041B7DC.pdf",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:26:28"
+  },
+  {
+    "company_id": "JetFinance",
+    "company_name": "JetFinance",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:26:28"
+  },
+  {
+    "company_id": "JetFinance",
+    "company_name": "JetFinance",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-06-25",
+    "scraped_at": "2025-03-04 20:26:28"
+  },
+  {
+    "company_id": "kviku",
+    "company_name": "kviku",
+    "title": "kviku Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/kviku/",
+    "date": "2021-05-17",
+    "scraped_at": "2025-03-04 20:26:30"
+  },
+  {
+    "company_id": "kviku",
+    "company_name": "kviku",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/B8C8F7BA-4C1A-A3E9-13FF-B6E326521417.pdf",
+    "date": "2021-05-17",
+    "scraped_at": "2025-03-04 20:26:30"
+  },
+  {
+    "company_id": "kviku",
+    "company_name": "kviku",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/7C71C88B-38FD-38E0-F775-885249D8D35A.pdf",
+    "date": "2021-05-17",
+    "scraped_at": "2025-03-04 20:26:30"
+  },
+  {
+    "company_id": "kviku",
+    "company_name": "kviku",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/AFC053AB-1D7B-BBA1-F929-56F4BAE849EE.pdf",
+    "date": "2021-05-17",
+    "scraped_at": "2025-03-04 20:26:30"
+  },
+  {
+    "company_id": "kviku",
+    "company_name": "kviku",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-05-17",
+    "scraped_at": "2025-03-04 20:26:30"
+  },
+  {
+    "company_id": "kviku",
+    "company_name": "kviku",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-05-17",
+    "scraped_at": "2025-03-04 20:26:30"
+  },
+  {
+    "company_id": "limezaim",
+    "company_name": "limezaim",
+    "title": "limezaim Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/limezaim/",
+    "date": "2021-05-18",
+    "scraped_at": "2025-03-04 20:26:49"
+  },
+  {
+    "company_id": "limezaim",
+    "company_name": "limezaim",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/0F167B16-A94B-C43A-5978-422A4DAE95AF.pdf",
+    "date": "2021-05-18",
+    "scraped_at": "2025-03-04 20:26:49"
+  },
+  {
+    "company_id": "limezaim",
+    "company_name": "limezaim",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/0328318B-7506-E293-DA50-A4777681057D.pdf",
+    "date": "2021-05-18",
+    "scraped_at": "2025-03-04 20:26:49"
+  },
+  {
+    "company_id": "limezaim",
+    "company_name": "limezaim",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/67D77F8A-329B-0D94-44CA-FA8270B0AA2F.pdf",
+    "date": "2021-05-18",
+    "scraped_at": "2025-03-04 20:26:49"
+  },
+  {
+    "company_id": "limezaim",
+    "company_name": "limezaim",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-05-18",
+    "scraped_at": "2025-03-04 20:26:49"
+  },
+  {
+    "company_id": "limezaim",
+    "company_name": "limezaim",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-05-18",
+    "scraped_at": "2025-03-04 20:26:49"
+  },
+  {
+    "company_id": "MiDinerito",
+    "company_name": "MiDinerito",
+    "title": "MiDinerito Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/MiDinerito/",
+    "date": "2024-11-01",
+    "scraped_at": "2025-03-04 20:26:50"
+  },
+  {
+    "company_id": "MiDinerito",
+    "company_name": "MiDinerito",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/4858321D-3366-63CC-4DE1-45A3A7D4DC7D.pdf",
+    "date": "2024-11-01",
+    "scraped_at": "2025-03-04 20:26:50"
+  },
+  {
+    "company_id": "MiDinerito",
+    "company_name": "MiDinerito",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/92D0A244-3DC6-6F85-AB3F-DABA621A43B8.pdf",
+    "date": "2024-11-01",
+    "scraped_at": "2025-03-04 20:26:50"
+  },
+  {
+    "company_id": "MiDinerito",
+    "company_name": "MiDinerito",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/EC19EA9F-B143-0823-49F8-88DD5D427F34.pdf",
+    "date": "2024-11-01",
+    "scraped_at": "2025-03-04 20:26:50"
+  },
+  {
+    "company_id": "MiDinerito",
+    "company_name": "MiDinerito",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-11-01",
+    "scraped_at": "2025-03-04 20:26:50"
+  },
+  {
+    "company_id": "MiDinerito",
+    "company_name": "MiDinerito",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-11-01",
+    "scraped_at": "2025-03-04 20:26:50"
+  },
+  {
+    "company_id": "Mikrokapital",
+    "company_name": "Mikrokapital",
+    "title": "Mikrokapital Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Mikrokapital/",
+    "date": "2020-05-12",
+    "scraped_at": "2025-03-04 20:26:52"
+  },
+  {
+    "company_id": "Mikrokapital",
+    "company_name": "Mikrokapital",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-05-12",
+    "scraped_at": "2025-03-04 20:26:52"
+  },
+  {
+    "company_id": "Mikrokapital",
+    "company_name": "Mikrokapital",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-05-12",
+    "scraped_at": "2025-03-04 20:26:52"
+  },
+  {
+    "company_id": "mintos",
+    "company_name": "mintos",
+    "title": "mintos Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/mintos/",
+    "date": "2024-02-01",
+    "scraped_at": "2025-03-04 20:26:53"
+  },
+  {
+    "company_id": "mintos",
+    "company_name": "mintos",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/720237E1-1AD3-18E9-CB34-6D2B6B5B4FF2.pdf",
+    "date": "2024-02-01",
+    "scraped_at": "2025-03-04 20:26:53"
+  },
+  {
+    "company_id": "mintos",
+    "company_name": "mintos",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-02-01",
+    "scraped_at": "2025-03-04 20:26:53"
+  },
+  {
+    "company_id": "mintos",
+    "company_name": "mintos",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-02-01",
+    "scraped_at": "2025-03-04 20:26:53"
+  },
+  {
+    "company_id": "mogo",
+    "company_name": "mogo",
+    "title": "mogo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/mogo/",
+    "date": "2024-05-17",
+    "scraped_at": "2025-03-04 20:26:55"
+  },
+  {
+    "company_id": "mogo",
+    "company_name": "mogo",
+    "title": "eleving group reports \u20ac71.8m ebitda in 2022",
+    "type": "document",
+    "url": "https://www.mintos.com/blog/eleving-group-reports-e71-8m-ebitda-in-2022/",
+    "date": "2024-05-17",
+    "scraped_at": "2025-03-04 20:26:55"
+  },
+  {
+    "company_id": "mogo",
+    "company_name": "mogo",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/7088750D-185F-D96A-67B0-BC4A9565AFA1.pdf",
+    "date": "2024-05-17",
+    "scraped_at": "2025-03-04 20:26:55"
+  },
+  {
+    "company_id": "mogo",
+    "company_name": "mogo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-05-17",
+    "scraped_at": "2025-03-04 20:26:55"
+  },
+  {
+    "company_id": "mogo",
+    "company_name": "mogo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-05-17",
+    "scraped_at": "2025-03-04 20:26:55"
+  },
+  {
+    "company_id": "Monego",
+    "company_name": "Monego",
+    "title": "Monego Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Monego/",
+    "date": "2019-07-16",
+    "scraped_at": "2025-03-04 20:26:56"
+  },
+  {
+    "company_id": "Monego",
+    "company_name": "Monego",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/97FBBDFA-1A45-567D-7FF2-D8E7551A7DD1.pdf",
+    "date": "2019-07-16",
+    "scraped_at": "2025-03-04 20:26:56"
+  },
+  {
+    "company_id": "Monego",
+    "company_name": "Monego",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/FD8F1C61-184C-8008-FCE2-295F6E13EC98.pdf",
+    "date": "2019-07-16",
+    "scraped_at": "2025-03-04 20:26:56"
+  },
+  {
+    "company_id": "Monego",
+    "company_name": "Monego",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/A8595EA6-1035-907F-A3DC-20E10B7967FC.pdf",
+    "date": "2019-07-16",
+    "scraped_at": "2025-03-04 20:26:56"
+  },
+  {
+    "company_id": "Monego",
+    "company_name": "Monego",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2019-07-16",
+    "scraped_at": "2025-03-04 20:26:56"
+  },
+  {
+    "company_id": "Monego",
+    "company_name": "Monego",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2019-07-16",
+    "scraped_at": "2025-03-04 20:26:56"
+  },
+  {
+    "company_id": "mozipogroup",
+    "company_name": "mozipogroup",
+    "title": "mozipogroup Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/mozipogroup/",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:26:57"
+  },
+  {
+    "company_id": "mozipogroup",
+    "company_name": "mozipogroup",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/21A9FFCC-9E66-EACA-CB8F-FC0D54418AA8.pdf",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:26:57"
+  },
+  {
+    "company_id": "mozipogroup",
+    "company_name": "mozipogroup",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/0779B651-127D-69E7-3BDA-1FD624A8DE9C.pdf",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:26:57"
+  },
+  {
+    "company_id": "mozipogroup",
+    "company_name": "mozipogroup",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:26:57"
+  },
+  {
+    "company_id": "mozipogroup",
+    "company_name": "mozipogroup",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:26:57"
+  },
+  {
+    "company_id": "NeraCapital",
+    "company_name": "NeraCapital",
+    "title": "NeraCapital Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/NeraCapital/",
+    "date": "2024-07-04",
+    "scraped_at": "2025-03-04 20:26:59"
+  },
+  {
+    "company_id": "NeraCapital",
+    "company_name": "NeraCapital",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/72F8136D-0C4A-B96C-0851-9BFBC40C72F5.pdf",
+    "date": "2024-07-04",
+    "scraped_at": "2025-03-04 20:26:59"
+  },
+  {
+    "company_id": "NeraCapital",
+    "company_name": "NeraCapital",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/104B0595-43C4-05C1-2826-4B88FE93076E.pdf",
+    "date": "2024-07-04",
+    "scraped_at": "2025-03-04 20:26:59"
+  },
+  {
+    "company_id": "NeraCapital",
+    "company_name": "NeraCapital",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-07-04",
+    "scraped_at": "2025-03-04 20:26:59"
+  },
+  {
+    "company_id": "NeraCapital",
+    "company_name": "NeraCapital",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-07-04",
+    "scraped_at": "2025-03-04 20:26:59"
+  },
+  {
+    "company_id": "novaloans",
+    "company_name": "novaloans",
+    "title": "novaloans Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/novaloans/",
+    "date": "2021-07-21",
+    "scraped_at": "2025-03-04 20:27:00"
+  },
+  {
+    "company_id": "novaloans",
+    "company_name": "novaloans",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/8D61578F-20C6-C840-2C6F-C29355CF5D08.pdf",
+    "date": "2021-07-21",
+    "scraped_at": "2025-03-04 20:27:00"
+  },
+  {
+    "company_id": "novaloans",
+    "company_name": "novaloans",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/F3B64245-707D-D86D-A3B9-C6F91962C1A9.pdf",
+    "date": "2021-07-21",
+    "scraped_at": "2025-03-04 20:27:00"
+  },
+  {
+    "company_id": "novaloans",
+    "company_name": "novaloans",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/6700FC18-D3EF-9EF8-0BC9-9EBCBDBEF734.pdf",
+    "date": "2021-07-21",
+    "scraped_at": "2025-03-04 20:27:00"
+  },
+  {
+    "company_id": "novaloans",
+    "company_name": "novaloans",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-07-21",
+    "scraped_at": "2025-03-04 20:27:00"
+  },
+  {
+    "company_id": "novaloans",
+    "company_name": "novaloans",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-07-21",
+    "scraped_at": "2025-03-04 20:27:00"
+  },
+  {
+    "company_id": "placet",
+    "company_name": "placet",
+    "title": "placet Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/placet/",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:27:02"
+  },
+  {
+    "company_id": "placet",
+    "company_name": "placet",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/1B7A1813-B91D-7F1E-83A0-39FA15056486.pdf",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:27:02"
+  },
+  {
+    "company_id": "placet",
+    "company_name": "placet",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/3A01DEB8-8C82-27E3-E604-6BB69A80EEBF.pdf",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:27:02"
+  },
+  {
+    "company_id": "placet",
+    "company_name": "placet",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/A0329B2F-DB56-7697-79F4-4207C0C10AF5.pdf",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:27:02"
+  },
+  {
+    "company_id": "placet",
+    "company_name": "placet",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:27:02"
+  },
+  {
+    "company_id": "placet",
+    "company_name": "placet",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-09-12",
+    "scraped_at": "2025-03-04 20:27:02"
+  },
+  {
+    "company_id": "Planet42",
+    "company_name": "Planet42",
+    "title": "Planet42 Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Planet42/",
+    "date": "2022-02-17",
+    "scraped_at": "2025-03-04 20:27:03"
+  },
+  {
+    "company_id": "Planet42",
+    "company_name": "Planet42",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/A0663C30-03CB-1D64-302A-603A2A08930A.pdf",
+    "date": "2022-02-17",
+    "scraped_at": "2025-03-04 20:27:03"
+  },
+  {
+    "company_id": "Planet42",
+    "company_name": "Planet42",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/69F00EDC-D56D-C3FE-DD84-6CAC7097DA66.pdf",
+    "date": "2022-02-17",
+    "scraped_at": "2025-03-04 20:27:03"
+  },
+  {
+    "company_id": "Planet42",
+    "company_name": "Planet42",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/206007A1-83E7-E561-512E-B0CA772A7474.pdf",
+    "date": "2022-02-17",
+    "scraped_at": "2025-03-04 20:27:03"
+  },
+  {
+    "company_id": "Planet42",
+    "company_name": "Planet42",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2022-02-17",
+    "scraped_at": "2025-03-04 20:27:03"
+  },
+  {
+    "company_id": "Planet42",
+    "company_name": "Planet42",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2022-02-17",
+    "scraped_at": "2025-03-04 20:27:03"
+  },
+  {
+    "company_id": "Rapicredit",
+    "company_name": "Rapicredit",
+    "title": "Rapicredit Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Rapicredit/",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:27:04"
+  },
+  {
+    "company_id": "Rapicredit",
+    "company_name": "Rapicredit",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/920E8790-4A41-A9DC-C017-F8A4FAE21567.pdf",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:27:04"
+  },
+  {
+    "company_id": "Rapicredit",
+    "company_name": "Rapicredit",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/8E0448B1-AD40-6B2C-ED60-C10513861470.pdf",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:27:04"
+  },
+  {
+    "company_id": "Rapicredit",
+    "company_name": "Rapicredit",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/D53AEE7A-9D42-2B81-70C3-11AC364471FD.pdf",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:27:05"
+  },
+  {
+    "company_id": "Rapicredit",
+    "company_name": "Rapicredit",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:27:05"
+  },
+  {
+    "company_id": "Rapicredit",
+    "company_name": "Rapicredit",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2024-10-22",
+    "scraped_at": "2025-03-04 20:27:05"
+  },
+  {
+    "company_id": "Revo",
+    "company_name": "Revo",
+    "title": "Revo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Revo/",
+    "date": "2021-05-25",
+    "scraped_at": "2025-03-04 20:27:06"
+  },
+  {
+    "company_id": "Revo",
+    "company_name": "Revo",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/3D08D7F6-2D7C-D50A-1A15-A15886390007.pdf",
+    "date": "2021-05-25",
+    "scraped_at": "2025-03-04 20:27:06"
+  },
+  {
+    "company_id": "Revo",
+    "company_name": "Revo",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/A1087249-6437-6F00-30EB-AE70C7601406.pdf",
+    "date": "2021-05-25",
+    "scraped_at": "2025-03-04 20:27:06"
+  },
+  {
+    "company_id": "Revo",
+    "company_name": "Revo",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/3CFC2393-EA0B-818C-3734-0C7D13E422E0.pdf",
+    "date": "2021-05-25",
+    "scraped_at": "2025-03-04 20:27:06"
+  },
+  {
+    "company_id": "Revo",
+    "company_name": "Revo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-05-25",
+    "scraped_at": "2025-03-04 20:27:06"
+  },
+  {
+    "company_id": "Revo",
+    "company_name": "Revo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-05-25",
+    "scraped_at": "2025-03-04 20:27:06"
+  },
+  {
+    "company_id": "SOS_Credit",
+    "company_name": "SOS_Credit",
+    "title": "SOS_Credit Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/SOS_Credit/",
+    "date": "2021-06-28",
+    "scraped_at": "2025-03-04 20:27:07"
+  },
+  {
+    "company_id": "SOS_Credit",
+    "company_name": "SOS_Credit",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/7494B4D3-4BE2-64C5-846E-8B2C77E53411.pdf",
+    "date": "2021-06-28",
+    "scraped_at": "2025-03-04 20:27:07"
+  },
+  {
+    "company_id": "SOS_Credit",
+    "company_name": "SOS_Credit",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/94B6F9DD-9B3B-A6B6-B9EF-6F5C6BF46A3D.pdf",
+    "date": "2021-06-28",
+    "scraped_at": "2025-03-04 20:27:07"
+  },
+  {
+    "company_id": "SOS_Credit",
+    "company_name": "SOS_Credit",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/6C900489-03A5-A3AA-C4D7-697AFAC97E6A.pdf",
+    "date": "2021-06-28",
+    "scraped_at": "2025-03-04 20:27:07"
+  },
+  {
+    "company_id": "SOS_Credit",
+    "company_name": "SOS_Credit",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-06-28",
+    "scraped_at": "2025-03-04 20:27:07"
+  },
+  {
+    "company_id": "SOS_Credit",
+    "company_name": "SOS_Credit",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-06-28",
+    "scraped_at": "2025-03-04 20:27:07"
+  },
+  {
+    "company_id": "Swell",
+    "company_name": "Swell",
+    "title": "Swell Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Swell/",
+    "date": "2021-06-30",
+    "scraped_at": "2025-03-04 20:27:25"
+  },
+  {
+    "company_id": "Swell",
+    "company_name": "Swell",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/66CA09DB-2F95-D373-EC18-950D7FC33E8C.pdf",
+    "date": "2021-06-30",
+    "scraped_at": "2025-03-04 20:27:25"
+  },
+  {
+    "company_id": "Swell",
+    "company_name": "Swell",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/2C09FD2B-B72B-8BCF-159E-50546D1F95CC.pdf",
+    "date": "2021-06-30",
+    "scraped_at": "2025-03-04 20:27:25"
+  },
+  {
+    "company_id": "Swell",
+    "company_name": "Swell",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/45DDE085-45F6-55F5-4637-C616676EE9C3.pdf",
+    "date": "2021-06-30",
+    "scraped_at": "2025-03-04 20:27:25"
+  },
+  {
+    "company_id": "Swell",
+    "company_name": "Swell",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-06-30",
+    "scraped_at": "2025-03-04 20:27:25"
+  },
+  {
+    "company_id": "Swell",
+    "company_name": "Swell",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-06-30",
+    "scraped_at": "2025-03-04 20:27:25"
+  },
+  {
+    "company_id": "Watu",
+    "company_name": "Watu",
+    "title": "Watu Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Watu/",
+    "date": "2020-04-24",
+    "scraped_at": "2025-03-04 20:27:26"
+  },
+  {
+    "company_id": "Watu",
+    "company_name": "Watu",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/66EDDB35-D23D-5E3D-A46E-C48445539BAD.pdf",
+    "date": "2020-04-24",
+    "scraped_at": "2025-03-04 20:27:26"
+  },
+  {
+    "company_id": "Watu",
+    "company_name": "Watu",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/EE49EB97-9CCC-67BC-2235-108BD4A79505.pdf",
+    "date": "2020-04-24",
+    "scraped_at": "2025-03-04 20:27:26"
+  },
+  {
+    "company_id": "Watu",
+    "company_name": "Watu",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/C670B788-5F45-5E87-6C7C-EDCD16C66255.pdf",
+    "date": "2020-04-24",
+    "scraped_at": "2025-03-04 20:27:26"
+  },
+  {
+    "company_id": "Watu",
+    "company_name": "Watu",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-04-24",
+    "scraped_at": "2025-03-04 20:27:26"
+  },
+  {
+    "company_id": "Watu",
+    "company_name": "Watu",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-04-24",
+    "scraped_at": "2025-03-04 20:27:26"
+  },
+  {
+    "company_id": "Wowwo",
+    "company_name": "Wowwo",
+    "title": "Wowwo Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Wowwo/",
+    "date": "2020-11-06",
+    "scraped_at": "2025-03-04 20:27:27"
+  },
+  {
+    "company_id": "Wowwo",
+    "company_name": "Wowwo",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/A75C5337-B295-7FDF-E9DA-35F8FF0CD342.pdf",
+    "date": "2020-11-06",
+    "scraped_at": "2025-03-04 20:27:27"
+  },
+  {
+    "company_id": "Wowwo",
+    "company_name": "Wowwo",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/5EA4A541-FEA0-948D-8FEF-B19767283A3F.pdf",
+    "date": "2020-11-06",
+    "scraped_at": "2025-03-04 20:27:27"
+  },
+  {
+    "company_id": "Wowwo",
+    "company_name": "Wowwo",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/2852FBA7-D803-CC0E-C0DA-F2BECA3D1A3C.pdf",
+    "date": "2020-11-06",
+    "scraped_at": "2025-03-04 20:27:27"
+  },
+  {
+    "company_id": "Wowwo",
+    "company_name": "Wowwo",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2020-11-06",
+    "scraped_at": "2025-03-04 20:27:27"
+  },
+  {
+    "company_id": "Wowwo",
+    "company_name": "Wowwo",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2020-11-06",
+    "scraped_at": "2025-03-04 20:27:27"
+  },
+  {
+    "company_id": "Zenka",
+    "company_name": "Zenka",
+    "title": "Zenka Mintos Page",
+    "type": "company_page",
+    "url": "https://www.mintos.com/en/lending-companies/Zenka/",
+    "date": "2021-10-29",
+    "scraped_at": "2025-03-04 20:27:29"
+  },
+  {
+    "company_id": "Zenka",
+    "company_name": "Zenka",
+    "title": "presentation",
+    "type": "presentation",
+    "url": "https://assets.mintos.com/30EEDC7E-ED89-A9B4-75F5-F9613089DAC0.pdf",
+    "date": "2021-10-29",
+    "scraped_at": "2025-03-04 20:27:29"
+  },
+  {
+    "company_id": "Zenka",
+    "company_name": "Zenka",
+    "title": "financials",
+    "type": "financials",
+    "url": "https://assets.mintos.com/B1D1D21E-494A-7E15-00B3-7CDBCBAA6D57.pdf",
+    "date": "2021-10-29",
+    "scraped_at": "2025-03-04 20:27:29"
+  },
+  {
+    "company_id": "Zenka",
+    "company_name": "Zenka",
+    "title": "loan agreement",
+    "type": "loan_agreement",
+    "url": "https://assets.mintos.com/4D67CACA-87A7-E1A7-14B2-9DF341CDD0D2.pdf",
+    "date": "2021-10-29",
+    "scraped_at": "2025-03-04 20:27:29"
+  },
+  {
+    "company_id": "Zenka",
+    "company_name": "Zenka",
+    "title": "legal documents",
+    "type": "document",
+    "url": "https://www.mintos.com/en/legal-documents/",
+    "date": "2021-10-29",
+    "scraped_at": "2025-03-04 20:27:29"
+  },
+  {
+    "company_id": "Zenka",
+    "company_name": "Zenka",
+    "title": "report a security vulnerability",
+    "type": "document",
+    "url": "https://www.mintos.com/en/report-security-vulnerability/",
+    "date": "2021-10-29",
+    "scraped_at": "2025-03-04 20:27:29"
+  }
+]
