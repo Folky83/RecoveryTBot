@@ -332,52 +332,114 @@ class DashboardManager:
             # Create a mapping from company ID to company name based on our companies list
             # This helps to ensure consistent company names across the application
             company_name_mapping = {}
+            company_id_by_name = {}  # Reverse mapping to find company_id by name
             for company in self.companies:
                 company_name_mapping[company.id] = company.name
+                company_id_by_name[company.name.lower()] = company.id
             
-            # Process each company's documents
-            for company_id, docs in raw_documents.items():
-                if not docs:  # Skip empty document lists
-                    continue
+            # Handle both formats - the old dict format and the new list format
+            if isinstance(raw_documents, list):
+                # NEW FORMAT: List of document objects
+                # Group documents by company
+                documents_by_company = {}
+                
+                for doc in raw_documents:
+                    company_name = doc.get('company_name')
+                    if not company_name:
+                        continue
                     
-                # Get company name from our mapping if available
-                company_name = company_name_mapping.get(company_id)
+                    # Try to find company ID from our mapping
+                    company_id = company_id_by_name.get(company_name.lower())
+                    
+                    # If not found, create a slugified version of the company name
+                    if not company_id:
+                        import re
+                        company_id = re.sub(r'[^a-z0-9]', '-', company_name.lower())
+                        company_id = re.sub(r'-+', '-', company_id).strip('-')
+                    
+                    # Initialize company document list if needed
+                    if company_id not in documents_by_company:
+                        documents_by_company[company_id] = []
+                    
+                    # Add document to the company's list
+                    documents_by_company[company_id].append(doc)
                 
-                # If not in our mapping, try to get it from the first document
-                if company_name is None:
+                # Now process each company's documents
+                for company_id, docs in documents_by_company.items():
+                    document_list = []
+                    
+                    # Get company name (prefer our mapping, fallback to document's company_name)
+                    company_name = company_name_mapping.get(company_id)
+                    if not company_name and docs:
+                        company_name = docs[0].get('company_name')
+                    if not company_name:
+                        company_name = company_id.replace('-', ' ').title()
+                    
+                    # Process each document
                     for doc in docs:
-                        if 'company_name' in doc:
-                            company_name = doc['company_name']
-                            break
-                
-                # Fallback to formatting the company ID if still no name
-                if company_name is None:
-                    company_name = company_id.replace('-', ' ').title()
-                
-                document_list = []
-                
-                # Process each document
-                for doc in docs:
-                    # Create document object with consistent company name
-                    document_list.append(Document(
-                        title=doc.get('title', 'Untitled Document'),
-                        url=doc.get('url', ''),
-                        date=doc.get('date', 'Unknown Date'),
-                        company_name=company_name,  # Use consistent company name
-                        document_type=doc.get('document_type', None),
-                        country_info=doc.get('country_info', None),
-                        id=doc.get('id', None)
-                    ))
-                
-                # If we have documents, add them to the dictionary
-                if document_list:
-                    # Store documents sorted by date (newest first)
-                    self.documents[company_id] = sorted(
-                        document_list, 
-                        key=lambda x: x.date if x.date else '', 
-                        reverse=True
-                    )
-                    total_documents += len(document_list)
+                        document_list.append(Document(
+                            title=doc.get('title', 'Untitled Document'),
+                            url=doc.get('url', ''),
+                            date=doc.get('date', 'Unknown Date'),
+                            company_name=company_name,
+                            document_type=doc.get('document_type'),
+                            country_info=doc.get('country_info'),
+                            id=doc.get('id')
+                        ))
+                    
+                    # Store documents sorted by date
+                    if document_list:
+                        self.documents[company_id] = sorted(
+                            document_list,
+                            key=lambda x: x.date if x.date else '',
+                            reverse=True
+                        )
+                        total_documents += len(document_list)
+            else:
+                # OLD FORMAT: Dictionary mapping company_id to list of documents
+                # Process each company's documents
+                for company_id, docs in raw_documents.items():
+                    if not docs:  # Skip empty document lists
+                        continue
+                        
+                    # Get company name from our mapping if available
+                    company_name = company_name_mapping.get(company_id)
+                    
+                    # If not in our mapping, try to get it from the first document
+                    if company_name is None:
+                        for doc in docs:
+                            if 'company_name' in doc:
+                                company_name = doc['company_name']
+                                break
+                    
+                    # Fallback to formatting the company ID if still no name
+                    if company_name is None:
+                        company_name = company_id.replace('-', ' ').title()
+                    
+                    document_list = []
+                    
+                    # Process each document
+                    for doc in docs:
+                        # Create document object with consistent company name
+                        document_list.append(Document(
+                            title=doc.get('title', 'Untitled Document'),
+                            url=doc.get('url', ''),
+                            date=doc.get('date', 'Unknown Date'),
+                            company_name=company_name,  # Use consistent company name
+                            document_type=doc.get('document_type', None),
+                            country_info=doc.get('country_info', None),
+                            id=doc.get('id', None)
+                        ))
+                    
+                    # If we have documents, add them to the dictionary
+                    if document_list:
+                        # Store documents sorted by date (newest first)
+                        self.documents[company_id] = sorted(
+                            document_list, 
+                            key=lambda x: x.date if x.date else '', 
+                            reverse=True
+                        )
+                        total_documents += len(document_list)
             
             logger.info(f"Loaded {total_documents} documents for {len(self.documents)} companies")
         except Exception as e:

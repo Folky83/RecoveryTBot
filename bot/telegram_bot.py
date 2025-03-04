@@ -2445,21 +2445,46 @@ class MintosBot:
                 logger.warning(f"Could not delete command message: {e}")
             
             # Load document data to check if there are any documents
-            document_data = {}
+            document_data = []
+            documents_by_company = {}
+            
             try:
                 document_cache_path = "data/documents_cache.json"
                 logger.info(f"Loading documents from {document_cache_path} for company selection")
                 if os.path.exists(document_cache_path):
                     with open(document_cache_path, 'r', encoding='utf-8') as f:
                         document_data = json.load(f)
-                        logger.info(f"Successfully loaded document data with {len(document_data)} companies for selection")
+                        
+                        # Check if document_data is a list (new format) or dict (old format)
+                        if isinstance(document_data, list):
+                            # Group documents by company name
+                            for doc in document_data:
+                                company_name = doc.get('company_name')
+                                if not company_name:
+                                    continue
+                                
+                                # Create a slug for the company name to use as ID
+                                import re
+                                company_id = re.sub(r'[^a-z0-9]', '-', company_name.lower())
+                                company_id = re.sub(r'-+', '-', company_id).strip('-')
+                                
+                                if company_id not in documents_by_company:
+                                    documents_by_company[company_id] = []
+                                
+                                documents_by_company[company_id].append(doc)
+                            
+                            logger.info(f"Successfully loaded document data with {len(documents_by_company)} companies for selection")
+                        else:
+                            # Old format - direct dictionary
+                            documents_by_company = document_data
+                            logger.info(f"Successfully loaded document data with {len(documents_by_company)} companies for selection")
                 else:
                     logger.error(f"Document cache file not found at {document_cache_path}")
             except Exception as e:
                 logger.error(f"Error loading document data for company selection: {e}", exc_info=True)
-                document_data = {}
+                documents_by_company = {}
             
-            if not document_data:
+            if not documents_by_company:
                 await self.send_message(
                     chat_id,
                     "❓ No document data available. Use /check_documents to fetch the latest documents.",
@@ -2472,10 +2497,19 @@ class MintosBot:
             
             # Get companies that have documents
             companies_with_docs = []
-            for company_id in document_data:
+            for company_id, docs in documents_by_company.items():
                 # Only add company if it has documents
-                if document_data[company_id]:
+                if docs:
                     company_name = self.data_manager.get_company_name(company_id) or company_id
+                    
+                    # If we don't have a name from data_manager, try to get from first document
+                    if company_name == company_id and docs and 'company_name' in docs[0]:
+                        company_name = docs[0]['company_name']
+                    
+                    # Format company ID as fallback if needed
+                    if company_name == company_id:
+                        company_name = company_id.replace('-', ' ').title()
+                        
                     companies_with_docs.append((company_id, company_name))
             
             # Sort companies by name
@@ -2536,14 +2570,42 @@ class MintosBot:
             await query.edit_message_text("🔄 Loading documents... Please wait.", disable_web_page_preview=True)
             
             # Load document data
-            document_data = {}
+            document_data = None
+            documents_by_company = {}
+            
             try:
                 document_cache_path = "data/documents_cache.json"
                 logger.info(f"Loading documents from {document_cache_path} for company {company_id}")
                 if os.path.exists(document_cache_path):
                     with open(document_cache_path, 'r', encoding='utf-8') as f:
                         document_data = json.load(f)
-                        logger.info(f"Successfully loaded document data with {len(document_data)} companies")
+                        
+                        # Check if document_data is a list (new format) or dict (old format)
+                        if isinstance(document_data, list):
+                            # Group documents by company ID
+                            for doc in document_data:
+                                company_name = doc.get('company_name')
+                                if not company_name:
+                                    continue
+                                
+                                # Create a slug for the company name to use as ID
+                                import re
+                                doc_company_id = re.sub(r'[^a-z0-9]', '-', company_name.lower())
+                                doc_company_id = re.sub(r'-+', '-', doc_company_id).strip('-')
+                                
+                                # Also check if this document belongs to the company we're looking for
+                                # by comparing the slugified company name with the requested company_id
+                                if doc_company_id == company_id:
+                                    if company_id not in documents_by_company:
+                                        documents_by_company[company_id] = []
+                                    
+                                    documents_by_company[company_id].append(doc)
+                            
+                            logger.info(f"Successfully processed document data: found {len(documents_by_company)} companies in list format")
+                        else:
+                            # Old format - direct dictionary
+                            documents_by_company = document_data
+                            logger.info(f"Successfully loaded document data with {len(documents_by_company)} companies in dict format")
                 else:
                     logger.error(f"Document cache file not found at {document_cache_path}")
             except Exception as e:
@@ -2559,8 +2621,12 @@ class MintosBot:
             # Get company name
             company_name = self.data_manager.get_company_name(company_id) or company_id
             
+            # If we still only have the ID, try to format it nicely
+            if company_name == company_id:
+                company_name = company_id.replace('-', ' ').title()
+            
             # Check if company has documents
-            if company_id not in document_data or not document_data[company_id]:
+            if company_id not in documents_by_company or not documents_by_company[company_id]:
                 # No documents for this company
                 keyboard = [[InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]]
                 reply_markup = InlineKeyboardMarkup(keyboard)
@@ -2574,7 +2640,7 @@ class MintosBot:
                 return
             
             # Get documents for this company
-            company_docs = document_data[company_id]
+            company_docs = documents_by_company[company_id]
             
             # Sort by date (newest first)
             company_docs.sort(key=lambda x: x.get('date', ''), reverse=True)
