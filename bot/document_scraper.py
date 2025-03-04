@@ -453,9 +453,19 @@ class DocumentScraper:
         # Load fallback mapping for companies that have been renamed
         fallback_mapping = self._load_company_fallback_mapping()
         
+        # Start with a list of direct URLs to try
+        direct_urls = []
+        
         # Check if we have a special fallback for this company
         if company_id in fallback_mapping:
             fallback_info = fallback_mapping[company_id]
+            
+            # Check for direct alt_urls that we know work
+            if "alt_urls" in fallback_info and fallback_info["alt_urls"]:
+                direct_urls.extend(fallback_info["alt_urls"])
+                logger.info(f"Using {len(fallback_info['alt_urls'])} direct URLs from fallback for {company_id}")
+            
+            # Apply redirect if available
             redirect_id = fallback_info.get("redirect_id")
             if redirect_id:
                 logger.info(f"Using fallback for {company_id}: redirecting to {redirect_id} ({fallback_info.get('notes', '')})")
@@ -463,6 +473,11 @@ class DocumentScraper:
                 # Update company name if provided
                 if fallback_info.get("redirect_name"):
                     company_name = fallback_info.get("redirect_name")
+                
+                # Check if the redirect also has alt_urls
+                if redirect_id in fallback_mapping and "alt_urls" in fallback_mapping[redirect_id]:
+                    direct_urls.extend(fallback_mapping[redirect_id]["alt_urls"])
+                    logger.info(f"Using {len(fallback_mapping[redirect_id]['alt_urls'])} direct URLs from redirect target")
         
         # Create variations of the company ID
         id_variations = [company_id]
@@ -489,6 +504,14 @@ class DocumentScraper:
         if name_slug not in id_variations:
             id_variations.append(name_slug)
         
+        # Check for two-way mappings - for companies that have been renamed
+        # but we might need to check previous names as well
+        for mapped_id, info in fallback_mapping.items():
+            if "alt_ids" in info and company_id in info["alt_ids"]:
+                logger.info(f"Found two-way mapping: {company_id} is also referenced as {mapped_id}")
+                if mapped_id not in id_variations:
+                    id_variations.append(mapped_id)
+        
         # Remove duplicates
         id_variations = list(set(id_variations))
         
@@ -501,12 +524,14 @@ class DocumentScraper:
         ]
         
         # Generate all combinations
-        urls = []
+        urls = list(direct_urls)  # Start with our known direct URLs
         for pattern in base_patterns:
             for variation in id_variations:
-                urls.append(pattern.format(variation))
+                url = pattern.format(variation)
+                if url not in urls:  # Avoid duplicates
+                    urls.append(url)
         
-        logger.debug(f"Generated {len(urls)} URL variations for {company_name}")
+        logger.debug(f"Generated {len(urls)} URL variations for {company_name} (including {len(direct_urls)} direct URLs)")
         return urls
 
     def get_company_documents(self, company_id: str, company_name: str, company_url: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -525,33 +550,61 @@ class DocumentScraper:
         # Track all URLs we've tried to avoid duplication
         tried_urls = set()
         
+        # Check if this company has a fallback mapping with direct URLs
+        fallback_mapping = self._load_company_fallback_mapping()
+        direct_urls = []
+        
+        # First check the company directly
+        if company_id in fallback_mapping and "alt_urls" in fallback_mapping[company_id]:
+            direct_urls.extend(fallback_mapping[company_id]["alt_urls"])
+            logger.info(f"Found {len(fallback_mapping[company_id]['alt_urls'])} direct URLs in fallback mapping for {company_id}")
+        
+        # Then check if this company has a redirect, and that redirect has direct URLs
+        if company_id in fallback_mapping and fallback_mapping[company_id].get("redirect_id"):
+            redirect_id = fallback_mapping[company_id]["redirect_id"]
+            if redirect_id in fallback_mapping and "alt_urls" in fallback_mapping[redirect_id]:
+                direct_urls.extend(fallback_mapping[redirect_id]["alt_urls"])
+                logger.info(f"Found {len(fallback_mapping[redirect_id]['alt_urls'])} direct URLs from redirect target {redirect_id}")
+        
+        # Finally, check for two-way mappings
+        for mapped_id, info in fallback_mapping.items():
+            if "alt_ids" in info and company_id in info["alt_ids"] and "alt_urls" in info:
+                direct_urls.extend(info["alt_urls"])
+                logger.info(f"Found {len(info['alt_urls'])} direct URLs from two-way mapping with {mapped_id}")
+                
+        # If we have a provided URL, add it to our direct URLs list with highest priority
         if company_url:
-            # If we have a direct URL, use it
+            # If we have a direct URL, add it to the front of the list
             logger.debug(f"Using provided company URL: {company_url}")
-            tried_urls.add(company_url)
+            direct_urls.insert(0, company_url)
+            
+        # Make all direct URLs unique
+        direct_urls = list(dict.fromkeys(direct_urls))
+        
+        # First try all our direct URLs, which we know have worked in the past
+        for url in direct_urls:
+            tried_urls.add(url)
+            logger.info(f"Trying known working URL: {url}")
             
             # First try with JavaScript rendering for better document detection
-            html_content = self._make_request(company_url, use_js_rendering=True)
+            html_content = self._make_request(url, use_js_rendering=True)
             if html_content:
-                logger.info(f"Successfully fetched content from {company_url} with JS rendering")
+                logger.info(f"Successfully fetched content from {url} with JS rendering")
                 documents = self._parse_documents(html_content, company_name)
                 if documents:
-                    logger.info(f"Found {len(documents)} documents at {company_url} with JS rendering")
+                    logger.info(f"Found {len(documents)} documents at {url} with JS rendering")
                     return documents
             
             # Fall back to regular request if JS rendering fails or finds no documents
-            html_content = self._make_request(company_url)
+            html_content = self._make_request(url)
             if html_content:
-                logger.info(f"Successfully fetched content from {company_url}")
+                logger.info(f"Successfully fetched content from {url}")
                 documents = self._parse_documents(html_content, company_name)
                 if documents:
-                    logger.info(f"Found {len(documents)} documents at {company_url}")
+                    logger.info(f"Found {len(documents)} documents at {url}")
                     return documents
-                    
-                # The documents should be embedded in the main company page, 
-                # no need to try subpaths with /documents as they don't exist
         
-        # Generate all possible URL variations and try them
+        # If direct URLs didn't work, generate all possible URL variations and try them
         urls_to_try = self._generate_url_variations(company_id, company_name)
         
         # Remove URLs we've already tried

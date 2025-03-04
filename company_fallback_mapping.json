@@ -2,26 +2,71 @@
   "iuvo": {
     "redirect_id": "finko",
     "redirect_name": "Finko (formerly Iuvo)",
-    "notes": "Iuvo was renamed to Finko, all documents should be found under Finko now"
+    "notes": "Iuvo was renamed to Finko, all documents should be found under Finko now",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/finko/",
+      "https://www.mintos.com/en/lending-companies/finko/"
+    ]
   },
   "iuvo-group": {
     "redirect_id": "finko",
     "redirect_name": "Finko (formerly Iuvo Group)",
-    "notes": "Iuvo Group was renamed to Finko, all documents should be found under Finko now"
+    "notes": "Iuvo Group was renamed to Finko, all documents should be found under Finko now",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/finko/",
+      "https://www.mintos.com/en/lending-companies/finko/"
+    ]
   },
   "eleving": {
     "redirect_id": "mogo",
     "redirect_name": "Mogo (now Eleving Group)",
-    "notes": "Eleving Group was previously known as Mogo, documents may be found under Mogo"
+    "notes": "Eleving Group was previously known as Mogo, documents may be found under Mogo",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/mogo/",
+      "https://www.mintos.com/en/lending-companies/mogo/"
+    ]
   },
   "eleving-group": {
     "redirect_id": "mogo",
     "redirect_name": "Mogo (now Eleving Group)",
-    "notes": "Eleving Group was previously known as Mogo, documents may be found under Mogo"
+    "notes": "Eleving Group was previously known as Mogo, documents may be found under Mogo",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/mogo/",
+      "https://www.mintos.com/en/lending-companies/mogo/"
+    ]
   },
   "delfin-group": {
     "redirect_id": "delfin",
     "redirect_name": "Delfin",
-    "notes": "Delfin Group is now known simply as Delfin"
+    "notes": "Delfin Group is now known simply as Delfin",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/delfin/",
+      "https://www.mintos.com/en/lending-companies/delfin/"
+    ]
+  },
+  "creditstar-group": {
+    "redirect_id": "creditstar",
+    "redirect_name": "Creditstar",
+    "notes": "Creditstar Group is typically referred to as just Creditstar",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/creditstar/",
+      "https://www.mintos.com/en/lending-companies/creditstar/"
+    ]
+  },
+  "finko": {
+    "alt_ids": ["iuvo", "iuvo-group"],
+    "notes": "Finko was previously known as Iuvo Group",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/finko/",
+      "https://www.mintos.com/en/lending-companies/finko/"
+    ]
+  },
+  "mogo": {
+    "alt_ids": ["eleving", "eleving-group"],
+    "notes": "Mogo is now known as Eleving Group",
+    "alt_urls": [
+      "https://www.mintos.com/en/loan-originators/mogo/",
+      "https://www.mintos.com/en/lending-companies/mogo/"
+    ]
   }
 }
