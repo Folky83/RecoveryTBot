@@ -815,30 +815,6 @@ class MintosBot:
                 # Return to company documents selection
                 await self.company_documents_command(update, context)
                 return
-                
-            elif query.data == "companies_prev_page":
-                # Go to previous page of companies
-                if context.user_data is None:
-                    context.user_data = {}
-                current_page = context.user_data.get('company_page', 1)
-                if current_page > 1:
-                    context.user_data['company_page'] = current_page - 1
-                await self.company_documents_command(update, context)
-                return
-                
-            elif query.data == "companies_next_page":
-                # Go to next page of companies
-                if context.user_data is None:
-                    context.user_data = {}
-                current_page = context.user_data.get('company_page', 1)
-                context.user_data['company_page'] = current_page + 1
-                await self.company_documents_command(update, context)
-                return
-                
-            elif query.data == "company_page_info":
-                # Just a placeholder - clicking the page number does nothing
-                await query.answer("Use the Previous/Next buttons to navigate")
-                return
             
             elif query.data == "cancel":
                 await query.edit_message_text("Operation cancelled.", disable_web_page_preview=True)
@@ -2556,43 +2532,15 @@ class MintosBot:
             # Sort companies by name, with companies with documents first
             all_companies.sort(key=lambda x: (not x[2], x[1]))
             
-            # Set up pagination
-            max_companies_per_page = 20  # Show 10 rows with 2 companies each (20 total)
-            total_pages = (len(all_companies) + max_companies_per_page - 1) // max_companies_per_page
-            
-            # Get page number from context or default to 1
-            current_page = 1
-            if context.user_data and 'company_page' in context.user_data:
-                current_page = context.user_data['company_page']
-            
-            # Calculate start and end indices for current page
-            start_idx = (current_page - 1) * max_companies_per_page
-            end_idx = min(start_idx + max_companies_per_page, len(all_companies))
-            page_companies = all_companies[start_idx:end_idx]
-            
-            # Create buttons, 2 per row, for current page only
-            for i in range(0, len(page_companies), 2):
+            # Create buttons, 2 per row
+            for i in range(0, len(all_companies), 2):
                 row = []
-                for company_id, display_name, _ in page_companies[i:i+2]:
+                for company_id, display_name, _ in all_companies[i:i+2]:
                     row.append(InlineKeyboardButton(
                         display_name,
                         callback_data=f"doc_company_{company_id}"
                     ))
                 company_buttons.append(row)
-            
-            # Add pagination controls
-            pagination_row = []
-            if current_page > 1:
-                pagination_row.append(InlineKeyboardButton("◀️ Previous", callback_data="companies_prev_page"))
-            
-            # Add page indicator
-            pagination_row.append(InlineKeyboardButton(f"Page {current_page}/{total_pages}", callback_data="company_page_info"))
-            
-            if current_page < total_pages:
-                pagination_row.append(InlineKeyboardButton("Next ▶️", callback_data="companies_next_page"))
-                
-            if pagination_row:
-                company_buttons.append(pagination_row)
             
             # Add "All Companies" button at the top
             company_buttons.insert(0, [InlineKeyboardButton("📄 All Documents", callback_data="view_all_documents")])
