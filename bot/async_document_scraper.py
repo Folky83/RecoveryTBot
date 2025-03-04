@@ -173,7 +173,11 @@ class AsyncDocumentScraper:
             
         # Load previously found documents
         previous_documents = self._load_documents_data()
-        previous_docs_by_id = {doc.get('id', ''): doc for doc in previous_documents if 'id' in doc}
+        # Make sure previous_documents is a list of dicts, not a string
+        if isinstance(previous_documents, str):
+            logger.warning("Received string instead of list from document cache, treating as empty")
+            previous_documents = []
+        previous_docs_by_id = {}
         
         # Track new documents
         new_documents = []
