@@ -436,6 +436,62 @@ class DocumentScraper:
                     elif 'agreement' in text_lower:
                         doc_type = 'loan_agreement'
                     
+                    # Look for a specific date associated with this document
+                    specific_date = None
+                    
+                    # First, check if the URL or text contains date information
+                    url_date_patterns = [
+                        r'_(\d{2}\.\d{2}\.\d{4})\.pdf',  # _DD.MM.YYYY.pdf
+                        r'_(\d{2}-\d{2}-\d{4})\.pdf',    # _DD-MM-YYYY.pdf
+                        r'_(\d{4}-\d{2}-\d{2})\.pdf',    # _YYYY-MM-DD.pdf
+                        r'_(\d{4}\.\d{2}\.\d{2})\.pdf',  # _YYYY.MM.DD.pdf
+                        r'(\d{2}\.\d{2}\.\d{4})',        # DD.MM.YYYY in text or URL
+                        r'(\d{4}-\d{2}-\d{2})'           # YYYY-MM-DD in text or URL
+                    ]
+                    
+                    # Check URL for date pattern
+                    for pattern in url_date_patterns:
+                        match = re.search(pattern, doc_url)
+                        if match:
+                            specific_date = self._normalize_date(match.group(1))
+                            break
+                            
+                    # Check document link text for date pattern
+                    if not specific_date:
+                        for pattern in url_date_patterns:
+                            match = re.search(pattern, text)
+                            if match:
+                                specific_date = self._normalize_date(match.group(1))
+                                break
+                    
+                    # If still no date, check parent elements
+                    if not specific_date:
+                        parent_element = link.parent
+                        
+                        # Check up to 3 levels up for date text
+                        for _ in range(3):
+                            if parent_element:
+                                parent_text = parent_element.get_text()
+                                # Search for date patterns in the parent elements
+                                for pattern in [
+                                    r'Last Updated:\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+                                    r'Updated:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+                                    r'Date:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+                                    r'(\d{1,2}\.\d{1,2}\.\d{4})',
+                                    r'(\d{4}-\d{2}-\d{2})'
+                                ]:
+                                    match = re.search(pattern, parent_text)
+                                    if match:
+                                        specific_date = self._normalize_date(match.group(1))
+                                        break
+                            
+                            if specific_date:
+                                break
+                            parent_element = parent_element.parent
+                    
+                    # Determine final date to use
+                    final_date = specific_date if specific_date else document_date
+                    
                     # Create document record
                     document = {
                         'company_id': company_id,
@@ -443,12 +499,15 @@ class DocumentScraper:
                         'title': text if text else f"{company_name} {doc_type.capitalize()}",
                         'type': doc_type,
                         'url': doc_url,
-                        'date': document_date,  # Use same date as company page for now
+                        'date': final_date,  # Use specific date if found, otherwise page date
                         'scraped_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     }
                     
                     all_documents.append(document)
-                    logger.debug(f"Found document link: {text} ({doc_url})")
+                    
+                    # Add detailed logging for dates
+                    date_source = "document-specific" if specific_date else "page-level"
+                    logger.debug(f"Found {doc_type} for {company_name}: '{text}' - Date ({date_source}): {final_date}")
             
         return all_documents
 
