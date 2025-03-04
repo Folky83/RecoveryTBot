@@ -1,54 +1,57 @@
 # Document Scraper Improvements
 
-## Summary of Improvements
+## Current Status
+Our fallback mapping system is working well for the key problematic companies:
+- Iuvo → Finko redirection works
+- Eleving → Mogo redirection works
+- Creditstar direct access works
 
-The document scraper has been enhanced with the following improvements:
+All test cases are passing with 100% success rate.
 
-1. **URL Variation Generator**
-   - Generates multiple URL combinations using company ID variations
-   - Handles company name variations (spaces, hyphens, etc.)
-   - Removes unnecessary `/documents` URL patterns that don't exist
+## Potential Improvements
 
-2. **Company Fallback Mapping**
-   - Added a fallback mapping system for companies that have been renamed
-   - Example: Iuvo → Finko, Eleving Group → Mogo
-   - Allows for successful document extraction even when company names change
+### 1. Expand Fallback Mapping
+We could expand the company fallback mapping to include more companies and more URL variations. Some companies may have additional aliases or historical names that we haven't captured yet.
 
-3. **Optimized URL Patterns**
-   - Removed unnecessary URL patterns that consistently fail
-   - Focused on base company URLs that are more likely to contain documents
-   - Documents are embedded in the main company page, not in subpaths
+### 2. Optimize JavaScript Rendering Usage
+Our current implementation tries JavaScript rendering first and then falls back to regular requests. This can be slow, especially when checking many companies. We could consider:
+- Only using JS rendering for companies where we know it's necessary
+- Implementing a caching layer for rendered content
+- Adding a configuration option to disable JS rendering for faster checks
 
-4. **Comprehensive Document Extraction**
-   - Implemented multi-stage approach to find documents in different page structures
-   - Falls back to simpler requests if JavaScript rendering fails
-   - Handles different document formats and presentations
+### 3. Regular Expression URL Patterns
+For companies with non-standard URL patterns, we could add regex pattern matching to identify document links more reliably.
 
-## Testing Results
+### 4. Document Deduplication Improvement
+We're currently using a hash-based approach for document identification. We could enhance this with:
+- Fuzzy title matching to catch small title variations
+- Content fingerprinting for PDFs to identify actual content changes vs. just metadata changes
 
-The enhanced document scraper has been tested with:
+### 5. Scheduled Incremental Checks
+Instead of checking all companies at once, we could implement an incremental check system that:
+- Prioritizes companies with recent updates
+- Rotates through companies over time
+- Enables more frequent checks for important companies
 
-1. **Known Working Companies**
-   - Wowwo: Successfully extracts 3 documents
-   - Creditstar: Successfully extracts 2 documents
-   - Mogo: Successfully extracts documents
+### 6. Add More Company Types
+Our document type detection is currently focused on standard categories (financial, presentation, etc.). We could expand this to include more specialized categories:
+- Loan performance reports
+- Audit reports
+- Anti-money laundering (AML) policies
+- Investor reports
+- Recovery updates
 
-2. **Previously Failing Companies**
-   - Iuvo/Iuvo Group: Now redirects to Finko for document extraction
-   - Eleving Group: Now redirects to Mogo for document extraction
+### 7. Company-Specific Scraping Logic
+For particularly problematic companies, we could implement custom scraping logic specific to their document structure.
 
-## Maintenance Considerations
+### 8. Enhanced Logging and Monitoring
+Add more detailed tracking of:
+- Success/failure rates by company
+- Document extraction patterns
+- URL health over time
 
-To maintain the document scraper's effectiveness:
+### 9. Auto-updating Fallback Mappings
+Implement a system to automatically detect URL changes and update the fallback mapping based on success patterns.
 
-1. **Regular Mapping Updates**
-   - Periodically check for company name changes or URL structure changes
-   - Update the `company_fallback_mapping.json` file when new patterns are found
-
-2. **URL Pattern Verification**
-   - Verify which URL patterns continue to work over time
-   - Remove patterns that consistently fail
-
-3. **Error Reporting**
-   - Log detailed error information for failing document extractions
-   - Use error logs to identify new URL patterns or company changes
+### 10. Documents Archive History
+Store historical versions of documents to allow for change tracking and comparison.
