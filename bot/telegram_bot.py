@@ -311,7 +311,8 @@ class MintosBot:
             await self.check_updates()
             
             # Check for new company documents if it's time
-            await self.check_company_documents()
+            # Use standard mode for scheduled updates (less resource-intensive)
+            await self.check_company_documents(fast_mode=False)
             
             logger.info("Update check completed")
         except Exception as e:
@@ -2382,7 +2383,13 @@ class MintosBot:
                 return
                 
             # Check for new documents with fast mode enabled
-            new_documents = self.document_scraper.check_all_companies(company_mapping, fast_mode=True)
+            # Try to use async document scraper first if available
+            if self._async_document_scraper:
+                logger.info("Using async document scraper with fast mode for manual check")
+                new_documents = await self._async_document_scraper.check_all_companies(fast_mode=True)
+            else:
+                logger.info("Using sync document scraper with fast mode for manual check")
+                new_documents = self.document_scraper.check_all_companies(company_mapping, fast_mode=True)
             
             # Delete checking message
             if checking_message:

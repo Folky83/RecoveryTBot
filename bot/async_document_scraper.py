@@ -200,7 +200,8 @@ class AsyncDocumentScraper:
             # Common lenders that often publish documents
             priority_keywords = [
                 'mogo', 'eleving', 'iuvo', 'creditstar', 'finko', 'wowwo', 
-                'sunorat', 'ids', 'delfin', 'dozarplati', 'kviku', 'mikro'
+                'sunorat', 'ids', 'delfin', 'dozarplati', 'kviku', 'mikro',
+                'capem', 'revo', 'dineo', 'novaloans', 'credius', 'efactor'
             ]
             
             # Sort company_mapping to check priority companies first
@@ -208,9 +209,16 @@ class AsyncDocumentScraper:
                 company_items,
                 key=lambda x: (0 if any(kw in x[0].lower() for kw in priority_keywords) else 1, x[1])
             )
-            batch_size = 10  # Larger batch size in fast mode
+            
+            # In fast mode, limit to top 40 companies if there are more than 50
+            # This significantly improves performance for manual checks
+            if len(company_items) > 50:
+                logger.info(f"Fast mode: Limiting check to top 40 companies out of {len(company_items)}")
+                company_items = company_items[:40]
+                
+            batch_size = 15  # Even larger batch size in fast mode for much faster checking
         else:
-            batch_size = 5  # Standard batch size for regular operation
+            batch_size = 5  # Standard batch size for regular operation (gentler on resources)
         
         for i in range(0, len(company_items), batch_size):
             batch = company_items[i:i+batch_size]
@@ -246,9 +254,10 @@ class AsyncDocumentScraper:
                 except Exception as e:
                     logger.error(f"Error checking company {company_name}: {e}", exc_info=True)
                     
-            # Small delay between batches to avoid overwhelming the server
-            # Shorter delay in fast mode
-            await asyncio.sleep(0.2 if fast_mode else 1)
+            # Adjust delay between batches based on mode
+            # In fast mode: minimal delay for speed, otherwise longer delay to be gentle on servers
+            # This significantly improves performance during manual document checks
+            await asyncio.sleep(0.1 if fast_mode else 1.5)
             
         # Update document cache with all documents
         self._save_documents_data(list(previous_docs_by_id.values()))

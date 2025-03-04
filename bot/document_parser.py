@@ -452,11 +452,21 @@ class DocumentParser:
         if not text:
             return None
         
-        # Special pattern for "Last Updated: " format from company pages
-        last_updated_pattern = r'Last Updated:?\s*(\d{1,2}\.\d{1,2}\.\d{4})'
-        match = re.search(last_updated_pattern, text)
-        if match:
-            return match.group(1)  # Return just the date part
+        # Special patterns for "Last Updated: " format from company pages
+        # Handle multiple date formats that appear on the Mintos website
+        last_updated_patterns = [
+            r'Last Updated:?\s*(\d{1,2}\.\d{1,2}\.\d{4})',  # Format: DD.MM.YYYY
+            r'Last Updated:?\s*(\d{1,2}-\d{1,2}-\d{4})',    # Format: DD-MM-YYYY
+            r'Last Updated:?\s*(\d{1,2}/\d{1,2}/\d{4})',    # Format: DD/MM/YYYY
+            r'Last Updated:?\s*(\w+ \d{1,2},? \d{4})',      # Format: Month DD, YYYY
+            r'Updated:?\s*(\d{1,2}\.\d{1,2}\.\d{4})',       # Format without "Last"
+            r'Updated on:?\s*(\d{1,2}\.\d{1,2}\.\d{4})'     # Another variation
+        ]
+        
+        for pattern in last_updated_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1)  # Return just the date part
         
         # Common date patterns
         date_patterns = [

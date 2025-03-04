@@ -243,7 +243,8 @@ class DocumentScraper:
             # Common lenders that often publish documents
             priority_keywords = [
                 'mogo', 'eleving', 'iuvo', 'creditstar', 'finko', 'wowwo', 
-                'sunorat', 'ids', 'delfin', 'dozarplati', 'kviku', 'mikro'
+                'sunorat', 'ids', 'delfin', 'dozarplati', 'kviku', 'mikro',
+                'capem', 'revo', 'dineo', 'novaloans', 'credius', 'efactor'
             ]
             
             # Sort company_mapping to check priority companies first
@@ -251,6 +252,12 @@ class DocumentScraper:
                 company_mapping.items(),
                 key=lambda x: (0 if any(kw in x[0].lower() for kw in priority_keywords) else 1, x[1])
             )
+            
+            # In fast mode, limit to top 40 companies if there are more than 50
+            # This significantly improves performance for manual checks
+            if len(sorted_companies) > 50:
+                logger.info(f"Fast mode: Limiting check to top 40 companies out of {len(sorted_companies)}")
+                sorted_companies = sorted_companies[:40]
         else:
             sorted_companies = company_mapping.items()
         
