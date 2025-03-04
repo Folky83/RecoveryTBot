@@ -18,8 +18,8 @@ from .config import (
 )
 from .data_manager import DataManager
 from .mintos_client import MintosClient
-from .user_manager import UserManager
 from .document_scraper import DocumentScraper
+from .user_manager import UserManager
 import os
 
 logger = setup_logger(__name__)
@@ -72,7 +72,7 @@ class MintosBot:
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
             self.document_scraper = DocumentScraper()
-            self._is_startup_check = True  # Flag to track initial startup
+            self._is_startup_check = True  # Flag to indicate first check after startup
             self._initialized = True
             logger.info("Bot instance created")
 
