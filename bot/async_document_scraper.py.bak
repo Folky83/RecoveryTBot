@@ -6,14 +6,12 @@ import asyncio
 import logging
 import os
 import time
-import json
 from typing import Dict, List, Any, Optional, Set
 
 import aiohttp
 from bs4 import BeautifulSoup
 
 from .document_scraper import DocumentScraper
-from .document_parser import DocumentParser
 from .logger import setup_logger
 from .data_manager import DataManager
 
@@ -31,7 +29,6 @@ class AsyncDocumentScraper:
     def __init__(self):
         """Initialize with the standard document scraper"""
         self.document_scraper = DocumentScraper()
-        self.document_parser = DocumentParser()
         self.data_manager = DataManager()
         self._background_task = None
         self._running = False
@@ -124,6 +121,10 @@ class AsyncDocumentScraper:
         """
         logger.debug(f"Checking documents for company: {company_name} (ID: {company_id})")
         
+        # Load company URLs from the document scraper
+        company_mapping = self.data_manager.load_company_mapping()
+        fallback_mapping = self.document_scraper._load_company_fallback_mapping()
+        
         # Generate URL variations for this company
         url_variations = self.document_scraper._generate_url_variations(company_id, company_name)
         
@@ -137,8 +138,8 @@ class AsyncDocumentScraper:
                 async with session.get(url) as response:
                     if response.status == 200:
                         html_content = await response.text()
-                        # Parse documents using the document parser
-                        docs = self.document_parser.parse_documents(html_content, company_name)
+                        # Parse documents using the sync method (it's CPU-bound so no benefit in making async)
+                        docs = self.document_scraper._parse_documents(html_content, company_name)
                         if docs:
                             documents.extend(docs)
                             logger.debug(f"Found {len(docs)} documents at URL: {url}")
@@ -178,11 +179,6 @@ class AsyncDocumentScraper:
             previous_documents = []
         previous_docs_by_id = {}
         
-        # Create ID-based lookup for efficiency
-        for doc in previous_documents:
-            if 'id' in doc:
-                previous_docs_by_id[doc['id']] = doc
-        
         # Track new documents
         new_documents = []
         
@@ -208,7 +204,7 @@ class AsyncDocumentScraper:
                     for doc in company_documents:
                         # Ensure the document has an ID
                         if 'id' not in doc:
-                            doc_id = self.document_parser.generate_document_id(
+                            doc_id = self.document_scraper._generate_document_id(
                                 doc.get('title', ''), 
                                 doc.get('url', ''), 
                                 doc.get('date', '')
@@ -252,6 +248,7 @@ class AsyncDocumentScraper:
         try:
             if os.path.exists(file_path):
                 with open(file_path, 'r', encoding='utf-8') as f:
+                    import json
                     return json.load(f)
             return default_value
         except Exception as e:
@@ -265,6 +262,7 @@ class AsyncDocumentScraper:
             os.makedirs(os.path.dirname(self.DOCUMENTS_CACHE_FILE), exist_ok=True)
             
             # Save with error handling
+            import json
             with open(self.DOCUMENTS_CACHE_FILE, 'w', encoding='utf-8') as f:
                 json.dump(documents, f, ensure_ascii=False, indent=2)
                 
