@@ -2,6 +2,9 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 import time
+import html
+import hashlib
+import os
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -20,7 +23,6 @@ from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .document_scraper import DocumentScraper
 from .user_manager import UserManager
-import os
 
 logger = setup_logger(__name__)
 
@@ -182,6 +184,7 @@ class MintosBot:
             CommandHandler("today", self.today_command),
             CommandHandler("refresh", self.refresh_command),
             CommandHandler("campaigns", self.campaigns_command),
+            CommandHandler("documents", self.documents_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
@@ -778,7 +781,7 @@ class MintosBot:
                 logger.error(f"Failed to resend message: {e}")
                 self._failed_messages.append(msg)
 
-    async def send_message(self, chat_id: Union[int, str], text: str, reply_markup: Optional[InlineKeyboardMarkup] = None, disable_web_page_preview: bool = False) -> None:
+    async def send_message(self, chat_id: Union[int, str], text: str, reply_markup: Optional[InlineKeyboardMarkup] = None, disable_web_page_preview: bool = False, parse_mode: Optional[str] = None) -> None:
         max_retries = 3
         base_delay = 1.0
 
@@ -791,7 +794,7 @@ class MintosBot:
                 await self.application.bot.send_message(
                     chat_id=chat_id,
                     text=text,
-                    parse_mode='HTML',
+                    parse_mode=parse_mode or 'HTML',
                     reply_markup=reply_markup,
                     disable_web_page_preview=disable_web_page_preview
                 )
@@ -827,7 +830,9 @@ class MintosBot:
                     self._failed_messages.append({
                         'chat_id': chat_id,
                         'text': text,
-                        'reply_markup': reply_markup
+                        'reply_markup': reply_markup,
+                        'parse_mode': parse_mode,
+                        'disable_web_page_preview': disable_web_page_preview
                     })
                     raise
                 delay = base_delay * (2 ** attempt)  # Exponential backoff
