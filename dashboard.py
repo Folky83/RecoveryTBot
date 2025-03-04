@@ -699,32 +699,44 @@ class DashboardManager:
         
         # Add company selector
         companies = []
-        for company_id, docs in self.documents.items():
-            if docs:  # Only include companies with documents
-                # Get company name from the first document or use ID
-                company_name = docs[0].company_name if docs else company_id.replace('-', ' ').title()
-                companies.append((company_id, company_name))
-                
-        # Sort companies by name
+        companies_with_docs = []
+        
+        # First, collect all companies and mark which ones have documents
+        for company in self.companies:
+            company_id = company.id
+            has_docs = company_id in self.documents and len(self.documents[company_id]) > 0
+            company_entry = (company_id, company.name, has_docs)
+            
+            # Add to the appropriate list
+            if has_docs:
+                companies_with_docs.append(company_entry)
+            else:
+                companies.append(company_entry)
+        
+        # Combine both lists, with companies with documents first
+        # Sort each list by name before combining
+        companies_with_docs.sort(key=lambda x: x[1])
         companies.sort(key=lambda x: x[1])
+        all_companies = companies_with_docs + companies
         
-        # Create selection box
-        company_names = [name for _, name in companies]
-        company_ids = [cid for cid, _ in companies]
+        # Create selection box with visual indicators for companies with documents
+        company_display_names = [f"{name} 📄" if has_docs else name 
+                               for _, name, has_docs in all_companies]
+        company_ids = [cid for cid, _, _ in all_companies]
         
-        if not company_names:
-            st.warning("⚠️ No companies with documents found")
+        if not company_display_names:
+            st.warning("⚠️ No companies found")
             return
             
         selected_idx = st.selectbox(
             "Select a company to view documents:",
-            range(len(company_names)),
-            format_func=lambda i: company_names[i]
+            range(len(company_display_names)),
+            format_func=lambda i: company_display_names[i]
         )
         
         # Get selected company ID and name
         selected_id = company_ids[selected_idx]
-        selected_name = company_names[selected_idx]
+        selected_name = all_companies[selected_idx][1]  # Get the clean name without the 📄 indicator
         
         # Display documents for the selected company
         self._render_company_documents(selected_id, selected_name)
