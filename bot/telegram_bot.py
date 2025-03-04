@@ -476,16 +476,39 @@ class MintosBot:
                 
             elif query.data == "refresh_documents":
                 chat_id = update.effective_chat.id
-                await query.edit_message_text("🔄 Refreshing documents...", disable_web_page_preview=True)
+                # Improved refresh message with HTML formatting for consistency
+                await query.edit_message_text(
+                    "🔄 <b>Refreshing documents...</b>\n\n"
+                    "Checking for new presentations, financials, and loan agreements "
+                    "across all companies. This may take a moment.",
+                    disable_web_page_preview=True,
+                    parse_mode='HTML'
+                )
 
                 try:
                     # Force document check
-                    await self.check_documents()
-                    # Run documents command again
+                    new_documents = await self.check_documents()
+                    
+                    # Show count of new documents found
+                    if new_documents:
+                        await self.send_message(
+                            chat_id,
+                            f"✅ <b>Refresh completed</b>\n\n"
+                            f"Found {len(new_documents)} new document(s).",
+                            disable_web_page_preview=True
+                        )
+                    
+                    # Run documents command again to display updated list
                     await self.documents_command(update, context)
                 except Exception as e:
-                    logger.error(f"Error during document refresh from callback: {e}")
-                    await query.edit_message_text("⚠️ Error refreshing documents. Please try again.", disable_web_page_preview=True)
+                    logger.error(f"Error during document refresh from callback: {e}", exc_info=True)
+                    await query.edit_message_text(
+                        "⚠️ <b>Error refreshing documents</b>\n\n"
+                        "An error occurred while checking for new documents. "
+                        "Please try again later or contact the administrator.",
+                        disable_web_page_preview=True,
+                        parse_mode='HTML'
+                    )
                 return
                 
             elif query.data == "admin_users":
@@ -661,7 +684,13 @@ class MintosBot:
                 return
 
             elif query.data == "cancel":
-                await query.edit_message_text("Operation cancelled.", disable_web_page_preview=True)
+                # Make the cancellation message more attractive and consistent
+                await query.edit_message_text(
+                    "✅ <b>Operation cancelled</b>\n\n"
+                    "Menu has been closed successfully.",
+                    disable_web_page_preview=True,
+                    parse_mode='HTML'
+                )
                 return
 
             elif query.data.startswith(("latest_", "all_")):
