@@ -1180,67 +1180,7 @@ class MintosBot:
                 except Exception as nested_e:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
 
-    async def check_documents(self) -> None:
-        """Check for document updates from loan originators"""
-        try:
-            logger.info("Checking for document updates...")
-            
-            # Get new document updates
-            new_documents = await self.document_scraper.check_document_updates()
-            
-            if not new_documents:
-                logger.info("No new document updates found")
-                return
-                
-            logger.info(f"Found {len(new_documents)} new document updates")
-            
-            # Get registered users
-            users = self.user_manager.get_all_users()
-            if not users:
-                logger.warning("No registered users to send document updates to")
-                return
-                
-            # Filter to only send documents that haven't been sent before
-            unsent_documents = [
-                doc for doc in new_documents
-                if not self.document_scraper.is_document_sent(doc)
-            ]
-            
-            if not unsent_documents:
-                logger.info("All new documents have already been sent")
-                return
-                
-            logger.info(f"Sending {len(unsent_documents)} unsent documents to {len(users)} users")
-            
-            # Send documents to all users
-            for i, document in enumerate(unsent_documents):
-                try:
-                    message = self.format_document_message(document)
-                    
-                    for user_id in users:
-                        try:
-                            await self.send_message(
-                                user_id, 
-                                message, 
-                                disable_web_page_preview=True,
-                                parse_mode='HTML'
-                            )
-                            logger.info(f"Sent document {i+1}/{len(unsent_documents)} to user {user_id}")
-                        except Exception as e:
-                            logger.error(f"Failed to send document to user {user_id}: {e}")
-                    
-                    # Mark document as sent
-                    self.document_scraper.save_sent_document(document)
-                    
-                except Exception as e:
-                    logger.error(f"Error processing document {i+1}/{len(unsent_documents)}: {e}", exc_info=True)
-                    continue
-                    
-            logger.info("Document update check completed successfully")
-            
-        except Exception as e:
-            logger.error(f"Error checking document updates: {e}", exc_info=True)
-    
+
     async def check_campaigns(self) -> None:
         """Check for new Mintos campaigns"""
         try:
@@ -1396,6 +1336,7 @@ class MintosBot:
                             self._failed_messages.append({
                                 'chat_id': chat_id,
                                 'text': message,
+                                'parse_mode': 'HTML',
                                 'disable_web_page_preview': True
                             })
                             
