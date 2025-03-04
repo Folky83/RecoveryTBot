@@ -2558,13 +2558,21 @@ class MintosBot:
                 parse_mode='HTML',
                 disable_web_page_preview=False  # Enable preview for document links
             )
-            
         except Exception as e:
             logger.error(f"Error in _show_company_documents: {e}", exc_info=True)
-            await query.edit_message_text(
-                "⚠️ Error retrieving documents. Please try again.",
-                disable_web_page_preview=True
-            )
+            try:
+                # Try to send a meaningful error message
+                keyboard = [
+                    [InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await query.edit_message_text(
+                    "⚠️ Error retrieving documents. Please try again.",
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=True
+                )
+            except Exception as inner_e:
+                logger.error(f"Error sending error message: {inner_e}", exc_info=True)
 
 if __name__ == "__main__":
     bot = MintosBot()
