@@ -521,6 +521,8 @@ class DocumentScraper:
         Returns:
             List of possible URLs to try
         """
+        import urllib.parse
+        
         # Load fallback mapping for companies that have been renamed
         fallback_mapping = self._load_company_fallback_mapping()
         
@@ -554,12 +556,20 @@ class DocumentScraper:
         # Create variations of the company ID
         id_variations = [company_id]
         
-        # Add variations with spaces/hyphens converted
+        # Fix spaces in company ID - very important for URLs
         if ' ' in company_id:
+            # Replace with hyphen (most common format)
             id_variations.append(company_id.replace(' ', '-'))
+            # Replace with no space
+            id_variations.append(company_id.replace(' ', ''))
+            # URL encode the space (as %20)
+            id_variations.append(urllib.parse.quote(company_id))
+        
+        # Fix hyphens in company ID
         if '-' in company_id:
-            id_variations.append(company_id.replace('-', ''))
-            id_variations.append(company_id.replace('-', ' '))
+            id_variations.append(company_id.replace('-', ''))  # No hyphen
+            id_variations.append(company_id.replace('-', ' '))  # Space instead of hyphen
+            id_variations.append(company_id.replace('-', '_'))  # Underscore instead of hyphen
         
         # Add variations with "group" added/removed
         if 'group' not in company_id.lower():
@@ -571,10 +581,15 @@ class DocumentScraper:
             if clean_id and clean_id != company_id:
                 id_variations.append(clean_id)
         
-        # Same for company name - create a slug from the name for URL usage
-        name_slug = company_name.lower().replace(' ', '-')
+        # Same for company name - create slugs from the name for URL usage
+        name_slug = company_name.lower().replace(' ', '-').replace('.', '')
         if name_slug not in id_variations:
             id_variations.append(name_slug)
+            
+        # URL-encoded company name
+        encoded_name = urllib.parse.quote(company_name.lower())
+        if encoded_name not in id_variations:
+            id_variations.append(encoded_name)
         
         # Check for two-way mappings - for companies that have been renamed
         # but we might need to check previous names as well
@@ -599,7 +614,14 @@ class DocumentScraper:
         urls = list(direct_urls)  # Start with our known direct URLs
         for pattern in base_patterns:
             for variation in id_variations:
-                url = pattern.format(variation)
+                # Ensure proper URL encoding for values that contain special characters
+                if ' ' in variation or '%' in variation:
+                    # Already URL encoded or containing spaces
+                    url = pattern.format(variation)
+                else:
+                    # Apply standard formatting
+                    url = pattern.format(variation)
+                
                 if url not in urls:  # Avoid duplicates
                     urls.append(url)
         

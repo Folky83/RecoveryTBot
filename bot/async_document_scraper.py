@@ -1,0 +1,268 @@
+"""
+Asynchronous Document Scraper for Telegram Bot
+Provides a non-blocking implementation to run alongside the Telegram bot.
+"""
+import asyncio
+import logging
+import os
+import time
+from typing import Dict, List, Any, Optional, Set
+
+import aiohttp
+from bs4 import BeautifulSoup
+
+from .document_scraper import DocumentScraper
+from .logger import setup_logger
+from .data_manager import DataManager
+
+# Configure logger
+logger = setup_logger('bot.async_document_scraper')
+
+class AsyncDocumentScraper:
+    """Non-blocking document scraper implementation for the Telegram bot"""
+    
+    CACHE_DIR = "data"
+    DOCUMENTS_CACHE_FILE = os.path.join(CACHE_DIR, "documents_cache.json")
+    REQUEST_TIMEOUT = 30
+    CHECK_INTERVAL = 24 * 60 * 60  # 24 hours in seconds
+    
+    def __init__(self):
+        """Initialize with the standard document scraper"""
+        self.document_scraper = DocumentScraper()
+        self.data_manager = DataManager()
+        self._background_task = None
+        self._running = False
+        self._session = None
+        self._last_check_time = 0
+        self._new_documents_cache = {}
+        
+        # Ensure we have a document scraper with loaded company URLs
+        logger.info("Initializing async document scraper")
+        
+    async def start_document_checking(self) -> None:
+        """Start background document checking task"""
+        if self._background_task is None or self._background_task.done():
+            logger.info("Starting background document checking task")
+            self._running = True
+            self._background_task = asyncio.create_task(self._check_documents_task())
+        else:
+            logger.warning("Background document checking task already running")
+
+    async def stop_document_checking(self) -> None:
+        """Stop background document checking task"""
+        logger.info("Stopping background document checking task")
+        self._running = False
+        
+        if self._background_task and not self._background_task.done():
+            logger.debug("Cancelling background task")
+            self._background_task.cancel()
+            try:
+                await self._background_task
+            except asyncio.CancelledError:
+                logger.debug("Background task cancelled successfully")
+        
+        if self._session and not self._session.closed:
+            logger.debug("Closing aiohttp session")
+            await self._session.close()
+            self._session = None
+            
+        logger.info("Background document checking task stopped")
+
+    async def _check_documents_task(self) -> None:
+        """Background task to check for new documents periodically"""
+        logger.info("Background document checking task started")
+        
+        try:
+            while self._running:
+                # Check if enough time has passed since last check
+                current_time = time.time()
+                if (current_time - self._last_check_time) >= self.CHECK_INTERVAL:
+                    logger.info("Checking for new documents in background task")
+                    
+                    try:
+                        # Check for new documents without blocking
+                        new_docs = await self.check_all_companies()
+                        if new_docs:
+                            logger.info(f"Found {len(new_docs)} new documents in background check")
+                        else:
+                            logger.info("No new documents found in background check")
+                            
+                        # Update last check time
+                        self._last_check_time = current_time
+                    except Exception as e:
+                        logger.error(f"Error in background document check: {e}", exc_info=True)
+                
+                # Sleep for a while before checking again (5 minutes)
+                # This is a short interval just to check if we need to run again
+                # The actual document check interval is controlled by CHECK_INTERVAL
+                await asyncio.sleep(300)  # 5 minutes
+        except asyncio.CancelledError:
+            logger.info("Background document checking task cancelled")
+        except Exception as e:
+            logger.error(f"Unhandled exception in background task: {e}", exc_info=True)
+        finally:
+            logger.info("Background document checking task completed")
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create an aiohttp session"""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.REQUEST_TIMEOUT))
+        return self._session
+
+    async def check_company(self, company_id: str, company_name: str) -> List[Dict[str, Any]]:
+        """Check for documents for a specific company in a non-blocking way
+        
+        Args:
+            company_id: ID of the company to check
+            company_name: Name of the company
+            
+        Returns:
+            List of documents for the company
+        """
+        logger.debug(f"Checking documents for company: {company_name} (ID: {company_id})")
+        
+        # Load company URLs from the document scraper
+        company_mapping = self.data_manager.load_company_mapping()
+        fallback_mapping = self.document_scraper._load_company_fallback_mapping()
+        
+        # Generate URL variations for this company
+        url_variations = self.document_scraper._generate_url_variations(company_id, company_name)
+        
+        # Try each URL variation
+        documents = []
+        session = await self._get_session()
+        
+        for url in url_variations:
+            try:
+                logger.debug(f"Trying URL: {url}")
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        html_content = await response.text()
+                        # Parse documents using the sync method (it's CPU-bound so no benefit in making async)
+                        docs = self.document_scraper._parse_documents(html_content, company_name)
+                        if docs:
+                            documents.extend(docs)
+                            logger.debug(f"Found {len(docs)} documents at URL: {url}")
+                            break  # Found documents, no need to try more URLs
+                    else:
+                        logger.warning(f"Request failed with status code {response.status}: {url}")
+            except aiohttp.ClientError as e:
+                logger.error(f"Request error for {url}: {e}")
+            except Exception as e:
+                logger.error(f"Error processing URL {url}: {e}", exc_info=True)
+                
+        if documents:
+            logger.info(f"Found {len(documents)} documents for {company_name}")
+        else:
+            logger.info(f"No documents found for {company_name}")
+            
+        return documents
+
+    async def check_all_companies(self) -> List[Dict[str, Any]]:
+        """Check all companies for new documents
+        
+        Returns:
+            List of newly detected documents
+        """
+        # Load company mapping and previous documents
+        company_mapping = self.data_manager.load_company_mapping()
+        
+        if not company_mapping:
+            logger.warning("No company mapping available for document scraping")
+            return []
+            
+        # Load previously found documents
+        previous_documents = self._load_documents_data()
+        previous_docs_by_id = {doc.get('id', ''): doc for doc in previous_documents if 'id' in doc}
+        
+        # Track new documents
+        new_documents = []
+        
+        # Process companies in small batches to avoid overwhelming the server
+        company_items = list(company_mapping.items())
+        batch_size = 5
+        
+        for i in range(0, len(company_items), batch_size):
+            batch = company_items[i:i+batch_size]
+            
+            # Check each company in the batch concurrently
+            tasks = []
+            for company_id, company_name in batch:
+                task = asyncio.create_task(self.check_company(company_id, company_name))
+                tasks.append((company_id, company_name, task))
+                
+            # Wait for all tasks in the batch to complete
+            for company_id, company_name, task in tasks:
+                try:
+                    company_documents = await task
+                    
+                    # Check for new documents
+                    for doc in company_documents:
+                        # Ensure the document has an ID
+                        if 'id' not in doc:
+                            doc_id = self.document_scraper._generate_document_id(
+                                doc.get('title', ''), 
+                                doc.get('url', ''), 
+                                doc.get('date', '')
+                            )
+                            doc['id'] = doc_id
+                            
+                        # Check if this is a new document
+                        if doc['id'] not in previous_docs_by_id:
+                            logger.info(f"New document found: {doc['title']} for {company_name}")
+                            doc['company_name'] = company_name  # Ensure company name is in the document
+                            new_documents.append(doc)
+                            previous_docs_by_id[doc['id']] = doc
+                except Exception as e:
+                    logger.error(f"Error checking company {company_name}: {e}", exc_info=True)
+                    
+            # Small delay between batches to avoid overwhelming the server
+            await asyncio.sleep(1)
+            
+        # Update document cache with all documents
+        self._save_documents_data(list(previous_docs_by_id.values()))
+        
+        return new_documents
+        
+    def _load_documents_data(self) -> List[Dict[str, Any]]:
+        """Load documents data from file"""
+        if os.path.exists(self.DOCUMENTS_CACHE_FILE):
+            try:
+                return self.data_manager._load_json_with_backup(self.DOCUMENTS_CACHE_FILE, [])
+            except Exception as e:
+                logger.error(f"Error loading documents data: {e}", exc_info=True)
+                return []
+        return []
+        
+    def _save_documents_data(self, documents: List[Dict[str, Any]]) -> None:
+        """Save documents data to file"""
+        try:
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(self.DOCUMENTS_CACHE_FILE), exist_ok=True)
+            
+            # Save with backup
+            self.data_manager._save_json_with_backup(self.DOCUMENTS_CACHE_FILE, documents)
+        except Exception as e:
+            logger.error(f"Error saving documents data: {e}", exc_info=True)
+
+    def get_documents_for_company(self, company_id: str) -> List[Dict[str, Any]]:
+        """Get documents for a specific company from cache
+        
+        Args:
+            company_id: ID of the company
+            
+        Returns:
+            List of documents for the company
+        """
+        company_name = self.data_manager.get_company_name(company_id)
+        if not company_name:
+            logger.warning(f"Company name not found for ID: {company_id}")
+            return []
+            
+        # Load all documents from cache
+        all_documents = self._load_documents_data()
+        
+        # Filter documents for this company
+        documents = [doc for doc in all_documents if doc.get('company_name') == company_name]
+        
+        return documents

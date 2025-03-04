@@ -221,17 +221,39 @@ class DataManager:
             raise
 
     def get_company_name(self, lender_id: Union[int, str]) -> str:
-        """Get company name by lender ID"""
+        """Get company name by lender ID or string ID
+        
+        This method handles both numeric lender IDs (for updates) and 
+        string IDs (for documents from the document scraper).
+        """
+        # First try to get name from company_names (numeric IDs)
         try:
-            lender_id = int(lender_id)
-            name = self.company_names.get(lender_id)
-            if name is None:
-                logger.warning(f"Company name not found for lender_id: {lender_id}")
-                name = f"Unknown Company {lender_id}"
-            return name
+            # Check if this is a numeric ID
+            if isinstance(lender_id, int) or (isinstance(lender_id, str) and lender_id.isdigit()):
+                numeric_id = int(lender_id)
+                name = self.company_names.get(numeric_id)
+                if name:
+                    return name
         except (ValueError, TypeError):
-            logger.error(f"Invalid lender_id format: {lender_id}")
-            return f"Invalid Company ID {lender_id}"
+            pass  # Not a numeric ID, will try string-based approaches
+            
+        # If we get here, either the ID wasn't numeric or we didn't find it
+        # Check if this is a string ID from document scrapers
+        if isinstance(lender_id, str):
+            # Try to format the string ID into a readable name
+            formatted_name = lender_id.replace('-', ' ').replace('_', ' ').title()
+            
+            # Check if we have a mapping for this string ID
+            company_mapping = self.load_company_mapping()
+            if lender_id in company_mapping:
+                return company_mapping[lender_id]
+                
+            # Return the formatted name as fallback
+            return formatted_name
+            
+        # Last resort fallback
+        logger.warning(f"Company name not found for lender_id: {lender_id}")
+        return f"Unknown Company {lender_id}"
 
     def compare_updates(self, new_updates: List[Dict[str, Any]], previous_updates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Compare updates to find new ones"""

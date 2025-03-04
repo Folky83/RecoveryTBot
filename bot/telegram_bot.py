@@ -72,6 +72,7 @@ class MintosBot:
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
             self.document_scraper = DocumentScraper()
+            self._async_document_scraper = None  # Will be initialized in initialize()
             self._is_startup_check = True  # Flag to track initial startup
             self._last_document_check = 0  # Timestamp of last document check
             self._initialized = True
@@ -82,6 +83,15 @@ class MintosBot:
         try:
             logger.info("Starting cleanup process...")
             await self._cancel_tasks()
+            
+            # Clean up async document scraper if initialized
+            if self._async_document_scraper:
+                try:
+                    await self._async_document_scraper.stop_document_checking()
+                    logger.info("Async document scraper stopped")
+                except Exception as e:
+                    logger.error(f"Error stopping async document scraper: {e}")
+            
             await self._cleanup_application()
             logger.info("Cleanup completed successfully")
         except Exception as e:
@@ -163,6 +173,15 @@ class MintosBot:
                 except Exception as e:
                     logger.error(f"Application startup failed: {e}")
                     return False
+                    
+                # Initialize async document scraper
+                try:
+                    from .async_document_scraper import AsyncDocumentScraper
+                    self._async_document_scraper = AsyncDocumentScraper()
+                    logger.info("Async document scraper initialized")
+                except Exception as e:
+                    logger.error(f"Failed to initialize async document scraper: {e}")
+                    # Continue without async document scraper, we'll fall back to regular scraper
 
                 self._initialized = True
                 logger.info("Bot initialization completed successfully")
@@ -316,8 +335,22 @@ class MintosBot:
                     logger.warning("No company mapping available for document scraping")
                     return
                 
-                # Check for new documents
-                new_documents = self.document_scraper.check_all_companies(company_mapping)
+                # Check for new documents - use async scraper if available
+                new_documents = []
+                if self._async_document_scraper:
+                    logger.info("Using async document scraper")
+                    try:
+                        # Use the non-blocking async document scraper
+                        new_documents = await self._async_document_scraper.check_all_companies()
+                    except Exception as e:
+                        logger.error(f"Async document scraping failed: {e}", exc_info=True)
+                        # Fall back to sync scraper
+                        logger.info("Falling back to sync document scraper")
+                        new_documents = self.document_scraper.check_all_companies(company_mapping)
+                else:
+                    # Use the regular blocking document scraper
+                    logger.info("Using sync document scraper")
+                    new_documents = self.document_scraper.check_all_companies(company_mapping)
                 
                 if new_documents:
                     logger.info(f"Found {len(new_documents)} new documents")
