@@ -391,10 +391,9 @@ class DashboardManager:
             self._apply_custom_css()
             self._render_header()
 
-            # Create tabs for recovery updates, company information, documents, and campaigns
-            tab1, tab2, tab3, tab4 = st.tabs([
+            # Create tabs for recovery updates, documents, and campaigns
+            tab1, tab2, tab3 = st.tabs([
                 "Recovery Updates", 
-                "Lending Companies", 
                 "Company Documents", 
                 "Active Campaigns"
             ])
@@ -407,12 +406,9 @@ class DashboardManager:
                     self._render_updates(selected_company)
             
             with tab2:
-                self._render_companies()
-                
-            with tab3:
                 self._render_documents_tab()
             
-            with tab4:
+            with tab3:
                 if not self.campaigns:
                     st.warning("⚠️ No active campaigns available yet.")
                     st.info("The Telegram bot will automatically collect campaign data.")
