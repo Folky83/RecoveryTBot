@@ -916,44 +916,7 @@ class MintosBot:
 
         return message.strip()
 
-    def format_document_message(self, document: Dict[str, Any]) -> str:
-        """Format document message with rich information"""
-        
-        company_name = document.get('company_name', 'Unknown Company')
-        doc_title = document.get('title', 'Document')
-        doc_type = document.get('type', 'document')
-        doc_date = document.get('date', 'Unknown date')
-        doc_url = document.get('url', '')
-        
-        # Create an icon based on document type
-        icon = '📄'
-        if doc_type == 'presentation':
-            icon = '📊'
-        elif doc_type == 'financial' or doc_type == 'report':
-            icon = '📈'
-        elif doc_type == 'agreement':
-            icon = '📝'
-        elif doc_type == 'company_page':
-            icon = '🏢'
-        
-        # Format date for display
-        try:
-            date_obj = datetime.strptime(doc_date, '%Y-%m-%d')
-            display_date = date_obj.strftime('%d %b %Y')
-        except:
-            display_date = doc_date
-        
-        # Format message with HTML
-        message = f"{icon} <b>{html.escape(doc_title)}</b>\n\n"
-        message += f"Company: <b>{html.escape(company_name)}</b>\n"
-        message += f"Type: {doc_type.capitalize()}\n"
-        message += f"Date: {display_date}\n\n"
-        
-        if doc_url:
-            # Make the URL clickable but avoid preview
-            message += f"<a href=\"{doc_url}\">View Document</a>"
-        
-        return message
+
         
     def format_campaign_message(self, campaign: Dict[str, Any]) -> str:
         """Format campaign message with rich information from Mintos API"""
