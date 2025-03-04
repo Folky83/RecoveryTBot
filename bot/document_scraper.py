@@ -429,6 +429,7 @@ class DocumentScraper:
                             'type': doc_type,
                             'title': link_text,
                             'url': href,
+                            'company_page_url': url,
                             'date': specific_date if specific_date else page_date
                         }
                         
@@ -483,6 +484,7 @@ class DocumentScraper:
                                     'type': matched_type,
                                     'title': link_text,
                                     'url': href,
+                                    'company_page_url': url,
                                     'date': page_date  # Use page date as we don't have a specific one
                                 }
                                 

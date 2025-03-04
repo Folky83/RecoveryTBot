@@ -1317,6 +1317,11 @@ class MintosBot:
         if document_url and not document_url.startswith(('http://', 'https://')):
             document_url = f"https://{document_url}"
         
+        # Get company page URL from document or create it from company name
+        company_page_url = document.get('company_page_url')
+        if not company_page_url:
+            company_page_url = f"https://www.mintos.com/en/lending-companies/{company_name.replace(' ', '')}/"
+        
         # Match the emoji to the document types shown in the image
         emoji_map = {
             'presentation': '📊',
@@ -1332,7 +1337,8 @@ class MintosBot:
             f"{emoji} <b>New {document_type}</b> from <b>{company_name}</b>\n\n"
             f"<b>Title:</b> {document_title}\n"
             f"<b>Date:</b> {document_date}\n"
-            f"<b>Link:</b> <a href=\"{document_url}\">{document_title}</a>"
+            f"<b>Document:</b> <a href=\"{document_url}\">{document_title}</a>\n"
+            f"<b>Company Page:</b> <a href=\"{company_page_url}\">View on Mintos</a>"
         )
         
         return message
