@@ -30,6 +30,47 @@ def test_company_url_extraction():
     start_time = datetime.now()
     logger.info(f"Starting URL extraction at {start_time}")
     
+    # First, let's test if requests-html is working properly
+    try:
+        from requests_html import HTMLSession
+        logger.info("Successfully imported requests-html")
+        
+        # Try a simpler test with a single page and shorter timeout
+        url = "https://www.mintos.com/en/loan-originators/"
+        logger.info(f"Testing with a single URL: {url}")
+        
+        session = HTMLSession()
+        r = session.get(url, timeout=10)
+        logger.info(f"Successfully fetched URL. Status: {r.status_code}")
+        
+        logger.info("Attempting to render JavaScript (limited timeout)...")
+        try:
+            # Use a shorter timeout for testing
+            r.html.render(timeout=15, sleep=1)
+            logger.info("Successfully rendered JavaScript!")
+            
+            # Look for company links
+            company_links = [link for link in r.html.links 
+                            if '/loan-originators/' in link and link != url]
+            
+            logger.info(f"Found {len(company_links)} company links on the test page")
+            
+            # Show sample links
+            sample_count = min(5, len(company_links))
+            for i, link in enumerate(company_links[:sample_count]):
+                logger.info(f"Sample link {i+1}: {link}")
+                
+            session.close()
+        except Exception as e:
+            logger.error(f"Error rendering JavaScript: {e}", exc_info=True)
+            session.close()
+    except ImportError:
+        logger.error("Failed to import requests-html")
+    except Exception as e:
+        logger.error(f"Error testing requests-html: {e}", exc_info=True)
+    
+    # Now proceed with the regular extraction
+    logger.info("Proceeding with full company URL extraction")
     company_urls = scraper.test_url_extraction()
     
     end_time = datetime.now()
