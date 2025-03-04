@@ -18,11 +18,6 @@ CACHE_REFRESH_THRESHOLD_MINUTES = 120  # 2 hours - threshold to show refresh but
 DATA_DIR = "data"
 UPDATES_FILE = os.path.join(DATA_DIR, "recovery_updates.json")
 CAMPAIGNS_FILE = os.path.join(DATA_DIR, "campaigns.json")
-DOCUMENTS_FILE = os.path.join(DATA_DIR, "documents.json")
-COMPANY_MAPPING_FILE = os.path.join(DATA_DIR, "company_mapping.json")
-
-# Document Scraping Configuration
-DOCUMENT_CHECK_INTERVAL_HOURS = 24  # Check for new documents every 24 hours
 
 # API Configuration
 MINTOS_API_BASE = "https://www.mintos.com/webapp/api/marketplace-api/v1"

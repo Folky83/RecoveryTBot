@@ -2,8 +2,6 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 import time
-import json
-import os
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -11,16 +9,11 @@ from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, Retry
 import math
 
 from .logger import setup_logger
-from .config import (
-    TELEGRAM_TOKEN, 
-    UPDATES_FILE, 
-    CAMPAIGNS_FILE, 
-    DOCUMENT_CHECK_INTERVAL_HOURS
-)
+from .config import TELEGRAM_TOKEN, UPDATES_FILE, CAMPAIGNS_FILE
 from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .user_manager import UserManager
-from .document_scraper import DocumentScraper
+import os
 
 logger = setup_logger(__name__)
 
@@ -71,10 +64,7 @@ class MintosBot:
             self.data_manager = DataManager()
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
-            self.document_scraper = DocumentScraper()
-            self._async_document_scraper = None  # Will be initialized in initialize()
             self._is_startup_check = True  # Flag to track initial startup
-            self._last_document_check = 0  # Timestamp of last document check
             self._initialized = True
             logger.info("Bot instance created")
 
@@ -83,15 +73,6 @@ class MintosBot:
         try:
             logger.info("Starting cleanup process...")
             await self._cancel_tasks()
-            
-            # Clean up async document scraper if initialized
-            if self._async_document_scraper:
-                try:
-                    await self._async_document_scraper.stop_document_checking()
-                    logger.info("Async document scraper stopped")
-                except Exception as e:
-                    logger.error(f"Error stopping async document scraper: {e}")
-            
             await self._cleanup_application()
             logger.info("Cleanup completed successfully")
         except Exception as e:
@@ -173,15 +154,6 @@ class MintosBot:
                 except Exception as e:
                     logger.error(f"Application startup failed: {e}")
                     return False
-                    
-                # Initialize async document scraper
-                try:
-                    from .async_document_scraper import AsyncDocumentScraper
-                    self._async_document_scraper = AsyncDocumentScraper()
-                    logger.info("Async document scraper initialized")
-                except Exception as e:
-                    logger.error(f"Failed to initialize async document scraper: {e}")
-                    # Continue without async document scraper, we'll fall back to regular scraper
 
                 self._initialized = True
                 logger.info("Bot initialization completed successfully")
@@ -205,10 +177,6 @@ class MintosBot:
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
-            CommandHandler("documents", self.documents_command), # Show recent documents
-            CommandHandler("company_documents", self.company_documents_command), # Show documents by company
-            CommandHandler("check_documents", self.check_documents_command), # Manually check for new documents
-            CommandHandler("help", self.help_command), # Help command
             CallbackQueryHandler(self.handle_callback)
         ]
 
@@ -309,77 +277,9 @@ class MintosBot:
         try:
             await asyncio.sleep(1)  # Prevent conflicts
             await self.check_updates()
-            
-            # Check for new company documents if it's time
-            # Use standard mode for scheduled updates (less resource-intensive)
-            await self.check_company_documents(fast_mode=False)
-            
             logger.info("Update check completed")
         except Exception as e:
             logger.error(f"Update check error: {e}", exc_info=True)
-            
-    async def check_company_documents(self, fast_mode: bool = False) -> None:
-        """Check for new documents on company pages
-        
-        Args:
-            fast_mode: If True, use faster checking mode with more resources
-        """
-        try:
-            current_time = time.time()
-            # Convert hours to seconds for comparison
-            check_interval_seconds = DOCUMENT_CHECK_INTERVAL_HOURS * 3600
-            
-            # Only check once per day or after interval has passed, unless fast_mode is True
-            if fast_mode or (current_time - self._last_document_check) >= check_interval_seconds:
-                logger.info(f"Checking for new company documents (fast_mode={fast_mode})")
-                
-                # Load company mapping from data manager
-                company_mapping = self.data_manager.load_company_mapping()
-                
-                if not company_mapping:
-                    logger.warning("No company mapping available for document scraping")
-                    return
-                
-                # Check for new documents - use async scraper if available
-                new_documents = []
-                if self._async_document_scraper:
-                    logger.info("Using async document scraper")
-                    try:
-                        # Use the non-blocking async document scraper with fast mode if requested
-                        new_documents = await self._async_document_scraper.check_all_companies(fast_mode=fast_mode)
-                    except Exception as e:
-                        logger.error(f"Async document scraping failed: {e}", exc_info=True)
-                        # Fall back to sync scraper
-                        logger.info("Falling back to sync document scraper")
-                        new_documents = self.document_scraper.check_all_companies(company_mapping)
-                else:
-                    # Use the regular blocking document scraper
-                    logger.info("Using sync document scraper")
-                    new_documents = self.document_scraper.check_all_companies(company_mapping)
-                
-                if new_documents:
-                    logger.info(f"Found {len(new_documents)} new documents")
-                    
-                    # Send notifications for each new document
-                    for document in new_documents:
-                        if not self.data_manager.is_document_sent(document):
-                            # Format and send the message
-                            message = self.format_document_message(document)
-                            await self.send_document_notification(message)
-                            
-                            # Mark this document as sent
-                            self.data_manager.save_sent_document(document)
-                else:
-                    logger.info("No new documents found")
-                
-                # Update last check timestamp
-                self._last_document_check = current_time
-                logger.info("Document check completed")
-            else:
-                logger.debug("Skipping document check - checked recently")
-                
-        except Exception as e:
-            logger.error(f"Error checking company documents: {e}", exc_info=True)
 
     async def run(self) -> None:
         """Run the bot with polling and scheduled updates"""
@@ -473,20 +373,15 @@ class MintosBot:
         return (
             "🚀 Welcome to Mintos Update Bot!\n\n"
             "📅 Update Schedule:\n"
-            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n"
-            "• Daily checks for new company documents\n\n"
+            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n\n"
             "Available Commands:\n"
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
             "• /campaigns - View current Mintos campaigns\n"
-            "• /documents - View recent company documents\n"
-            "• /company_documents - Filter documents by company\n"
-            "• /check_documents - Manually check for new documents\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
-            "• /help - Show all available commands\n"
             f"{admin_command}\n"
-            "You'll receive notifications about recovery updates, new company documents, and campaigns automatically. Stay tuned!"
+            "You'll receive updates about lending companies automatically. Stay tuned!"
         )
 
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -645,14 +540,6 @@ class MintosBot:
                 )
                 return
                 
-            elif query.data.startswith("doc_company_"):
-                # Extract company ID from callback data
-                company_id = query.data.split("_")[2]
-                
-                # Show documents for this company only
-                await self._show_company_documents(update, company_id)
-                return
-                
             elif query.data.startswith("trigger_today_"):
                 # Extract channel ID from callback data
                 target_channel = query.data.split("_")[2]
@@ -675,45 +562,6 @@ class MintosBot:
                 await query.edit_message_text("✅ Admin panel closed.", disable_web_page_preview=True)
                 return
                 
-            elif query.data == "admin_check_documents":
-                # Check if user is admin
-                if not await self.is_admin(update.effective_user.id):
-                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
-                    return
-                
-                # Show checking message
-                await query.edit_message_text("🔄 Checking for new company documents...", disable_web_page_preview=True)
-                
-                try:
-                    # Force document check
-                    self._last_document_check = 0  # Reset last check time to force a check
-                    await self.check_company_documents()
-                    
-                    # Return to admin panel with success message
-                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
-                    reply_markup = InlineKeyboardMarkup(keyboard)
-                    
-                    await query.edit_message_text(
-                        "✅ Document check completed!\n\n"
-                        "Any new documents found will be sent to all registered users.",
-                        reply_markup=reply_markup,
-                        disable_web_page_preview=True
-                    )
-                except Exception as e:
-                    logger.error(f"Error during document check: {e}", exc_info=True)
-                    
-                    # Return to admin panel with error message
-                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
-                    reply_markup = InlineKeyboardMarkup(keyboard)
-                    
-                    await query.edit_message_text(
-                        f"⚠️ Error checking documents: {str(e)}\n\n"
-                        "Please try again later.",
-                        reply_markup=reply_markup,
-                        disable_web_page_preview=True
-                    )
-                return
-                
             elif query.data == "admin_back":
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
@@ -724,7 +572,6 @@ class MintosBot:
                 keyboard = [
                     [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
                     [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
-                    [InlineKeyboardButton("📄 Check Company Documents", callback_data="admin_check_documents")],
                     [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
@@ -737,90 +584,6 @@ class MintosBot:
                 )
                 return
 
-            elif query.data == "check_documents":
-                # Show checking message
-                await query.edit_message_text("🔄 Checking for new company documents... Please wait.", disable_web_page_preview=True)
-                
-                try:
-                    # Force document check
-                    self._last_document_check = 0  # Reset last check time to force a check
-                    
-                    # Load company mapping from data manager
-                    company_mapping = self.data_manager.load_company_mapping()
-                    
-                    if not company_mapping:
-                        await query.edit_message_text("⚠️ No company mapping available for document scraping.", disable_web_page_preview=True)
-                        return
-                        
-                    # Check for new documents
-                    new_documents = self.document_scraper.check_all_companies(company_mapping)
-                    
-                    if new_documents:
-                        # Send information about new documents
-                        message = f"✅ Found {len(new_documents)} new documents:\n\n"
-                        
-                        for i, document in enumerate(new_documents[:5], 1):  # Show first 5 documents
-                            company = document.get('company_name', 'Unknown Company')
-                            title = document.get('title', 'Untitled Document')
-                            date = document.get('date', 'Unknown Date')
-                            url = document.get('url', '#')
-                            
-                            message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date})\n\n"
-                            
-                        if len(new_documents) > 5:
-                            message += f"... and {len(new_documents) - 5} more documents. Use /documents to see all recent documents.\n\n"
-                            
-                        message += "New document notifications will be sent to all users shortly."
-                        
-                        # Add a button to view all documents
-                        keyboard = [[InlineKeyboardButton("📄 View All Documents", callback_data="view_all_documents")]]
-                        reply_markup = InlineKeyboardMarkup(keyboard)
-                        
-                        await query.edit_message_text(
-                            message,
-                            reply_markup=reply_markup,
-                            parse_mode='HTML',
-                            disable_web_page_preview=False  # Enable preview for document links
-                        )
-                        
-                        # Also trigger sending the notification to all users
-                        for document in new_documents:
-                            if not self.data_manager.is_document_sent(document):
-                                # Format and send the message
-                                notification = self.format_document_message(document)
-                                await self.send_document_notification(notification)
-                                
-                                # Mark this document as sent
-                                self.data_manager.save_sent_document(document)
-                    else:
-                        # Add a button to view all documents
-                        keyboard = [[InlineKeyboardButton("📄 View All Documents", callback_data="view_all_documents")]]
-                        reply_markup = InlineKeyboardMarkup(keyboard)
-                        
-                        await query.edit_message_text(
-                            "✅ Document check completed. No new documents found.",
-                            reply_markup=reply_markup,
-                            disable_web_page_preview=True
-                        )
-                        
-                except Exception as e:
-                    logger.error(f"Error during document check: {e}", exc_info=True)
-                    await query.edit_message_text(
-                        f"⚠️ Error checking documents: {str(e)}",
-                        disable_web_page_preview=True
-                    )
-                return
-
-            elif query.data == "view_all_documents":
-                # Simulate /documents command
-                await self.documents_command(update, context)
-                return
-            
-            elif query.data == "company_documents_back":
-                # Return to company documents selection
-                await self.company_documents_command(update, context)
-                return
-            
             elif query.data == "cancel":
                 await query.edit_message_text("Operation cancelled.", disable_web_page_preview=True)
                 return
@@ -919,132 +682,6 @@ class MintosBot:
             await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
 
     _failed_messages: List[Dict[str, Any]] = []
-    
-    def format_document_message(self, document: Dict[str, Any]) -> str:
-        """Format a notification message for a new document
-        
-        Args:
-            document: Document information dictionary
-            
-        Returns:
-            Formatted message text
-        """
-        company_name = document.get('company_name', 'Unknown Company')
-        # Handle both direct and nested document structures
-        title = document.get('title', None)
-        date = document.get('date', None) 
-        url = document.get('url', None)
-        document_type = document.get('document_type', None)
-        country_info = document.get('country_info', None)
-        
-        # If values are not direct, try to get from nested 'document' object
-        if title is None or date is None or url is None:
-            doc = document.get('document', {})
-            if not title:
-                title = doc.get('title', 'Untitled Document')
-            if not date:
-                date = doc.get('date', 'Unknown date')
-            if not url:
-                url = doc.get('url', '#')
-            if not document_type:
-                document_type = doc.get('document_type', None)
-            if not country_info:
-                country_info = doc.get('country_info', None)
-                
-        # Determine document type based on metadata or extension
-        if document_type:
-            # Use the document type from metadata
-            doc_type = document_type.capitalize()
-        else:
-            # Format the document type based on file extension
-            doc_type = "PDF"
-            if url and "." in url:
-                file_ext = url.split(".")[-1].lower()
-                if file_ext in ["xls", "xlsx", "csv"]:
-                    doc_type = "Spreadsheet"
-                elif file_ext in ["doc", "docx"]:
-                    doc_type = "Word Document"
-                elif file_ext in ["ppt", "pptx"]:
-                    doc_type = "Presentation"
-                elif file_ext in ["zip", "rar"]:
-                    doc_type = "Archive"
-                
-        # Format date if possible
-        formatted_date = date
-        try:
-            # Check if the date might be in some standard format
-            if isinstance(date, str) and ("-" in date or "/" in date):
-                # Try to parse the date into a more readable format
-                date_formats = ["%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y", "%d/%m/%Y", "%m/%d/%Y"]
-                for fmt in date_formats:
-                    try:
-                        dt = datetime.strptime(date, fmt)
-                        formatted_date = dt.strftime("%d %B %Y")
-                        break
-                    except ValueError:
-                        continue
-        except Exception:
-            # If date formatting fails, keep original
-            pass
-            
-        # Create an emoji indicator for the document type
-        emoji = "📄"
-        if doc_type == "Spreadsheet":
-            emoji = "📊"
-        elif doc_type == "Word Document":
-            emoji = "📝"
-        elif doc_type == "Presentation":
-            emoji = "📑"
-            
-        # Create a more attractive message with emoji and formatting
-        message = (
-            f"{emoji} <b>New {doc_type} Document Published</b>\n\n"
-            f"🏢 <b>Company:</b> {company_name}\n"
-            f"📋 <b>Title:</b> {title}\n"
-            f"📅 <b>Published:</b> {formatted_date}\n"
-        )
-        
-        # Add country-specific information if available
-        if country_info and isinstance(country_info, dict) and country_info.get('is_country_specific', False):
-            countries = country_info.get('countries', [])
-            regions = country_info.get('regions', [])
-            
-            if countries:
-                countries_str = ", ".join(country.capitalize() for country in countries)
-                message += f"🌍 <b>Countries:</b> {countries_str}\n"
-                
-            if regions:
-                regions_str = ", ".join(region.capitalize() for region in regions)
-                message += f"🗺️ <b>Regions:</b> {regions_str}\n"
-        
-        # Add download link
-        message += f"\n<a href='{url}'>📥 Download Document</a>"
-        
-        return message
-        
-    async def send_document_notification(self, message: str) -> None:
-        """Send document notification to all registered users
-        
-        Args:
-            message: Formatted message text
-        """
-        user_ids = self.user_manager.get_all_users()
-        success_count = 0
-        
-        for chat_id in user_ids:
-            try:
-                await self.send_message(
-                    chat_id=chat_id,
-                    text=message,
-                    disable_web_page_preview=False,  # Allow document preview
-                )
-                success_count += 1
-                # Add a small delay to avoid rate limiting
-                await asyncio.sleep(0.1)
-            except Exception as e:
-                logger.error(f"Failed to send document notification to {chat_id}: {e}")
-                
-        logger.info(f"Sent document notification to {success_count}/{len(user_ids)} users")
 
     async def retry_failed_messages(self) -> None:
         """Attempt to resend failed messages"""
@@ -2175,9 +1812,6 @@ class MintosBot:
             "/company - Check updates for a specific company\n"
             "/today - View all updates from today\n"
             "/campaigns - View current Mintos campaigns\n"
-            "/documents - View recent company documents\n"
-            "/company_documents - Filter documents by company\n"
-            "/check_documents - Manually check for new documents\n"
             "/trigger_today @channel - Send today's updates to a specified channel\n"
         )
         await update.message.reply_text(help_text)
@@ -2246,7 +1880,6 @@ class MintosBot:
         keyboard = [
             [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
             [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
-            [InlineKeyboardButton("📄 Check Company Documents", callback_data="admin_check_documents")],
             [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
@@ -2257,459 +1890,6 @@ class MintosBot:
             reply_markup=reply_markup,
             disable_web_page_preview=True
         )
-
-    async def documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /documents command - show recent company documents"""
-        if not update.effective_chat or not update.message:
-            return
-            
-        chat_id = update.effective_chat.id
-        try:
-            # Try to delete the command message, continue if not possible
-            try:
-                await update.message.delete()
-            except Exception as e:
-                logger.warning(f"Could not delete command message: {e}")
-            
-            # Load document data - use direct path to improve reliability
-            document_data = {}
-            try:
-                document_cache_path = "data/documents_cache.json"
-                logger.info(f"Loading documents from {document_cache_path}")
-                if os.path.exists(document_cache_path):
-                    with open(document_cache_path, 'r', encoding='utf-8') as f:
-                        document_data = json.load(f)
-                        logger.info(f"Successfully loaded document data with {len(document_data)} companies")
-                else:
-                    logger.error(f"Document cache file not found at {document_cache_path}")
-            except Exception as e:
-                logger.error(f"Error loading document data: {e}", exc_info=True)
-                document_data = {}
-            
-            if not document_data:
-                await self.send_message(
-                    chat_id,
-                    "❓ No document data available. Use /check_documents to fetch the latest documents.",
-                    disable_web_page_preview=True
-                )
-                return
-                
-            # Get most recent documents (last 10)
-            recent_documents = []
-            for company_id, documents in document_data.items():
-                company_name = self.data_manager.get_company_name(company_id) or company_id
-                for doc in documents:
-                    # Create a copy of the document with company name
-                    doc_with_company = dict(doc)
-                    doc_with_company['company_name'] = company_name
-                    recent_documents.append(doc_with_company)
-            
-            logger.info(f"Found {len(recent_documents)} total documents across all companies")
-            
-            # Sort by date (newest first) and take top 10
-            recent_documents.sort(key=lambda x: x.get('date', ''), reverse=True)
-            recent_documents = recent_documents[:10]
-            
-            if not recent_documents:
-                await self.send_message(
-                    chat_id,
-                    "❓ No documents found in the database. Use /check_documents to fetch the latest documents.",
-                    disable_web_page_preview=True
-                )
-                return
-                
-            # Create message with document list
-            message = "📄 <b>Recent Company Documents</b>\n\n"
-            for i, doc in enumerate(recent_documents, 1):
-                company = doc.get('company_name', 'Unknown Company')
-                title = doc.get('title', 'Untitled Document')
-                date = doc.get('date', 'Unknown Date')
-                url = doc.get('url', '#')
-                doc_type = doc.get('document_type', 'document')
-                
-                message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date}) [{doc_type}]\n\n"
-                
-            # Add check documents button
-            keyboard = [[InlineKeyboardButton("🔄 Check for New Documents", callback_data="check_documents")]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await self.send_message(
-                chat_id,
-                message,
-                reply_markup=reply_markup,
-                disable_web_page_preview=False  # Enable preview for document links
-            )
-            
-        except Exception as e:
-            logger.error(f"Error in documents_command: {e}", exc_info=True)
-            await self.send_message(
-                chat_id,
-                "⚠️ Error retrieving documents. Please try again.",
-                disable_web_page_preview=True
-            )
-    
-    async def check_documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /check_documents command - manually trigger document check"""
-        if not update.effective_chat or not update.message:
-            return
-            
-        chat_id = update.effective_chat.id
-        try:
-            # Try to delete the command message, continue if not possible
-            try:
-                await update.message.delete()
-            except Exception as e:
-                logger.warning(f"Could not delete command message: {e}")
-                
-            # Show checking message
-            checking_message = await self.send_message(
-                chat_id,
-                "🔄 Checking for new company documents... Please wait.",
-                disable_web_page_preview=True
-            )
-            
-            # Force document check
-            self._last_document_check = 0  # Reset last check time to force a check
-            
-            # Load company mapping from data manager
-            company_mapping = self.data_manager.load_company_mapping()
-            
-            if not company_mapping:
-                await self.send_message(
-                    chat_id,
-                    "⚠️ No company mapping available for document scraping.",
-                    disable_web_page_preview=True
-                )
-                return
-                
-            # Check for new documents with fast mode enabled
-            # Try to use async document scraper first if available
-            if self._async_document_scraper:
-                logger.info("Using async document scraper with fast mode for manual check")
-                new_documents = await self._async_document_scraper.check_all_companies(fast_mode=True)
-            else:
-                logger.info("Using sync document scraper with fast mode for manual check")
-                new_documents = self.document_scraper.check_all_companies(company_mapping, fast_mode=True)
-            
-            # Delete checking message
-            if checking_message:
-                await self.application.bot.delete_message(chat_id=chat_id, message_id=checking_message.message_id)
-            
-            if new_documents:
-                # Send information about new documents
-                message = f"✅ Found {len(new_documents)} new documents:\n\n"
-                
-                for i, document in enumerate(new_documents[:5], 1):  # Show first 5 documents
-                    company = document.get('company_name', 'Unknown Company')
-                    title = document.get('title', 'Untitled Document')
-                    date = document.get('date', 'Unknown Date')
-                    url = document.get('url', '#')
-                    
-                    message += f"{i}. <b>{company}</b>: <a href='{url}'>{title}</a> ({date})\n\n"
-                    
-                if len(new_documents) > 5:
-                    message += f"... and {len(new_documents) - 5} more documents. Use /documents to see all recent documents.\n\n"
-                    
-                message += "New document notifications will be sent to all users shortly."
-                
-                await self.send_message(
-                    chat_id,
-                    message,
-                    disable_web_page_preview=False  # Enable preview for document links
-                )
-                
-                # Also trigger sending the notification to all users
-                for document in new_documents:
-                    if not self.data_manager.is_document_sent(document):
-                        # Format and send the message
-                        notification = self.format_document_message(document)
-                        await self.send_document_notification(notification)
-                        
-                        # Mark this document as sent
-                        self.data_manager.save_sent_document(document)
-            else:
-                await self.send_message(
-                    chat_id,
-                    "✅ Document check completed. No new documents found.",
-                    disable_web_page_preview=True
-                )
-                
-        except Exception as e:
-            logger.error(f"Error in check_documents_command: {e}", exc_info=True)
-            await self.send_message(
-                chat_id,
-                f"⚠️ Error checking documents: {str(e)}",
-                disable_web_page_preview=True
-            )
-
-    async def company_documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /company_documents command - show documents filtered by company"""
-        if not update.effective_chat or not update.message:
-            return
-            
-        chat_id = update.effective_chat.id
-        try:
-            # Try to delete the command message, continue if not possible
-            try:
-                await update.message.delete()
-            except Exception as e:
-                logger.warning(f"Could not delete command message: {e}")
-            
-            # Load company mapping to get all companies
-            company_mapping = self.data_manager.load_company_mapping()
-            
-            # Load document data to check if there are any documents
-            document_data = []
-            documents_by_company = {}
-            
-            # Initialize documents_by_company with all companies from mapping
-            for company_id, company_name in company_mapping.items():
-                documents_by_company[company_id] = []
-            
-            try:
-                document_cache_path = "data/documents_cache.json"
-                logger.info(f"Loading documents from {document_cache_path} for company selection")
-                if os.path.exists(document_cache_path):
-                    with open(document_cache_path, 'r', encoding='utf-8') as f:
-                        document_data = json.load(f)
-                        
-                        # Check if document_data is a list (new format) or dict (old format)
-                        if isinstance(document_data, list):
-                            # Group documents by company name
-                            for doc in document_data:
-                                company_name = doc.get('company_name')
-                                if not company_name:
-                                    continue
-                                
-                                # Create a slug for the company name to use as ID
-                                import re
-                                company_id = re.sub(r'[^a-z0-9]', '-', company_name.lower())
-                                company_id = re.sub(r'-+', '-', company_id).strip('-')
-                                
-                                if company_id not in documents_by_company:
-                                    documents_by_company[company_id] = []
-                                
-                                documents_by_company[company_id].append(doc)
-                            
-                            # Count companies that actually have documents
-                            companies_with_docs_count = sum(1 for docs in documents_by_company.values() if docs)
-                            logger.info(f"Successfully loaded document data with {companies_with_docs_count} companies with documents (total: {len(documents_by_company)})")
-                        else:
-                            # Old format - direct dictionary
-                            # Add existing documents to our initialized dictionary
-                            for company_id, docs in document_data.items():
-                                if docs:  # Only add if there are documents
-                                    documents_by_company[company_id] = docs
-                            
-                            # Count companies with docs
-                            companies_with_docs_count = sum(1 for docs in documents_by_company.values() if docs)
-                            logger.info(f"Successfully loaded document data with {companies_with_docs_count} companies with documents (total: {len(documents_by_company)})")
-                else:
-                    logger.error(f"Document cache file not found at {document_cache_path}")
-            except Exception as e:
-                logger.error(f"Error loading document data for company selection: {e}", exc_info=True)
-                documents_by_company = {}
-            
-            if not documents_by_company:
-                await self.send_message(
-                    chat_id,
-                    "❓ No document data available. Use /check_documents to fetch the latest documents.",
-                    disable_web_page_preview=True
-                )
-                return
-            
-            # Create company buttons for selection
-            company_buttons = []
-            
-            # Get all companies, not just those with documents
-            all_companies = []
-            for company_id, docs in documents_by_company.items():
-                company_name = self.data_manager.get_company_name(company_id) or company_id
-                
-                # If we don't have a name from data_manager but have docs, try to get from first document
-                if company_name == company_id and docs and 'company_name' in docs[0]:
-                    company_name = docs[0]['company_name']
-                
-                # Format company ID as fallback if needed
-                if company_name == company_id:
-                    company_name = company_id.replace('-', ' ').title()
-                    
-                # Show a document indicator for companies with documents
-                has_docs = bool(docs)
-                display_name = f"{company_name} 📄" if has_docs else company_name
-                
-                all_companies.append((company_id, display_name, has_docs))
-            
-            # Sort companies by name, with companies with documents first
-            all_companies.sort(key=lambda x: (not x[2], x[1]))
-            
-            # Create buttons, 2 per row
-            for i in range(0, len(all_companies), 2):
-                row = []
-                for company_id, display_name, _ in all_companies[i:i+2]:
-                    row.append(InlineKeyboardButton(
-                        display_name,
-                        callback_data=f"doc_company_{company_id}"
-                    ))
-                company_buttons.append(row)
-            
-            # Add "All Companies" button at the top
-            company_buttons.insert(0, [InlineKeyboardButton("📄 All Documents", callback_data="view_all_documents")])
-            
-            # Add cancel button
-            company_buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
-            
-            # Show company selection menu
-            reply_markup = InlineKeyboardMarkup(company_buttons)
-            await self.send_message(
-                chat_id,
-                "📄 <b>Select a company to view documents:</b>\n"
-                "Companies with documents are marked with 📄",
-                reply_markup=reply_markup,
-                disable_web_page_preview=True
-            )
-            
-        except Exception as e:
-            logger.error(f"Error in company_documents_command: {e}", exc_info=True)
-            await self.send_message(
-                chat_id,
-                "⚠️ Error retrieving company list. Please try again.",
-                disable_web_page_preview=True
-            )
-    
-    async def _show_company_documents(self, update: Update, company_id: str) -> None:
-        """Show documents for a specific company
-        
-        Args:
-            update: The update object from Telegram
-            company_id: The company ID to show documents for
-        """
-        query = update.callback_query
-        
-        try:
-            # Edit message to show loading
-            await query.edit_message_text("🔄 Loading documents... Please wait.", disable_web_page_preview=True)
-            
-            # Load document data
-            document_data = None
-            documents_by_company = {}
-            
-            try:
-                document_cache_path = "data/documents_cache.json"
-                logger.info(f"Loading documents from {document_cache_path} for company {company_id}")
-                if os.path.exists(document_cache_path):
-                    with open(document_cache_path, 'r', encoding='utf-8') as f:
-                        document_data = json.load(f)
-                        
-                        # Check if document_data is a list (new format) or dict (old format)
-                        if isinstance(document_data, list):
-                            # Group documents by company ID
-                            for doc in document_data:
-                                company_name = doc.get('company_name')
-                                if not company_name:
-                                    continue
-                                
-                                # Create a slug for the company name to use as ID
-                                import re
-                                doc_company_id = re.sub(r'[^a-z0-9]', '-', company_name.lower())
-                                doc_company_id = re.sub(r'-+', '-', doc_company_id).strip('-')
-                                
-                                # Also check if this document belongs to the company we're looking for
-                                # by comparing the slugified company name with the requested company_id
-                                if doc_company_id == company_id:
-                                    if company_id not in documents_by_company:
-                                        documents_by_company[company_id] = []
-                                    
-                                    documents_by_company[company_id].append(doc)
-                            
-                            logger.info(f"Successfully processed document data: found {len(documents_by_company)} companies in list format")
-                        else:
-                            # Old format - direct dictionary
-                            documents_by_company = document_data
-                            logger.info(f"Successfully loaded document data with {len(documents_by_company)} companies in dict format")
-                else:
-                    logger.error(f"Document cache file not found at {document_cache_path}")
-            except Exception as e:
-                logger.error(f"Error loading document data for company {company_id}: {e}", exc_info=True)
-                
-                # Show error message
-                await query.edit_message_text(
-                    "⚠️ Error loading document data. Please try again.",
-                    disable_web_page_preview=True
-                )
-                return
-            
-            # Get company name
-            company_name = self.data_manager.get_company_name(company_id) or company_id
-            
-            # If we still only have the ID, try to format it nicely
-            if company_name == company_id:
-                company_name = company_id.replace('-', ' ').title()
-            
-            # Check if company has documents
-            if company_id not in documents_by_company or not documents_by_company[company_id]:
-                # No documents for this company
-                keyboard = [[InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                
-                await query.edit_message_text(
-                    f"❓ No documents found for <b>{company_name}</b>. Use /check_documents to fetch the latest documents.",
-                    reply_markup=reply_markup,
-                    parse_mode='HTML',
-                    disable_web_page_preview=True
-                )
-                return
-            
-            # Get documents for this company
-            company_docs = documents_by_company[company_id]
-            
-            # Sort by date (newest first)
-            company_docs.sort(key=lambda x: x.get('date', ''), reverse=True)
-            
-            # Take top 10 documents
-            company_docs = company_docs[:10]
-            
-            # Create message with document list
-            message = f"📄 <b>Documents for {company_name}</b>\n\n"
-            for i, doc in enumerate(company_docs, 1):
-                title = doc.get('title', 'Untitled Document')
-                date = doc.get('date', 'Unknown Date')
-                url = doc.get('url', '#')
-                doc_type = doc.get('document_type', '')
-                
-                # Add document type if available
-                type_text = f" ({doc_type})" if doc_type else ""
-                
-                message += f"{i}. <a href='{url}'>{title}</a>{type_text} - {date}\n\n"
-            
-            # Add check documents button and back button
-            keyboard = [
-                [InlineKeyboardButton("🔄 Check for New Documents", callback_data="check_documents")],
-                [InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await query.edit_message_text(
-                message,
-                reply_markup=reply_markup,
-                parse_mode='HTML',
-                disable_web_page_preview=False  # Enable preview for document links
-            )
-        except Exception as e:
-            logger.error(f"Error in _show_company_documents: {e}", exc_info=True)
-            try:
-                # Try to send a meaningful error message
-                keyboard = [
-                    [InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]
-                ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                await query.edit_message_text(
-                    "⚠️ Error retrieving documents. Please try again.",
-                    reply_markup=reply_markup,
-                    disable_web_page_preview=True
-                )
-            except Exception as inner_e:
-                logger.error(f"Error sending error message: {inner_e}", exc_info=True)
 
 if __name__ == "__main__":
     bot = MintosBot()

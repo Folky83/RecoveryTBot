@@ -15,7 +15,6 @@ logger.info("Starting Streamlit Dashboard")
 # Constants
 UPDATES_FILE = os.path.join('data', 'recovery_updates.json')
 CAMPAIGNS_FILE = os.path.join('data', 'campaigns.json')
-COMPANY_URLS_FILE = os.path.join('data', 'company_urls_cache.json')
 CACHE_REFRESH_SECONDS = 900  # 15 minutes
 
 def _convert_to_float(value: Any) -> Optional[float]:
@@ -59,13 +58,6 @@ class Campaign:
     bonus_amount: Optional[str] = None
     required_principal: Optional[str] = None
     type: Optional[int] = None
-    
-@dataclass
-class Company:
-    """Represents a Mintos lending company"""
-    id: str
-    name: str
-    url: str
 
 class DashboardManager:
     """Manages dashboard data and rendering"""
@@ -73,10 +65,8 @@ class DashboardManager:
         self.data_manager = DataManager()
         self.updates: List[CompanyUpdate] = []
         self.campaigns: List[Campaign] = []
-        self.companies: List[Company] = []
         self._load_updates()
         self._load_campaigns()
-        self._load_companies()
 
     def _load_updates(self) -> None:
         """Load updates from file"""
@@ -179,31 +169,6 @@ class DashboardManager:
         except Exception as e:
             logger.error(f"Error loading campaigns: {e}", exc_info=True)
             self.campaigns = []
-            
-    def _load_companies(self) -> None:
-        """Load company information from URL cache file"""
-        try:
-            if not os.path.exists(COMPANY_URLS_FILE):
-                logger.warning(f"Company URLs file not found: {COMPANY_URLS_FILE}")
-                return
-
-            with open(COMPANY_URLS_FILE, 'r') as f:
-                raw_companies = json.load(f)
-
-            self.companies = []
-            for company_id, company_data in raw_companies.items():
-                self.companies.append(Company(
-                    id=company_id,
-                    name=company_data.get('name', company_id.replace('-', ' ').title()),
-                    url=company_data.get('url', '')
-                ))
-
-            # Sort companies by name
-            self.companies.sort(key=lambda x: x.name)
-            logger.info(f"Loaded {len(self.companies)} companies from URL cache")
-        except Exception as e:
-            logger.error(f"Error loading company URLs: {e}", exc_info=True)
-            self.companies = []
 
     def render_dashboard(self) -> None:
         """Render the main dashboard"""
@@ -212,8 +177,8 @@ class DashboardManager:
             self._apply_custom_css()
             self._render_header()
 
-            # Create tabs for recovery updates, company information, and campaigns
-            tab1, tab2, tab3 = st.tabs(["Recovery Updates", "Lending Companies", "Active Campaigns"])
+            # Create tabs for recovery updates and campaigns
+            tab1, tab2 = st.tabs(["Recovery Updates", "Active Campaigns"])
             
             with tab1:
                 if not self.updates:
@@ -223,9 +188,6 @@ class DashboardManager:
                     self._render_updates(selected_company)
             
             with tab2:
-                self._render_companies()
-            
-            with tab3:
                 if not self.campaigns:
                     st.warning("⚠️ No active campaigns available yet.")
                     st.info("The Telegram bot will automatically collect campaign data.")
@@ -341,95 +303,6 @@ class DashboardManager:
 
                     st.markdown("---")
                     
-    def _render_companies(self) -> None:
-        """Render company information"""
-        st.subheader("🏢 Mintos Lending Companies")
-        
-        if not self.companies:
-            st.warning("⚠️ No company information available yet.")
-            st.info("The Telegram bot will automatically collect company data.")
-            return
-        
-        # Add search filter
-        search_term = st.text_input("🔍 Search companies by name", 
-                                  help="Filter companies by name (case insensitive)")
-        
-        # Filter companies based on search term
-        filtered_companies = self.companies
-        if search_term:
-            filtered_companies = [
-                company for company in self.companies
-                if search_term.lower() in company.name.lower()
-            ]
-        
-        # Display company count
-        st.write(f"Showing {len(filtered_companies)} companies out of {len(self.companies)} total companies")
-        
-        # Create a grid layout for companies
-        cols_per_row = 3
-        
-        # Calculate how many rows we need
-        for i in range(0, len(filtered_companies), cols_per_row):
-            # Create columns for each row
-            cols = st.columns(cols_per_row)
-            
-            # Fill columns with companies
-            for j in range(cols_per_row):
-                idx = i + j
-                if idx < len(filtered_companies):
-                    company = filtered_companies[idx]
-                    with cols[j]:
-                        with st.expander(f"{company.name}", expanded=False):
-                            st.markdown(f"**ID:** {company.id}")
-                            
-                            # Only display URL if it's available
-                            if company.url:
-                                # Format URL as a clickable link
-                                st.markdown(f"**URL:** [{company.url}]({company.url})")
-                            
-                            # Add button to view documents
-                            if st.button("View Documents", key=f"docs_{company.id}"):
-                                # This would open a modal or redirect to documents page
-                                # For now, just show a message
-                                st.info(f"Document viewer for {company.name} is not implemented yet.")
-                                
-                            # Display updates for this company if available
-                            company_updates = [u for u in self.updates if u.company_name.lower() == company.name.lower()]
-                            if company_updates:
-                                st.markdown("---")
-                                st.markdown("**Recent Updates:**")
-                                
-                                # Show most recent update
-                                update = company_updates[0]
-                                if update.items:
-                                    recent_item = update.items[0]
-                                    st.markdown(f"*{recent_item.date}* - {recent_item.status or 'No Status'}")
-                                    
-                                    # Truncate description if it's too long
-                                    desc = recent_item.description or ""
-                                    if len(desc) > 100:
-                                        desc = desc[:97] + "..."
-                                    
-                                    # Clean HTML content in description
-                                    clean_description = (desc
-                                        .replace('\u003C', '<')
-                                        .replace('\u003E', '>')
-                                        .replace('&#39;', "'")
-                                        .replace('&rsquo;', "'")
-                                        .replace('&euro;', '€')
-                                        .replace('&nbsp;', ' ')
-                                        .replace('<br>', ' ')
-                                        .replace('<br/>', ' ')
-                                        .replace('<br />', ' ')
-                                        .replace('<p>', '')
-                                        .replace('</p>', ' ')
-                                        .strip())
-                                    
-                                    st.markdown(clean_description)
-                                    
-                                    # Add link to updates tab
-                                    st.markdown("[See all updates](#Recovery-Updates)")
-    
     def _render_campaigns(self) -> None:
         """Render active campaigns"""
         st.subheader("🎯 Active Mintos Campaigns")

@@ -10,13 +10,7 @@ import logging
 from typing import Dict, List, Optional, Set, Any, Union
 import pandas as pd
 from .logger import setup_logger
-from .config import (
-    DATA_DIR, 
-    UPDATES_FILE, 
-    CAMPAIGNS_FILE, 
-    DOCUMENTS_FILE,
-    COMPANY_MAPPING_FILE
-)
+from .config import DATA_DIR, UPDATES_FILE, CAMPAIGNS_FILE
 
 logger = setup_logger(__name__)
 
@@ -38,9 +32,6 @@ class DataManager:
             self._load_sent_campaigns()
         except Exception as e:
             logger.error(f"Error loading sent campaigns: {e}", exc_info=True)
-            
-        # Initialize document tracking
-        self.initialize_document_tracking()
 
     def ensure_data_directory(self) -> None:
         """Ensure data directory exists"""
@@ -221,39 +212,17 @@ class DataManager:
             raise
 
     def get_company_name(self, lender_id: Union[int, str]) -> str:
-        """Get company name by lender ID or string ID
-        
-        This method handles both numeric lender IDs (for updates) and 
-        string IDs (for documents from the document scraper).
-        """
-        # First try to get name from company_names (numeric IDs)
+        """Get company name by lender ID"""
         try:
-            # Check if this is a numeric ID
-            if isinstance(lender_id, int) or (isinstance(lender_id, str) and lender_id.isdigit()):
-                numeric_id = int(lender_id)
-                name = self.company_names.get(numeric_id)
-                if name:
-                    return name
+            lender_id = int(lender_id)
+            name = self.company_names.get(lender_id)
+            if name is None:
+                logger.warning(f"Company name not found for lender_id: {lender_id}")
+                name = f"Unknown Company {lender_id}"
+            return name
         except (ValueError, TypeError):
-            pass  # Not a numeric ID, will try string-based approaches
-            
-        # If we get here, either the ID wasn't numeric or we didn't find it
-        # Check if this is a string ID from document scrapers
-        if isinstance(lender_id, str):
-            # Try to format the string ID into a readable name
-            formatted_name = lender_id.replace('-', ' ').replace('_', ' ').title()
-            
-            # Check if we have a mapping for this string ID
-            company_mapping = self.load_company_mapping()
-            if lender_id in company_mapping:
-                return company_mapping[lender_id]
-                
-            # Return the formatted name as fallback
-            return formatted_name
-            
-        # Last resort fallback
-        logger.warning(f"Company name not found for lender_id: {lender_id}")
-        return f"Unknown Company {lender_id}"
+            logger.error(f"Invalid lender_id format: {lender_id}")
+            return f"Invalid Company ID {lender_id}"
 
     def compare_updates(self, new_updates: List[Dict[str, Any]], previous_updates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Compare updates to find new ones"""
@@ -376,158 +345,3 @@ class DataManager:
         except Exception as e:
             logger.error(f"Error saving campaigns: {e}", exc_info=True)
             raise
-    
-    # Methods for handling company mappings for document scraping
-    
-    def save_company_mapping(self, mapping: Dict[str, str]) -> None:
-        """Save company ID to name mapping (for document scraping)
-        
-        Args:
-            mapping: Dictionary mapping company IDs (string) to company names
-        """
-        try:
-            with open(COMPANY_MAPPING_FILE, 'w') as f:
-                json.dump(mapping, f, indent=4)
-            logger.info(f"Successfully saved mapping for {len(mapping)} companies")
-        except Exception as e:
-            logger.error(f"Error saving company mapping: {e}", exc_info=True)
-            raise
-    
-    def load_company_mapping(self) -> Dict[str, str]:
-        """Load company ID to name mapping
-        
-        Returns:
-            Dictionary mapping company IDs to names
-        """
-        try:
-            if os.path.exists(COMPANY_MAPPING_FILE):
-                with open(COMPANY_MAPPING_FILE, 'r') as f:
-                    mapping = json.load(f)
-                logger.info(f"Loaded mapping for {len(mapping)} companies")
-                return mapping
-            
-            # If no mapping file exists yet, create a default one based on company names
-            mapping = self._create_default_company_mapping()
-            self.save_company_mapping(mapping)
-            return mapping
-        except Exception as e:
-            logger.error(f"Error loading company mapping: {e}", exc_info=True)
-            return {}
-    
-    def _create_default_company_mapping(self) -> Dict[str, str]:
-        """Create default company mapping based on available company names
-        
-        This is a best-effort function that attempts to create URL-friendly IDs
-        from company names.
-        
-        Returns:
-            Dictionary mapping company IDs to names
-        """
-        mapping = {}
-        
-        # Convert company names to URL-friendly slugs
-        for lender_id, name in self.company_names.items():
-            if not name:
-                continue
-                
-            # Create a slug by converting to lowercase and replacing spaces with hyphens
-            slug = name.lower().replace(' ', '-').replace('.', '')
-            
-            # Remove any special characters
-            import re
-            slug = re.sub(r'[^a-z0-9-]', '', slug)
-            
-            # Add to mapping if slug is not empty
-            if slug:
-                mapping[slug] = name
-        
-        logger.info(f"Created default company mapping with {len(mapping)} entries")
-        return mapping
-    
-    # Methods for tracking sent document notifications
-    
-    def _create_document_id(self, document: Dict[str, Any]) -> str:
-        """Create a unique identifier for a document
-        
-        Args:
-            document: Document information dictionary
-            
-        Returns:
-            String hash identifier
-        """
-        company_id = document.get('company_id', '')
-        doc = document.get('document', {})
-        
-        hash_content = "_".join([
-            str(company_id),
-            str(doc.get('title', '')),
-            str(doc.get('url', '')),
-            str(doc.get('date', ''))
-        ])
-        
-        return hashlib.md5(hash_content.encode()).hexdigest()
-    
-    def initialize_document_tracking(self) -> None:
-        """Initialize document tracking"""
-        self.sent_documents_file = os.path.join(DATA_DIR, 'sent_documents.json')
-        self.backup_sent_documents_file = os.path.join(DATA_DIR, 'sent_documents.json.bak')
-        self.sent_documents: Set[str] = set()
-        
-        try:
-            self._load_sent_documents()
-        except Exception as e:
-            logger.error(f"Error initializing document tracking: {e}", exc_info=True)
-    
-    def _load_sent_documents(self) -> None:
-        """Load set of already sent document IDs"""
-        try:
-            if os.path.exists(self.sent_documents_file):
-                with open(self.sent_documents_file, 'r') as f:
-                    self.sent_documents = set(json.load(f))
-                logger.info(f"Loaded {len(self.sent_documents)} sent document IDs")
-                
-                # Create backup if needed
-                if not os.path.exists(self.backup_sent_documents_file):
-                    with open(self.backup_sent_documents_file, 'w') as f:
-                        json.dump(list(self.sent_documents), f)
-            elif os.path.exists(self.backup_sent_documents_file):
-                logger.warning("Main sent documents file not found, loading from backup")
-                with open(self.backup_sent_documents_file, 'r') as f:
-                    self.sent_documents = set(json.load(f))
-                
-                # Recreate main file
-                with open(self.sent_documents_file, 'w') as f:
-                    json.dump(list(self.sent_documents), f)
-        except Exception as e:
-            logger.error(f"Error loading sent documents: {e}", exc_info=True)
-            self.sent_documents = set()
-    
-    def save_sent_document(self, document: Dict[str, Any]) -> None:
-        """Mark a document as sent
-        
-        Args:
-            document: Document information dictionary
-        """
-        try:
-            document_id = self._create_document_id(document)
-            self.sent_documents.add(document_id)
-            
-            # Save to both main and backup files
-            for file_path in [self.sent_documents_file, self.backup_sent_documents_file]:
-                with open(file_path, 'w') as f:
-                    json.dump(list(self.sent_documents), f)
-            
-            logger.info(f"Saved sent document ID: {document_id}")
-        except Exception as e:
-            logger.error(f"Error saving sent document: {e}", exc_info=True)
-    
-    def is_document_sent(self, document: Dict[str, Any]) -> bool:
-        """Check if a document has already been sent
-        
-        Args:
-            document: Document information dictionary
-            
-        Returns:
-            True if the document has already been sent, False otherwise
-        """
-        return self._create_document_id(document) in self.sent_documents
