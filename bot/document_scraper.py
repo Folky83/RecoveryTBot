@@ -240,19 +240,30 @@ class DocumentScraper:
         """Extract document date from HTML content"""
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
+            today = datetime.now().strftime('%Y-%m-%d')
             
-            # Look for common date patterns in the HTML
-            date_patterns = [
-                r'Last Updated:\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
-                r'Last Updated:\s*(\d{4}-\d{1,2}-\d{1,2})',
-                r'Updated:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
-                r'Date:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
-                r'(\d{1,2}\.\d{1,2}\.\d{4})',
-                r'(\d{4}-\d{2}-\d{2})'
-            ]
+            # First, try to find the most reliable indicator - table cell with "Last Updated" label
+            # This matches the format used in the scrape2csv.py example
+            last_updated_cells = soup.find_all('td', attrs={'data-label': 'Last Updated'})
+            if last_updated_cells:
+                for cell in last_updated_cells:
+                    date_text = cell.get_text().strip()
+                    if date_text:
+                        logger.debug(f"Found 'Last Updated' cell with date: {date_text}")
+                        return self._normalize_date(date_text)
             
-            # Try to find any span or div with "Last Updated" or similar text
+            # Next, try to find any span, div, or p element containing the text "Last Updated"
             update_elements = soup.find_all(['span', 'div', 'p'], string=re.compile(r'(Last\s+Updated|Updated|Date)', re.I))
+            
+            # Look for common date patterns in these elements
+            date_patterns = [
+                r'Last Updated:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+                r'Last Updated:?\s*(\d{4}-\d{1,2}-\d{1,2})',
+                r'Updated:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+                r'Updated:?\s*(\d{4}-\d{1,2}-\d{1,2})',
+                r'Date:?\s*(\d{1,2}[./]\d{1,2}[./]\d{2,4})',
+                r'Date:?\s*(\d{4}-\d{1,2}-\d{1,2})'
+            ]
             
             for element in update_elements:
                 text = element.get_text().strip()
@@ -260,20 +271,43 @@ class DocumentScraper:
                     match = re.search(pattern, text)
                     if match:
                         date_str = match.group(1)
-                        return self._normalize_date(date_str)
+                        normalized_date = self._normalize_date(date_str)
+                        logger.debug(f"Found date in element text: {date_str} -> {normalized_date}")
+                        return normalized_date
             
-            # If not found in specific elements, try the whole page
+            # Look for time elements with datetime attributes
+            time_elements = soup.find_all('time')
+            if time_elements:
+                for time_elem in time_elements:
+                    if time_elem.has_attr('datetime'):
+                        date_str = time_elem['datetime']
+                        # Extract date part if it's a full datetime
+                        if 'T' in date_str:
+                            date_str = date_str.split('T')[0]
+                        logger.debug(f"Found date in time element: {date_str}")
+                        return date_str  # Already in YYYY-MM-DD format
+            
+            # As a last resort, search for date patterns in the entire page text
             text = soup.get_text()
-            for pattern in date_patterns:
+            general_date_patterns = [
+                r'(\d{1,2}\.\d{1,2}\.\d{4})',
+                r'(\d{4}-\d{2}-\d{2})',
+                r'(\d{1,2}/\d{1,2}/\d{4})'
+            ]
+            
+            for pattern in general_date_patterns:
                 match = re.search(pattern, text)
                 if match:
                     date_str = match.group(1)
-                    return self._normalize_date(date_str)
+                    normalized_date = self._normalize_date(date_str)
+                    logger.debug(f"Found date in page text: {date_str} -> {normalized_date}")
+                    return normalized_date
                     
-            return None
+            logger.warning("No date found in page, using today's date")
+            return today
         except Exception as e:
             logger.error(f"Error extracting date from page: {e}", exc_info=True)
-            return None
+            return datetime.now().strftime('%Y-%m-%d')
 
     def _normalize_date(self, date_str: str) -> str:
         """
