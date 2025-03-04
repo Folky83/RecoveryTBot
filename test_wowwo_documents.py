@@ -4,6 +4,7 @@ This tests the improved document scraper with a specific company.
 """
 import json
 import logging
+import requests
 from datetime import datetime
 from bot.document_scraper import DocumentScraper
 from bot.logger import setup_logger
@@ -11,9 +12,15 @@ from bot.logger import setup_logger
 # Set up logger
 logger = setup_logger("test_wowwo_documents")
 
-def test_wowwo_documents():
-    """Test fetching documents specifically for Wowwo company"""
-    logger.info("Starting document scraping test for Wowwo")
+def test_wowwo_documents(use_js_rendering=False):
+    """
+    Test fetching documents specifically for Wowwo company
+    
+    Args:
+        use_js_rendering: Whether to use JavaScript rendering (slow but more complete)
+                         If False, uses simpler extraction method
+    """
+    logger.info(f"Starting document scraping test for Wowwo (JS rendering: {use_js_rendering})")
     
     # Create document scraper instance
     scraper = DocumentScraper()
@@ -27,8 +34,27 @@ def test_wowwo_documents():
     start_time = datetime.now()
     logger.info(f"Starting document extraction at {start_time}")
     
-    # Try to extract documents
-    documents = scraper.get_company_documents(company_id, company_name, company_url)
+    if use_js_rendering:
+        # Full test with JS rendering
+        documents = scraper.get_company_documents(company_id, company_name, company_url)
+    else:
+        # Simplified test with direct request (no JS rendering)
+        logger.info("Using simplified extraction method (no JS rendering)")
+        try:
+            # Make a direct request to the company URL without JS rendering
+            response = requests.get(company_url, timeout=10)
+            
+            if response.status_code == 200:
+                # Parse the page content
+                html_content = response.text
+                documents = scraper._parse_documents(html_content, company_name)
+                logger.info(f"Successfully extracted {len(documents)} documents using simplified method")
+            else:
+                logger.error(f"Failed to fetch company page: {response.status_code}")
+                documents = []
+        except Exception as e:
+            logger.error(f"Error during document extraction: {e}")
+            documents = []
     
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
@@ -59,7 +85,9 @@ def test_wowwo_documents():
     return documents
 
 if __name__ == "__main__":
-    documents = test_wowwo_documents()
+    # Test with simplified extraction (no JS rendering - faster)
+    documents = test_wowwo_documents(use_js_rendering=False)
+    
     print(f"\nFound {len(documents)} documents for Wowwo")
     print("Sample of the first 5 documents found:")
     
