@@ -537,6 +537,47 @@ class MintosBot:
                 )
                 return
                 
+            elif query.data == "admin_refresh_documents":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Edit message to show processing
+                await query.edit_message_text("🔄 Refreshing documents, please wait...", disable_web_page_preview=True)
+                
+                # Perform document check
+                try:
+                    await self.check_documents()
+                    # Add back button
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    # Get documents count information
+                    previous_documents = self.document_scraper.load_previous_documents()
+                    doc_count = len(previous_documents)
+                    
+                    await query.edit_message_text(
+                        f"✅ Document check completed successfully!\n\n"
+                        f"📃 Total documents in cache: {doc_count}\n\n"
+                        f"Documents are checked once daily by default.",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True
+                    )
+                except Exception as e:
+                    logger.error(f"Error refreshing documents: {e}", exc_info=True)
+                    # Add back button
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    await query.edit_message_text(
+                        f"⚠️ Error refreshing documents: {str(e)}\n\n"
+                        f"Please check the logs for more information.",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True
+                    )
+                return
+                
             elif query.data == "trigger_today_custom":
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
@@ -587,6 +628,7 @@ class MintosBot:
                 keyboard = [
                     [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
                     [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+                    [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
                     [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
@@ -1157,6 +1199,132 @@ class MintosBot:
                 except Exception as nested_e:
                     logger.error(f"Failed to send campaign error notification to user {user_id}: {nested_e}")
 
+    async def check_documents(self) -> None:
+        """Check for document updates from loan originators"""
+        try:
+            logger.info("Checking for new company documents...")
+            
+            # Check if it's time to scrape documents based on interval
+            now = datetime.now()
+            cache_age_hours = self.document_scraper.get_cache_age() / 3600
+            
+            # Only scrape documents if the cache is older than the configured interval
+            # or if this is the first check after startup
+            if cache_age_hours < DOCUMENT_SCRAPE_INTERVAL_HOURS and not self._is_startup_check:
+                logger.info(f"Document cache is {cache_age_hours:.1f} hours old (< {DOCUMENT_SCRAPE_INTERVAL_HOURS}h), skipping document check")
+                return
+                
+            logger.info("Starting document scraping...")
+            
+            # Load previous documents
+            previous_documents = self.document_scraper.load_previous_documents()
+            logger.info(f"Loaded {len(previous_documents)} previous documents")
+            
+            # Fetch and process document updates
+            new_documents = await self.document_scraper.scrape_documents()
+            if not new_documents:
+                logger.warning("Failed to fetch documents or no documents available")
+                return
+                
+            logger.info(f"Fetched {len(new_documents)} documents from company pages")
+            
+            # Compare documents to find new ones
+            added_documents = self.document_scraper.compare_documents(new_documents, previous_documents)
+            logger.info(f"Found {len(added_documents)} new or updated documents after comparison")
+            
+            # Save all documents for future reference
+            try:
+                self.document_scraper.save_documents(new_documents)
+                logger.info(f"Successfully saved {len(new_documents)} documents")
+            except Exception as e:
+                logger.error(f"Error saving documents: {e}")
+            
+            if added_documents:
+                users = self.user_manager.get_all_users()
+                logger.info(f"Found {len(added_documents)} new documents to process for {len(users)} users")
+                
+                # Check if this is during app startup
+                is_startup = getattr(self, '_is_startup_check', True)
+                if is_startup:
+                    logger.info("Skipping notifications during startup")
+                    # Mark documents as sent without actually sending
+                    for document in added_documents:
+                        self.document_scraper.save_sent_document(document)
+                    return
+                
+                # Send to all users
+                user_count = 0
+                for chat_id in users:
+                    for document in added_documents:
+                        # Check if document has already been sent
+                        if self.document_scraper.is_document_sent(document):
+                            logger.debug(f"Document {document.get('title')} for {document.get('company_name')} already sent, skipping")
+                            continue
+                            
+                        message = self.format_document_message(document)
+                        
+                        try:
+                            await self.send_message(chat_id, message, disable_web_page_preview=True)
+                            self.document_scraper.save_sent_document(document)
+                            logger.info(f"Sent document notification to {chat_id}")
+                            user_count += 1
+                        except Exception as e:
+                            logger.error(f"Error sending document update to {chat_id}: {e}")
+                            # Add to failed messages for retry
+                            self._failed_messages.append({
+                                'chat_id': chat_id,
+                                'text': message,
+                                'disable_web_page_preview': True
+                            })
+                            
+                if user_count > 0:
+                    logger.info(f"Sent document updates to {user_count} users")
+            else:
+                logger.info("No new documents found")
+                
+            # Reset the startup check flag after first run
+            self._is_startup_check = False
+                
+        except Exception as e:
+            logger.error(f"Error during document check: {e}", exc_info=True)
+            for user_id in self.user_manager.get_all_users():
+                try:
+                    await self.send_message(user_id, "⚠️ Error occurred while checking for documents", disable_web_page_preview=True)
+                except Exception as nested_e:
+                    logger.error(f"Failed to send document error notification to user {user_id}: {nested_e}")
+    
+    def format_document_message(self, document: Dict[str, Any]) -> str:
+        """Format document message with rich information"""
+        company_name = document.get('company_name', 'Unknown Company')
+        document_title = document.get('title', 'Untitled Document')
+        document_type = document.get('type', 'Document')
+        document_date = document.get('date', 'Unknown date')
+        document_url = document.get('url', '#')
+        
+        # Ensure the URL is properly formatted
+        if document_url and not document_url.startswith(('http://', 'https://')):
+            document_url = f"https://{document_url}"
+        
+        emoji_map = {
+            'presentation': '📊',
+            'financial': '💰',
+            'agreement': '📄',
+            'report': '📑',
+            'document': '📃'
+        }
+        
+        emoji = emoji_map.get(document_type.lower(), '📃')
+        
+        message = (
+            f"{emoji} <b>New {document_type}</b> from <b>{company_name}</b>\n\n"
+            f"<b>Title:</b> {document_title}\n"
+            f"<b>Date:</b> {document_date}\n"
+            f"<b>Link:</b> <a href=\"{document_url}\">{document_title}</a>\n\n"
+            f"<i>To view all documents, use the Mintos Dashboard.</i>"
+        )
+        
+        return message
+            
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /today command to show today's updates"""
         chat_id = None
@@ -1895,6 +2063,7 @@ class MintosBot:
         keyboard = [
             [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
             [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+            [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
             [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
