@@ -418,10 +418,23 @@ class DocumentScraper:
                         
                     # Determine document type based on link text or URL
                     doc_type = 'document'
-                    for keyword in ['presentation', 'financial', 'report', 'agreement']:
-                        if keyword in text.lower() or keyword in href.lower():
-                            doc_type = keyword
-                            break
+                    
+                    # Match on exact document types from config
+                    text_lower = text.lower()
+                    href_lower = href.lower()
+                    
+                    # Check for presentation
+                    if 'presentation' in text_lower or 'presentation' in href_lower:
+                        doc_type = 'presentation'
+                    # Check for financials
+                    elif 'financial' in text_lower or 'financial' in href_lower:
+                        doc_type = 'financials'
+                    # Check for loan agreement
+                    elif ('loan' in text_lower and 'agreement' in text_lower) or 'loan_agreement' in href_lower:
+                        doc_type = 'loan_agreement'
+                    # Fallback checks for partial matches
+                    elif 'agreement' in text_lower:
+                        doc_type = 'loan_agreement'
                     
                     # Create document record
                     document = {

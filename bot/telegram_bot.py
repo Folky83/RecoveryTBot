@@ -1331,11 +1331,12 @@ class MintosBot:
         if document_url and not document_url.startswith(('http://', 'https://')):
             document_url = f"https://{document_url}"
         
+        # Match the emoji to the document types shown in the image
         emoji_map = {
             'presentation': '📊',
-            'financial': '💰',
-            'agreement': '📄',
-            'report': '📑',
+            'financials': '💰',
+            'loan_agreement': '🤝',
+            'company_page': '🏢',
             'document': '📃'
         }
         
