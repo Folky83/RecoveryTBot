@@ -228,11 +228,28 @@ class AsyncDocumentScraper:
         """Load documents data from file"""
         if os.path.exists(self.DOCUMENTS_CACHE_FILE):
             try:
-                return self.data_manager._load_json_with_backup(self.DOCUMENTS_CACHE_FILE, [])
+                # Use the proper methods from data manager
+                if hasattr(self.data_manager, '_load_json_with_backup'):
+                    return self.data_manager._load_json_with_backup(self.DOCUMENTS_CACHE_FILE, [])
+                else:
+                    # Fallback to regular method
+                    return self._load_json_file(self.DOCUMENTS_CACHE_FILE, [])
             except Exception as e:
                 logger.error(f"Error loading documents data: {e}", exc_info=True)
                 return []
         return []
+    
+    def _load_json_file(self, file_path: str, default_value: Any) -> Any:
+        """Load JSON data from file with error handling"""
+        try:
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    import json
+                    return json.load(f)
+            return default_value
+        except Exception as e:
+            logger.error(f"Error loading file {file_path}: {e}", exc_info=True)
+            return default_value
         
     def _save_documents_data(self, documents: List[Dict[str, Any]]) -> None:
         """Save documents data to file"""
@@ -240,8 +257,17 @@ class AsyncDocumentScraper:
             # Ensure directory exists
             os.makedirs(os.path.dirname(self.DOCUMENTS_CACHE_FILE), exist_ok=True)
             
-            # Save with backup
-            self.data_manager._save_json_with_backup(self.DOCUMENTS_CACHE_FILE, documents)
+            # Save with error handling
+            import json
+            with open(self.DOCUMENTS_CACHE_FILE, 'w', encoding='utf-8') as f:
+                json.dump(documents, f, ensure_ascii=False, indent=2)
+                
+            # Also create a backup
+            backup_file = f"{self.DOCUMENTS_CACHE_FILE}.bak"
+            with open(backup_file, 'w', encoding='utf-8') as f:
+                json.dump(documents, f, ensure_ascii=False, indent=2)
+                
+            logger.debug(f"Saved {len(documents)} documents to {self.DOCUMENTS_CACHE_FILE}")
         except Exception as e:
             logger.error(f"Error saving documents data: {e}", exc_info=True)
 
