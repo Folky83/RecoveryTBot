@@ -1,63 +1,80 @@
-#!/usr/bin/env python3
 """
-Test script to simulate document refresh functionality
+Test script to simulate document refresh functionality and verify the company_page_url field
 """
 import asyncio
-import logging
-import sys
+import json
 import os
+import sys
+from datetime import datetime
 
-# Add parent directory to path to find bot modules
-sys.path.append('.')
+# Add parent directory to path to import bot modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('document_refresh_test')
+# Import the DocumentScraper class
+from bot.document_scraper import DocumentScraper
 
 async def test_document_refresh():
-    """Test document refresh functionality"""
+    """Test document refresh functionality and verify the company_page_url field"""
+    print(f"Starting document scrape test at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Create document scraper
+    scraper = DocumentScraper()
+    
+    # Print previous document count
+    previous_docs = scraper.load_previous_documents()
+    print(f"Previous document count: {len(previous_docs)}")
+    
+    # Count documents with company_page_url
+    docs_with_url = sum(1 for doc in previous_docs if 'company_page_url' in doc)
+    print(f"Documents with company_page_url field: {docs_with_url} / {len(previous_docs)}")
+    
+    # Perform document check with just 3 companies to save time
+    # Load company pages
+    company_pages = []
     try:
-        # Import here to avoid import errors
-        from bot.document_scraper import DocumentScraper
-        
-        logger.info("Initializing document scraper")
-        scraper = DocumentScraper()
-        
-        # Ensure data directory exists
-        os.makedirs('data', exist_ok=True)
-        
-        # Load previous documents
-        previous_docs = scraper.load_previous_documents()
-        logger.info(f"Loaded {len(previous_docs)} previous documents")
-        
-        # Check for new documents
-        logger.info("Checking for document updates...")
-        new_docs = await scraper.check_document_updates()
-        
-        logger.info(f"Found {len(new_docs)} new/updated documents")
-        
-        # Print details of new documents
-        for i, doc in enumerate(new_docs[:5], 1):  # Show first 5 docs
-            doc_date = doc.get('date', 'Unknown date')
-            doc_type = doc.get('type', 'Unknown type')
-            company = doc.get('company_name', 'Unknown company')
-            title = doc.get('title', 'Untitled')
-            
-            logger.info(f"Document {i}: {company} - {doc_type} - {title} ({doc_date})")
-            
-        if len(new_docs) > 5:
-            logger.info(f"... and {len(new_docs) - 5} more")
-            
-        logger.info("Document refresh test completed successfully")
-        return new_docs
-            
+        import pandas as pd
+        company_csv = os.path.join('attached_assets', 'company_pages.csv')
+        if os.path.exists(company_csv):
+            df = pd.read_csv(company_csv)
+            for _, row in df.iterrows():
+                company_pages.append((row['company_name'], row['url']))
     except Exception as e:
-        logger.error(f"Error during document refresh test: {e}", exc_info=True)
-        return []
+        print(f"Error loading company pages: {e}")
+        company_pages = [
+            ('Capitalia', 'https://www.mintos.com/en/lending-companies/Capitalia'),
+            ('DelfinGroup', 'https://www.mintos.com/en/lending-companies/DelfinGroup'),
+            ('Everest Finanse', 'https://www.mintos.com/en/lending-companies/EverestFinanse')
+        ]
+    
+    # Limit to 3 companies for testing
+    test_companies = company_pages[:3]
+    print(f"Testing with {len(test_companies)} companies:")
+    for company_name, url in test_companies:
+        print(f"  - {company_name}: {url}")
+    
+    # Process companies directly
+    all_docs = []
+    for company_name, url in test_companies:
+        print(f"Processing company: {company_name}")
+        docs = await scraper._process_company(company_name, url)
+        all_docs.extend(docs)
+        print(f"  Found {len(docs)} documents")
+    
+    # Check if documents have company_page_url field
+    docs_with_url = sum(1 for doc in all_docs if 'company_page_url' in doc)
+    print(f"New documents with company_page_url field: {docs_with_url} / {len(all_docs)}")
+    
+    # Print sample document
+    if all_docs:
+        print("\nSample document fields:")
+        for key, value in all_docs[0].items():
+            print(f"  {key}: {value}")
+    
+    print(f"Document scrape test completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+async def main():
+    """Test function for document refresh"""
+    await test_document_refresh()
 
 if __name__ == "__main__":
-    result = asyncio.run(test_document_refresh())
-    print(f"\nTotal documents found: {len(result)}")
+    asyncio.run(main())
