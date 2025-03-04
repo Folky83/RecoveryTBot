@@ -1241,72 +1241,58 @@ class MintosBot:
                 
             logger.info("Starting document scraping...")
             
-            # Load previous documents
-            previous_documents = self.document_scraper.load_previous_documents()
-            logger.info(f"Loaded {len(previous_documents)} previous documents")
+            # Use the improved document scraper to check for updates
+            added_documents = await self.document_scraper.check_document_updates()
             
-            # Fetch and process document updates
-            new_documents = await self.document_scraper.scrape_documents()
-            if not new_documents:
-                logger.warning("Failed to fetch documents or no documents available")
-                return
-                
-            logger.info(f"Fetched {len(new_documents)} documents from company pages")
-            
-            # Compare documents to find new ones
-            added_documents = self.document_scraper.compare_documents(new_documents, previous_documents)
-            logger.info(f"Found {len(added_documents)} new or updated documents after comparison")
-            
-            # Save all documents for future reference
-            try:
-                self.document_scraper.save_documents(new_documents)
-                logger.info(f"Successfully saved {len(new_documents)} documents")
-            except Exception as e:
-                logger.error(f"Error saving documents: {e}")
-            
-            if added_documents:
-                users = self.user_manager.get_all_users()
-                logger.info(f"Found {len(added_documents)} new documents to process for {len(users)} users")
-                
-                # Check if this is during app startup
-                is_startup = getattr(self, '_is_startup_check', True)
-                if is_startup:
-                    logger.info("Skipping notifications during startup")
-                    # Mark documents as sent without actually sending
-                    for document in added_documents:
-                        self.document_scraper.save_sent_document(document)
-                    return
-                
-                # Send to all users
-                user_count = 0
-                for chat_id in users:
-                    for document in added_documents:
-                        # Check if document has already been sent
-                        if self.document_scraper.is_document_sent(document):
-                            logger.debug(f"Document {document.get('title')} for {document.get('company_name')} already sent, skipping")
-                            continue
-                            
-                        message = self.format_document_message(document)
-                        
-                        try:
-                            await self.send_message(chat_id, message, disable_web_page_preview=True)
-                            self.document_scraper.save_sent_document(document)
-                            logger.info(f"Sent document notification to {chat_id}")
-                            user_count += 1
-                        except Exception as e:
-                            logger.error(f"Error sending document update to {chat_id}: {e}")
-                            # Add to failed messages for retry
-                            self._failed_messages.append({
-                                'chat_id': chat_id,
-                                'text': message,
-                                'parse_mode': 'HTML',
-                                'disable_web_page_preview': True
-                            })
-                            
-                if user_count > 0:
-                    logger.info(f"Sent document updates to {user_count} users")
-            else:
+            if not added_documents:
                 logger.info("No new documents found")
+                
+                # Reset the startup check flag after first run
+                self._is_startup_check = False
+                return
+            
+            logger.info(f"Found {len(added_documents)} new or updated documents")
+            
+            users = self.user_manager.get_all_users()
+            logger.info(f"Processing {len(added_documents)} new documents for {len(users)} users")
+            
+            # Check if this is during app startup
+            is_startup = getattr(self, '_is_startup_check', True)
+            if is_startup:
+                logger.info("Skipping notifications during startup")
+                # Mark documents as sent without actually sending
+                for document in added_documents:
+                    self.document_scraper.save_sent_document(document)
+                return
+            
+            # Send to all users
+            user_count = 0
+            for chat_id in users:
+                for document in added_documents:
+                    # Check if document has already been sent
+                    if self.document_scraper.is_document_sent(document):
+                        logger.debug(f"Document {document.get('title')} for {document.get('company_name')} already sent, skipping")
+                        continue
+                        
+                    message = self.format_document_message(document)
+                    
+                    try:
+                        await self.send_message(chat_id, message, disable_web_page_preview=True)
+                        self.document_scraper.save_sent_document(document)
+                        logger.info(f"Sent document notification to {chat_id}")
+                        user_count += 1
+                    except Exception as e:
+                        logger.error(f"Error sending document update to {chat_id}: {e}")
+                        # Add to failed messages for retry
+                        self._failed_messages.append({
+                            'chat_id': chat_id,
+                            'text': message,
+                            'parse_mode': 'HTML',
+                            'disable_web_page_preview': True
+                        })
+                        
+            if user_count > 0:
+                logger.info(f"Sent document updates to {user_count} users")
                 
             # Reset the startup check flag after first run
             self._is_startup_check = False
