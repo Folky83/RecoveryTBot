@@ -182,6 +182,7 @@ class MintosBot:
             CommandHandler("today", self.today_command),
             CommandHandler("refresh", self.refresh_command),
             CommandHandler("campaigns", self.campaigns_command),
+            CommandHandler("documents", self.documents_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
@@ -394,6 +395,7 @@ class MintosBot:
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
             "• /campaigns - View current Mintos campaigns\n"
+            "• /documents - View recent company documents\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
             f"{admin_command}\n"
