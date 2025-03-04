@@ -1,0 +1,278 @@
+{
+  "document_counts": {
+    "presentation": 1,
+    "financials": 1,
+    "loan_agreement": 3
+  },
+  "document_cards": [
+    {
+      "class": "m-o-grid__item loan-originator-info m-o-grid__item--xs-12 m-o-grid__item--lg-6",
+      "text": "Loans OriginatedTotal volume of loans issued by this company to borrowers since its founding.\u20ac1.25 b...",
+      "links": []
+    },
+    {
+      "class": "m-o-grid__item m-o-grid__item--xs-6 m-o-grid__item--md-4",
+      "text": "Loans OriginatedTotal volume of loans issued by this company to borrowers since its founding.\u20ac1.25 b...",
+      "links": []
+    },
+    {
+      "class": "m-o-grid__item m-o-grid__item--xs-6 m-o-grid__item--md-4",
+      "text": "Loan portfolioLoans issued by the lending company to borrowers at the time of the most recent financ...",
+      "links": []
+    },
+    {
+      "class": "m-o-grid__item m-o-grid__item--xs-6 m-o-grid__item--md-4",
+      "text": "Buyback obligationA credit enhancement given by the lending company or other entity to the Issuer fo...",
+      "links": []
+    },
+    {
+      "class": "m-o-grid__item m-o-grid__item--xs-6 m-o-grid__item--lg-8",
+      "text": "Loan Types:The type of linked assets the lending company has issued.",
+      "links": []
+    },
+    {
+      "class": "m-o-grid__item info-block__value m-u-ta-right m-o-grid__item--xs-6 m-o-grid__item--lg-4",
+      "text": "Personal loanPersonal loanShort-term loanShort-term loan",
+      "links": []
+    },
+    {
+      "class": "m-o-grid__item m-o-grid__item--xs-6 m-o-grid__item--lg-8",
+      "text": "Schedule extension:During the first 30 days after the due date of a loan payment, the borrower can o...",
+      "links": []
+    }
+  ],
+  "document_containers": [
+    {
+      "id": "__nuxt",
+      "class": "",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "investsmart cashsecurityblogaboutenglishenglishlog increate accountavafin grouploans originatedtotal volume of loans issued by this company to borrowe..."
+    },
+    {
+      "id": "__layout",
+      "class": "",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "investsmart cashsecurityblogaboutenglishenglishlog increate accountavafin grouploans originatedtotal volume of loans issued by this company to borrowe..."
+    },
+    {
+      "id": "main-wrapper",
+      "class": "",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "investsmart cashsecurityblogaboutenglishenglishlog increate accountavafin grouploans originatedtotal volume of loans issued by this company to borrowe..."
+    },
+    {
+      "id": "main-sub-wrapper",
+      "class": "",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "investsmart cashsecurityblogaboutenglishenglishlog increate accountavafin grouploans originatedtotal volume of loans issued by this company to borrowe..."
+    },
+    {
+      "id": "",
+      "class": "content app",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "avafin grouploans originatedtotal volume of loans issued by this company to borrowers since its founding.\u20ac1.25 billionloan portfolioloans issued by th..."
+    },
+    {
+      "id": "",
+      "class": "loan-originator top-padded",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "avafin grouploans originatedtotal volume of loans issued by this company to borrowers since its founding.\u20ac1.25 billionloan portfolioloans issued by th..."
+    },
+    {
+      "id": "",
+      "class": "loan-originator-strech",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "aboutas per april 2024, capitec bank, south africa's largest retail bank and avafin's strategic investor, has acquired a controlling interest in the c..."
+    },
+    {
+      "id": "",
+      "class": "m-container-narrow",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "aboutas per april 2024, capitec bank, south africa's largest retail bank and avafin's strategic investor, has acquired a controlling interest in the c..."
+    },
+    {
+      "id": "",
+      "class": "horizontal-block clearfix",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "aboutas per april 2024, capitec bank, south africa's largest retail bank and avafin's strategic investor, has acquired a controlling interest in the c..."
+    },
+    {
+      "id": "",
+      "class": "",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "aboutas per april 2024, capitec bank, south africa's largest retail bank and avafin's strategic investor, has acquired a controlling interest in the c..."
+    },
+    {
+      "id": "",
+      "class": "loan-originator-files clearfix horizontal-block-right",
+      "pdf_links": [
+        {
+          "text": "Presentation",
+          "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf"
+        },
+        {
+          "text": "Financials",
+          "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf"
+        },
+        {
+          "text": "Loan Agreement",
+          "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf"
+        }
+      ],
+      "text_snippet": "presentationlast updated:\n                  10.07.2024financialslast updated:\n                  01.08.2024loan agreementlast updated:\n                ..."
+    }
+  ],
+  "pdf_links": [
+    {
+      "href": "https://assets.mintos.com/FC5D43F2-4215-CC42-7280-1C79AC03B274.pdf",
+      "text": "Presentation",
+      "parent_text": "Presentation",
+      "heading": null,
+      "probable_type": "presentation"
+    },
+    {
+      "href": "https://assets.mintos.com/4CA01069-4C76-6A6A-121D-F2AFEEDEBF86.pdf",
+      "text": "Financials",
+      "parent_text": "Financials",
+      "heading": null,
+      "probable_type": "financials"
+    },
+    {
+      "href": "https://assets.mintos.com/BCDBC203-C10F-54F9-A075-7A39C19BDCEF.pdf",
+      "text": "Loan Agreement",
+      "parent_text": "Loan Agreement",
+      "heading": null,
+      "probable_type": "loan_agreement"
+    }
+  ]
+}
