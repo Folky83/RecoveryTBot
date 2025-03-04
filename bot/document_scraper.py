@@ -47,19 +47,42 @@ class DocumentScraper:
     def _load_company_pages(self) -> None:
         """Load company pages from CSV file"""
         try:
-            csv_path = 'attached_assets/company_pages.csv'
-            if os.path.exists(csv_path):
+            # Check both locations for the CSV file
+            csv_paths = ['company_pages.csv', 'attached_assets/company_pages.csv']
+            found_path = None
+            
+            for path in csv_paths:
+                if os.path.exists(path):
+                    found_path = path
+                    break
+            
+            if found_path:
                 try:
-                    df = pd.read_csv(csv_path)
-                    # Convert DataFrame to dict of dicts for easier access
-                    self.company_pages = df.set_index('id').to_dict(orient='index')
-                    logger.info(f"Loaded {len(self.company_pages)} company pages")
+                    df = pd.read_csv(found_path)
+                    
+                    # Convert DataFrame to dict for easier access
+                    # New format: 'Company,URL'
+                    self.company_pages = {}
+                    
+                    for _, row in df.iterrows():
+                        company_name = row.get('Company')
+                        url = row.get('URL')
+                        if company_name and url:
+                            # Use the company name as the key
+                            self.company_pages[company_name] = {
+                                'name': company_name,
+                                'url': url
+                            }
+                    
+                    logger.info(f"Loaded {len(self.company_pages)} company pages from {found_path}")
                 except pd.errors.EmptyDataError:
-                    logger.warning(f"CSV file {csv_path} is empty")
+                    logger.warning(f"CSV file {found_path} is empty")
                 except pd.errors.ParserError:
-                    logger.warning(f"Could not parse CSV file {csv_path}")
+                    logger.warning(f"Could not parse CSV file {found_path}")
+                except Exception as e:
+                    logger.error(f"Error loading company pages: {e}")
             else:
-                logger.warning(f"CSV file {csv_path} not found")
+                logger.warning("Company pages CSV file not found in any location")
         except Exception as e:
             logger.error(f"Error loading company pages: {e}", exc_info=True)
 
@@ -327,46 +350,93 @@ class DocumentScraper:
         
         for company_id, company_data in self.company_pages.items():
             company_name = company_data.get('name', f"Unknown Company {company_id}")
-            logger.info(f"Scraping documents for {company_name} (ID: {company_id})")
+            company_url = company_data.get('url', '')
             
-            # Document types to scrape
-            document_types = {
-                'presentation': company_data.get('presentation_url', ''),
-                'financials': company_data.get('financials_url', ''),
-                'loan_agreement': company_data.get('loan_agreement_url', '')
+            if not company_url:
+                logger.warning(f"No URL for company {company_name}, skipping")
+                continue
+                
+            logger.info(f"Scraping documents for {company_name}")
+                
+            # Fetch the company page
+            logger.debug(f"Fetching company page for {company_name}: {company_url}")
+            html_content = await self.fetch_page(company_url)
+            
+            if not html_content:
+                logger.warning(f"Failed to fetch page for {company_name}")
+                continue
+            
+            # Extract date
+            document_date = await self.extract_date_from_page(html_content)
+            
+            if not document_date:
+                document_date = datetime.now().strftime('%Y-%m-%d')
+                logger.warning(f"Couldn't find date for {company_name}, using today's date")
+            
+            # Create document record for the company page
+            document = {
+                'company_id': company_id,
+                'company_name': company_name,
+                'title': f"{company_name} Mintos Page",
+                'type': 'company_page',
+                'url': company_url,
+                'date': document_date,
+                'scraped_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             }
             
-            for doc_type, url in document_types.items():
-                if not url:
+            all_documents.append(document)
+            logger.info(f"Found company page for {company_name}, date: {document_date}")
+            
+            # Look for related documents on the page
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            # Look for links that might be documents
+            document_keywords = ['presentation', 'financial', 'report', 'agreement', 'document', 'pdf']
+            
+            for link in soup.find_all('a', href=True):
+                href = link.get('href', '')
+                text = link.get_text().lower().strip()
+                
+                # Skip empty links or navigation
+                if not href or href.startswith('#') or len(text) < 3:
                     continue
                     
-                logger.debug(f"Fetching {doc_type} page for {company_name}: {url}")
-                html_content = await self.fetch_page(url)
+                # Check if this link might be a document based on text or URL
+                is_document = any(keyword in text.lower() for keyword in document_keywords) or href.endswith('.pdf')
                 
-                if not html_content:
-                    logger.warning(f"Failed to fetch {doc_type} page for {company_name}")
-                    continue
-                
-                # Extract date
-                document_date = await self.extract_date_from_page(html_content)
-                
-                if document_date:
-                    logger.info(f"Found {doc_type} for {company_name}, date: {document_date}")
+                if is_document:
+                    # Make sure URL is absolute
+                    if href.startswith('/'):
+                        # Convert relative URL to absolute
+                        base_url = "/".join(company_url.split("/")[:3])  # Get domain part
+                        doc_url = f"{base_url}{href}"
+                    elif not href.startswith(('http://', 'https://')):
+                        # Might be relative to current path
+                        doc_url = company_url.rstrip('/') + '/' + href
+                    else:
+                        doc_url = href
+                        
+                    # Determine document type based on link text or URL
+                    doc_type = 'document'
+                    for keyword in ['presentation', 'financial', 'report', 'agreement']:
+                        if keyword in text.lower() or keyword in href.lower():
+                            doc_type = keyword
+                            break
                     
                     # Create document record
                     document = {
                         'company_id': company_id,
                         'company_name': company_name,
-                        'document_type': doc_type,
-                        'document_url': url,
-                        'document_date': document_date,
+                        'title': text if text else f"{company_name} {doc_type.capitalize()}",
+                        'type': doc_type,
+                        'url': doc_url,
+                        'date': document_date,  # Use same date as company page for now
                         'scraped_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     }
                     
                     all_documents.append(document)
-                else:
-                    logger.warning(f"Couldn't find date for {doc_type} page of {company_name}")
-        
+                    logger.debug(f"Found document link: {text} ({doc_url})")
+            
         return all_documents
 
     async def check_document_updates(self) -> List[Dict[str, Any]]:

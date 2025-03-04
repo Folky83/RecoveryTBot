@@ -182,7 +182,6 @@ class MintosBot:
             CommandHandler("today", self.today_command),
             CommandHandler("refresh", self.refresh_command),
             CommandHandler("campaigns", self.campaigns_command),
-            CommandHandler("documents", self.documents_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
@@ -470,6 +469,20 @@ class MintosBot:
                 except Exception as e:
                     logger.error(f"Error during refresh from callback: {e}")
                     await query.edit_message_text("⚠️ Error refreshing updates. Please try again.", disable_web_page_preview=True)
+                return
+                
+            elif query.data == "refresh_documents":
+                chat_id = update.effective_chat.id
+                await query.edit_message_text("🔄 Refreshing documents...", disable_web_page_preview=True)
+
+                try:
+                    # Force document check
+                    await self.check_documents()
+                    # Run documents command again
+                    await self.documents_command(update, context)
+                except Exception as e:
+                    logger.error(f"Error during document refresh from callback: {e}")
+                    await query.edit_message_text("⚠️ Error refreshing documents. Please try again.", disable_web_page_preview=True)
                 return
                 
             elif query.data == "admin_users":
@@ -897,6 +910,45 @@ class MintosBot:
 
         return message.strip()
 
+    def format_document_message(self, document: Dict[str, Any]) -> str:
+        """Format document message with rich information"""
+        
+        company_name = document.get('company_name', 'Unknown Company')
+        doc_title = document.get('title', 'Document')
+        doc_type = document.get('type', 'document')
+        doc_date = document.get('date', 'Unknown date')
+        doc_url = document.get('url', '')
+        
+        # Create an icon based on document type
+        icon = '📄'
+        if doc_type == 'presentation':
+            icon = '📊'
+        elif doc_type == 'financial' or doc_type == 'report':
+            icon = '📈'
+        elif doc_type == 'agreement':
+            icon = '📝'
+        elif doc_type == 'company_page':
+            icon = '🏢'
+        
+        # Format date for display
+        try:
+            date_obj = datetime.strptime(doc_date, '%Y-%m-%d')
+            display_date = date_obj.strftime('%d %b %Y')
+        except:
+            display_date = doc_date
+        
+        # Format message with HTML
+        message = f"{icon} <b>{html.escape(doc_title)}</b>\n\n"
+        message += f"Company: <b>{html.escape(company_name)}</b>\n"
+        message += f"Type: {doc_type.capitalize()}\n"
+        message += f"Date: {display_date}\n\n"
+        
+        if doc_url:
+            # Make the URL clickable but avoid preview
+            message += f"<a href=\"{doc_url}\">View Document</a>"
+        
+        return message
+        
     def format_campaign_message(self, campaign: Dict[str, Any]) -> str:
         """Format campaign message with rich information from Mintos API"""
         logger.debug(f"Formatting campaign message for ID: {campaign.get('id')}")
@@ -1122,6 +1174,67 @@ class MintosBot:
                 except Exception as nested_e:
                     logger.error(f"Failed to send error notification to user {user_id}: {nested_e}")
 
+    async def check_documents(self) -> None:
+        """Check for document updates from loan originators"""
+        try:
+            logger.info("Checking for document updates...")
+            
+            # Get new document updates
+            new_documents = await self.document_scraper.check_document_updates()
+            
+            if not new_documents:
+                logger.info("No new document updates found")
+                return
+                
+            logger.info(f"Found {len(new_documents)} new document updates")
+            
+            # Get registered users
+            users = self.user_manager.get_all_users()
+            if not users:
+                logger.warning("No registered users to send document updates to")
+                return
+                
+            # Filter to only send documents that haven't been sent before
+            unsent_documents = [
+                doc for doc in new_documents
+                if not self.document_scraper.is_document_sent(doc)
+            ]
+            
+            if not unsent_documents:
+                logger.info("All new documents have already been sent")
+                return
+                
+            logger.info(f"Sending {len(unsent_documents)} unsent documents to {len(users)} users")
+            
+            # Send documents to all users
+            for i, document in enumerate(unsent_documents):
+                try:
+                    message = self.format_document_message(document)
+                    
+                    for user_id in users:
+                        try:
+                            await self.send_message(
+                                user_id, 
+                                message, 
+                                disable_web_page_preview=True,
+                                parse_mode='HTML'
+                            )
+                            logger.info(f"Sent document {i+1}/{len(unsent_documents)} to user {user_id}")
+                        except Exception as e:
+                            logger.error(f"Failed to send document to user {user_id}: {e}")
+                    
+                    # Mark document as sent
+                    self.document_scraper.save_sent_document(document)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing document {i+1}/{len(unsent_documents)}: {e}", exc_info=True)
+                    continue
+                    
+            logger.info("Document update check completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Error checking document updates: {e}", exc_info=True)
+    
     async def check_campaigns(self) -> None:
         """Check for new Mintos campaigns"""
         try:
@@ -1553,6 +1666,72 @@ class MintosBot:
             logger.error(f"Error in refresh command: {e}")
             await self.send_message(chat_id, "⚠️ Error checking for updates", disable_web_page_preview=True)
 
+    async def documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /documents command to show recent company documents"""
+        if not update.effective_chat or not update.message:
+            return
+        
+        chat_id = update.effective_chat.id
+        
+        try:
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+                
+            # Get documents
+            previous_documents = self.document_scraper.load_previous_documents()
+            
+            if not previous_documents:
+                await self.send_message(
+                    chat_id, 
+                    "No documents found in cache. Use the refresh button to check for documents.", 
+                    disable_web_page_preview=True
+                )
+            else:
+                # Sort documents by date (newest first)
+                sorted_documents = sorted(
+                    previous_documents, 
+                    key=lambda x: datetime.strptime(x.get('date', '1900-01-01'), '%Y-%m-%d') if x.get('date') else datetime.min,
+                    reverse=True
+                )
+                
+                # Get the 5 most recent documents
+                recent_documents = sorted_documents[:5]
+                
+                await self.send_message(
+                    chat_id,
+                    f"📄 <b>Recent Company Documents</b>\n\nShowing the {len(recent_documents)} most recent documents:",
+                    disable_web_page_preview=True,
+                    parse_mode='HTML'
+                )
+                
+                # Send each document
+                for document in recent_documents:
+                    message = self.format_document_message(document)
+                    await self.send_message(chat_id, message, disable_web_page_preview=True, parse_mode='HTML')
+            
+            # Add refresh button
+            keyboard = [[InlineKeyboardButton("🔄 Refresh Documents", callback_data="refresh_documents")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            cache_age_hours = self.document_scraper.get_cache_age() / 3600
+            
+            await self.send_message(
+                chat_id, 
+                f"Document cache is {cache_age_hours:.1f} hours old. Click refresh to check for new documents.",
+                reply_markup=reply_markup,
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in documents_command: {e}", exc_info=True)
+            error_msg = f"Error retrieving documents: {str(e)}"
+            if len(error_msg) > 100:
+                error_msg = error_msg[:97] + "..."
+            await self.send_message(chat_id, f"⚠️ {error_msg}", disable_web_page_preview=True)
+    
     async def campaigns_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /campaigns command to show active Mintos campaigns"""
         if not update.effective_chat:
