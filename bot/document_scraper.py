@@ -167,10 +167,26 @@ class DocumentScraper:
         logger.info("Fetching company information from Mintos details page")
         company_urls = {}
         
+        # First try the simplified extraction approach
+        try:
+            from .fetch_company_urls_simplified import fetch_company_urls_from_details
+            
+            logger.info("Using simplified extraction approach")
+            simplified_urls = fetch_company_urls_from_details()
+            
+            if simplified_urls and len(simplified_urls) > 0:
+                logger.info(f"Successfully found {len(simplified_urls)} companies using simplified approach")
+                return simplified_urls
+            else:
+                logger.warning("Simplified approach returned no results, falling back to alternatives")
+        except Exception as e:
+            logger.error(f"Error using simplified extraction approach: {str(e)}", exc_info=True)
+            logger.warning("Falling back to alternative extraction methods")
+        
         # The simplified approach uses the lending companies details page
         details_url = "https://www.mintos.com/en/lending-companies/#details"
         
-        # Try using a more direct web scraping approach with the main lending companies page
+        # Fallback: Try using a more direct web scraping approach with the main lending companies page
         # This approach will look for company links in the main pages
         logger.info("Using direct web scraping approach to find company URLs")
         
@@ -1128,7 +1144,14 @@ class DocumentScraper:
         Returns:
             Dictionary of company IDs to URL and name information
         """
-        return self.fetch_company_urls()
+        # First try the simplified approach
+        try:
+            from .fetch_company_urls_simplified import fetch_company_urls_from_details
+            return fetch_company_urls_from_details()
+        except Exception as e:
+            logger.error(f"Error using simplified extraction: {e}", exc_info=True)
+            # Fall back to normal scraping method
+            return self.fetch_company_urls()
     
     def check_all_companies(self, company_mapping: Dict[str, str]) -> List[Dict[str, Any]]:
         """Check all companies for new documents
