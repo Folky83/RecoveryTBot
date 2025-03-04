@@ -471,8 +471,9 @@ class DocumentScraper:
                 logger.info(f"Using fallback for {company_id}: redirecting to {redirect_id} ({fallback_info.get('notes', '')})")
                 company_id = redirect_id
                 # Update company name if provided
-                if fallback_info.get("redirect_name"):
-                    company_name = fallback_info.get("redirect_name")
+                redirect_name = fallback_info.get("redirect_name")
+                if redirect_name:
+                    company_name = redirect_name
                 
                 # Check if the redirect also has alt_urls
                 if redirect_id in fallback_mapping and "alt_urls" in fallback_mapping[redirect_id]:
@@ -687,7 +688,7 @@ class DocumentScraper:
                 document_sections.extend(tab_sections)
                 
             # Option 5: Look for sections with "document" in their class name or id
-            for element in soup.find_all(lambda tag: tag.has_attr('class') and any('document' in c.lower() for c in tag['class'])):
+            for element in soup.find_all(lambda tag: tag.has_attr('class') and isinstance(tag['class'], list) and any('document' in c.lower() for c in tag['class'])):
                 document_sections.append(element)
             
             # Look for elements with "document" in their ID
@@ -695,7 +696,9 @@ class DocumentScraper:
                 document_sections.append(element)
                 
             # Option 6: Look for download sections
-            for element in soup.find_all(lambda tag: tag.has_attr('class') and any(any(term in c.lower() for term in ['download', 'pdf']) for c in tag['class'])):
+            for element in soup.find_all(lambda tag: tag.has_attr('class') and isinstance(tag['class'], list) and 
+                                        any(any(term in c.lower() for term in ['download', 'pdf']) 
+                                            for c in tag['class'])):
                 document_sections.append(element)
                 
             # Option 7: Look for country sections that might contain documents
