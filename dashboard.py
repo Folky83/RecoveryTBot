@@ -318,13 +318,6 @@ class DashboardManager:
     def _load_documents(self) -> None:
         """Load documents from the document cache file"""
         try:
-            if not os.path.exists(DOCUMENTS_CACHE_FILE):
-                logger.warning(f"Documents cache file not found: {DOCUMENTS_CACHE_FILE}")
-                return
-
-            with open(DOCUMENTS_CACHE_FILE, 'r') as f:
-                raw_documents = json.load(f)
-
             # Initialize an empty dictionary to store documents by company
             self.documents = {}
             total_documents = 0
@@ -336,6 +329,26 @@ class DashboardManager:
             for company in self.companies:
                 company_name_mapping[company.id] = company.name
                 company_id_by_name[company.name.lower()] = company.id
+                
+                # Initialize empty document list for all companies
+                self.documents[company.id] = []
+            
+            # Create company ID from name function for reuse
+            def create_company_id_from_name(name):
+                import re
+                company_id = re.sub(r'[^a-z0-9]', '-', name.lower())
+                company_id = re.sub(r'-+', '-', company_id).strip('-')
+                return company_id
+            
+            # If document cache file doesn't exist, we'll just use empty lists for all companies
+            if not os.path.exists(DOCUMENTS_CACHE_FILE):
+                logger.warning(f"Documents cache file not found: {DOCUMENTS_CACHE_FILE}")
+                # We've already initialized empty document lists for all companies
+                return
+            
+            # Load the documents
+            with open(DOCUMENTS_CACHE_FILE, 'r') as f:
+                raw_documents = json.load(f)
             
             # Handle both formats - the old dict format and the new list format
             if isinstance(raw_documents, list):
@@ -353,9 +366,7 @@ class DashboardManager:
                     
                     # If not found, create a slugified version of the company name
                     if not company_id:
-                        import re
-                        company_id = re.sub(r'[^a-z0-9]', '-', company_name.lower())
-                        company_id = re.sub(r'-+', '-', company_id).strip('-')
+                        company_id = create_company_id_from_name(company_name)
                     
                     # Initialize company document list if needed
                     if company_id not in documents_by_company:
@@ -441,7 +452,10 @@ class DashboardManager:
                         )
                         total_documents += len(document_list)
             
-            logger.info(f"Loaded {total_documents} documents for {len(self.documents)} companies")
+            # Count companies with actual documents
+            companies_with_docs = sum(1 for docs in self.documents.values() if docs)
+            
+            logger.info(f"Loaded {total_documents} documents for {companies_with_docs} companies (total companies: {len(self.documents)})")
         except Exception as e:
             logger.error(f"Error loading documents: {e}", exc_info=True)
             self.documents = {}
