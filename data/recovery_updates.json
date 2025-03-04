@@ -1015,6 +1015,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-02-28",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>A payment of &euro;82K is expected to be processed by the end of today. We expect CAPEM to make the next payment by 14 March 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-21",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -4845,6 +4861,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-02-28",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We expect Dinerito Xtra to make the next payment of &euro;445k by 10 March 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-21",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -8666,6 +8698,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-02-28",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We received &euro;34k this week. We expect Finclusion to make the next payment by 15 March 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-21",
                         "recoveredAmount": null,
@@ -15739,6 +15787,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-02-28",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We mutually agreed with Rapidcredit to wind down the cooperation by the end of April 2025. We expect to receive the next payment in March.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-21",
                         "recoveredAmount": null,
