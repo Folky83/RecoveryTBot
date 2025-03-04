@@ -2414,12 +2414,16 @@ class MintosBot:
             # Load document data to check if there are any documents
             document_data = {}
             try:
-                document_cache_path = os.path.join(self.document_scraper.CACHE_DIR, self.document_scraper.DOCUMENTS_CACHE_FILE)
+                document_cache_path = "data/documents_cache.json"
+                logger.info(f"Loading documents from {document_cache_path} for company selection")
                 if os.path.exists(document_cache_path):
                     with open(document_cache_path, 'r', encoding='utf-8') as f:
                         document_data = json.load(f)
+                        logger.info(f"Successfully loaded document data with {len(document_data)} companies for selection")
+                else:
+                    logger.error(f"Document cache file not found at {document_cache_path}")
             except Exception as e:
-                logger.error(f"Error loading document data: {e}")
+                logger.error(f"Error loading document data for company selection: {e}", exc_info=True)
                 document_data = {}
             
             if not document_data:
@@ -2501,12 +2505,16 @@ class MintosBot:
             # Load document data
             document_data = {}
             try:
-                document_cache_path = os.path.join(self.document_scraper.CACHE_DIR, self.document_scraper.DOCUMENTS_CACHE_FILE)
+                document_cache_path = "data/documents_cache.json"
+                logger.info(f"Loading documents from {document_cache_path} for company {company_id}")
                 if os.path.exists(document_cache_path):
                     with open(document_cache_path, 'r', encoding='utf-8') as f:
                         document_data = json.load(f)
+                        logger.info(f"Successfully loaded document data with {len(document_data)} companies")
+                else:
+                    logger.error(f"Document cache file not found at {document_cache_path}")
             except Exception as e:
-                logger.error(f"Error loading document data: {e}")
+                logger.error(f"Error loading document data for company {company_id}: {e}", exc_info=True)
                 
                 # Show error message
                 await query.edit_message_text(
