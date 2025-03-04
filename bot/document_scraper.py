@@ -25,12 +25,7 @@ from bot.config import (
 
 logger = setup_logger("document_scraper")
 
-# Constants
-DATA_DIR = "data"
-DOCUMENTS_FILE = os.path.join(DATA_DIR, "documents.json")
-DOCUMENTS_CACHE_FILE = os.path.join(DATA_DIR, "documents_cache.json")
-SENT_DOCUMENTS_FILE = os.path.join(DATA_DIR, "sent_documents.json")
-BACKUP_SENT_DOCUMENTS_FILE = os.path.join(DATA_DIR, "sent_documents.json.bak")
+# Don't redefine constants already imported from config.py
 
 class DocumentScraper:
     """Scrapes and manages document information from company pages"""
