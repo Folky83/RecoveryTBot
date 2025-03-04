@@ -170,103 +170,85 @@ class DocumentScraper:
         # The simplified approach uses the lending companies details page
         details_url = "https://www.mintos.com/en/lending-companies/#details"
         
-        # Try using direct API endpoints first (most reliable)
-        api_endpoints = [
-            # Main lending companies API endpoint
-            "https://www.mintos.com/api/en/lending-companies/",
-            "https://www.mintos.com/api/en/loan-originators/",
-            # Alternative URLs with different formats
-            "https://www.mintos.com/api/loan-originators/",
-            "https://www.mintos.com/api/lending-companies/"
+        # Try using a more direct web scraping approach with the main lending companies page
+        # This approach will look for company links in the main pages
+        logger.info("Using direct web scraping approach to find company URLs")
+        
+        # Pages to check for company links
+        pages_to_check = [
+            "https://www.mintos.com/en/loan-originators/",
+            "https://www.mintos.com/en/lending-companies/",
+            "https://www.mintos.com/en/investing/"
         ]
         
-        logger.info("Trying direct API approach first")
-        for endpoint in api_endpoints:
-            try:
-                logger.info(f"Fetching data from API endpoint: {endpoint}")
-                response = self.session.get(endpoint, timeout=self.REQUEST_TIMEOUT)
+        found_urls = 0
+        
+        # Try each page
+        for page_url in pages_to_check:
+            if found_urls > 0:
+                # If we already found some URLs, skip remaining pages
+                break
                 
-                if response.status_code == 200:
-                    try:
-                        # Try to parse JSON response
-                        data = response.json()
-                        logger.info(f"Successfully got JSON data from API: {endpoint}")
-                        
-                        # Process different API response formats
-                        if isinstance(data, list):
-                            # Direct list of companies
-                            for company in data:
-                                if isinstance(company, dict):
-                                    company_id = company.get('id') or company.get('slug')
-                                    company_name = company.get('name')
-                                    company_url = company.get('url')
-                                    
-                                    if company_id and company_name:
-                                        # Convert ID to string if it's numeric
-                                        company_id = str(company_id)
-                                        
-                                        # Create URL if not provided
-                                        if not company_url:
-                                            company_url = f"https://www.mintos.com/en/loan-originators/{company_id}/"
-                                        
-                                        # Ensure URL is absolute
-                                        if not company_url.startswith('http'):
-                                            if company_url.startswith('/'):
-                                                company_url = f"https://www.mintos.com{company_url}"
-                                            else:
-                                                company_url = f"https://www.mintos.com/{company_url}"
-                                        
-                                        # Add to our results
-                                        company_urls[company_id] = {
-                                            'name': company_name,
-                                            'url': company_url
-                                        }
-                                        logger.debug(f"Added company from API list: {company_name} ({company_id})")
-                        
-                        elif isinstance(data, dict):
-                            # Look for companies in different possible nested structures
-                            for key in ['data', 'companies', 'lenders', 'loan_originators', 'results', 'items']:
-                                if key in data and isinstance(data[key], list):
-                                    companies_list = data[key]
-                                    for company in companies_list:
-                                        if isinstance(company, dict):
-                                            company_id = company.get('id') or company.get('slug')
-                                            company_name = company.get('name')
-                                            company_url = company.get('url')
-                                            
-                                            if company_id and company_name:
-                                                # Convert ID to string if it's numeric
-                                                company_id = str(company_id)
-                                                
-                                                # Create URL if not provided
-                                                if not company_url:
-                                                    company_url = f"https://www.mintos.com/en/loan-originators/{company_id}/"
-                                                
-                                                # Ensure URL is absolute
-                                                if not company_url.startswith('http'):
-                                                    if company_url.startswith('/'):
-                                                        company_url = f"https://www.mintos.com{company_url}"
-                                                    else:
-                                                        company_url = f"https://www.mintos.com/{company_url}"
-                                                
-                                                # Add to our results
-                                                company_urls[company_id] = {
-                                                    'name': company_name,
-                                                    'url': company_url
-                                                }
-                                                logger.debug(f"Added company from API nested structure: {company_name} ({company_id})")
-                        
-                        if company_urls:
-                            logger.info(f"Successfully found {len(company_urls)} companies from API endpoint: {endpoint}")
-                            break  # Exit loop if we found companies
+            try:
+                logger.info(f"Fetching main page: {page_url}")
+                html_content = self._make_request(page_url)
+                
+                if html_content:
+                    soup = BeautifulSoup(html_content, 'html.parser')
+                    
+                    # Look for links that might be company pages
+                    for link in soup.find_all('a', href=True):
+                        href = link['href']
+                        if '/loan-originators/' in href or '/lending-companies/' in href:
+                            # Extract company ID from URL
+                            url_str = href
+                            if isinstance(url_str, str):
+                                if url_str.endswith('/'):
+                                    url_str = url_str[:-1]  # Remove trailing slash
+                                path_parts = url_str.split('/')
+                                company_id = path_parts[-1] if path_parts else None
+                            else:
+                                logger.warning(f"Non-string URL encountered: {href}")
+                                company_id = None
                             
-                    except json.JSONDecodeError:
-                        logger.warning(f"Invalid JSON response from API endpoint: {endpoint}")
+                            # Skip main category pages and invalid IDs
+                            if (not company_id or
+                                company_id in ['loan-originators', 'lending-companies', 'details', '#details'] or
+                                '?' in company_id or
+                                '#' in company_id or
+                                company_id.isdigit()):
+                                continue
+                            
+                            # Get company name from link text
+                            company_name = link.get_text().strip()
+                            if not company_name or len(company_name) < 2:
+                                company_name = company_id.replace('-', ' ').title()
+                            
+                            # Ensure URL is absolute
+                            if not href.startswith('http'):
+                                if href.startswith('/'):
+                                    href = f"https://www.mintos.com{href}"
+                                else:
+                                    href = f"https://www.mintos.com/{href}"
+                            
+                            # Add to our results if not already present
+                            if company_id not in company_urls:
+                                company_urls[company_id] = {
+                                    'name': company_name,
+                                    'url': href
+                                }
+                                found_urls += 1
+                                logger.debug(f"Added company from main page: {company_name} ({company_id}) - {href}")
+                            
+                    if company_urls:
+                        logger.info(f"Successfully found {len(company_urls)} companies from main page")
+                    else:
+                        logger.warning(f"No company links found in {page_url}")
                 else:
-                    logger.warning(f"API request failed with status code {response.status_code}: {endpoint}")
+                    logger.warning(f"Failed to fetch page content from {page_url}")
                     
             except Exception as e:
-                logger.error(f"Error accessing API endpoint {endpoint}: {e}", exc_info=True)
+                logger.error(f"Error scraping page {page_url}: {e}", exc_info=True)
         
         # If API approach didn't work, try with requests-html for JS rendering
         if not company_urls:
