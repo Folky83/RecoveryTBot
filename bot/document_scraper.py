@@ -417,6 +417,29 @@ class DocumentScraper:
         logger.info(f"Found {len(company_urls)} total company URLs")
         return company_urls
             
+    def _load_company_fallback_mapping(self) -> Dict[str, Dict[str, str]]:
+        """Load company fallback mapping from JSON file
+        
+        This mapping provides alternative company IDs for companies that have
+        been renamed or have special URL patterns.
+        
+        Returns:
+            Dictionary mapping original company IDs to alternative IDs
+        """
+        try:
+            mapping_file = "company_fallback_mapping.json"
+            if os.path.exists(mapping_file):
+                with open(mapping_file, 'r', encoding='utf-8') as f:
+                    mapping = json.load(f)
+                logger.info(f"Loaded company fallback mapping: {len(mapping)} companies")
+                return mapping
+            else:
+                logger.debug("No company fallback mapping file found")
+                return {}
+        except Exception as e:
+            logger.error(f"Error loading company fallback mapping: {e}", exc_info=True)
+            return {}
+    
     def _generate_url_variations(self, company_id: str, company_name: str) -> List[str]:
         """Generate multiple URL variations for a company
         
@@ -427,6 +450,20 @@ class DocumentScraper:
         Returns:
             List of possible URLs to try
         """
+        # Load fallback mapping for companies that have been renamed
+        fallback_mapping = self._load_company_fallback_mapping()
+        
+        # Check if we have a special fallback for this company
+        if company_id in fallback_mapping:
+            fallback_info = fallback_mapping[company_id]
+            redirect_id = fallback_info.get("redirect_id")
+            if redirect_id:
+                logger.info(f"Using fallback for {company_id}: redirecting to {redirect_id} ({fallback_info.get('notes', '')})")
+                company_id = redirect_id
+                # Update company name if provided
+                if fallback_info.get("redirect_name"):
+                    company_name = fallback_info.get("redirect_name")
+        
         # Create variations of the company ID
         id_variations = [company_id]
         
@@ -455,12 +492,10 @@ class DocumentScraper:
         # Remove duplicates
         id_variations = list(set(id_variations))
         
-        # Base URL patterns
+        # Base URL patterns - No /documents URLs as they don't exist
         base_patterns = [
             "https://www.mintos.com/en/lending-companies/{}",
-            "https://www.mintos.com/en/lending-companies/{}/documents",
             "https://www.mintos.com/en/loan-originators/{}",
-            "https://www.mintos.com/en/loan-originators/{}/documents",
             "https://www.mintos.com/en/investing/loan-originators/{}",
             "https://www.mintos.com/en/investing/lending-companies/{}"
         ]
@@ -513,70 +548,8 @@ class DocumentScraper:
                     logger.info(f"Found {len(documents)} documents at {company_url}")
                     return documents
                     
-                # If no documents found on the main page, try to find documents on alternate paths
-                if '/' in company_url:
-                    # Try multiple potential document page patterns
-                    document_page_patterns = [
-                        "/documents",                  # Standard documents path
-                        "/loan-originator-documents",  # Another common pattern 
-                        "/documents-and-reports",      # Alternative naming
-                        "/company-documents",          # Another possibility
-                        "/investor-documents",         # Investor specific documents
-                        "/financial-reports",          # Financial documents
-                        "/annual-reports",             # Annual reports
-                    ]
-                    
-                    base_url = '/'.join(company_url.rstrip('/').split('/')[:-1])
-                    
-                    for pattern in document_page_patterns:
-                        documents_url = f"{base_url}{pattern}"
-                        if documents_url in tried_urls:
-                            continue
-                        
-                        tried_urls.add(documents_url)
-                        logger.debug(f"Trying document subpage: {documents_url}")
-                        
-                        # Try with JavaScript rendering first
-                        html_content = self._make_request(documents_url, use_js_rendering=True)
-                        if html_content:
-                            logger.info(f"Successfully fetched content from {documents_url} with JS rendering")
-                            documents = self._parse_documents(html_content, company_name)
-                            if documents:
-                                logger.info(f"Found {len(documents)} documents at {documents_url} with JS rendering")
-                                return documents
-                        
-                        # Fall back to regular request
-                        html_content = self._make_request(documents_url)
-                        if html_content:
-                            logger.info(f"Successfully fetched content from {documents_url}")
-                            documents = self._parse_documents(html_content, company_name)
-                            if documents:
-                                logger.info(f"Found {len(documents)} documents at {documents_url}")
-                                return documents
-                    
-                    # Also try company page with /documents appended directly
-                    direct_documents_url = f"{company_url.rstrip('/')}/documents"
-                    if direct_documents_url != f"{base_url}/documents" and direct_documents_url not in tried_urls:  # Skip if we already tried this
-                        tried_urls.add(direct_documents_url)
-                        logger.debug(f"Trying direct documents URL: {direct_documents_url}")
-                        
-                        # Try with JavaScript rendering first
-                        html_content = self._make_request(direct_documents_url, use_js_rendering=True)
-                        if html_content:
-                            logger.info(f"Successfully fetched content from {direct_documents_url} with JS rendering")
-                            documents = self._parse_documents(html_content, company_name)
-                            if documents:
-                                logger.info(f"Found {len(documents)} documents at {direct_documents_url} with JS rendering")
-                                return documents
-                        
-                        # Fall back to regular request
-                        html_content = self._make_request(direct_documents_url)
-                        if html_content:
-                            logger.info(f"Successfully fetched content from {direct_documents_url}")
-                            documents = self._parse_documents(html_content, company_name)
-                            if documents:
-                                logger.info(f"Found {len(documents)} documents at {direct_documents_url}")
-                                return documents
+                # The documents should be embedded in the main company page, 
+                # no need to try subpaths with /documents as they don't exist
         
         # Generate all possible URL variations and try them
         urls_to_try = self._generate_url_variations(company_id, company_name)
