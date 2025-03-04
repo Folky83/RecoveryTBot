@@ -15,6 +15,7 @@ logger.info("Starting Streamlit Dashboard")
 UPDATES_FILE = os.path.join('data', 'recovery_updates.json')
 CAMPAIGNS_FILE = os.path.join('data', 'campaigns.json')
 COMPANY_URLS_FILE = os.path.join('data', 'company_urls_cache.json')
+COMPANY_URLS_MANUAL_FILE = os.path.join('data', 'company_urls_manual.json')  # Manual URL list
 DOCUMENTS_CACHE_FILE = os.path.join('data', 'documents_cache.json')
 COMPANY_NAMES_CSV = os.path.join('attached_assets', 'lo_names.csv')
 CACHE_REFRESH_SECONDS = 900  # 15 minutes
@@ -215,7 +216,7 @@ class DashboardManager:
             self.campaigns = []
             
     def _load_companies(self) -> None:
-        """Load company information from URL cache file and company names from CSV"""
+        """Load company information from URL cache files and company names from CSV"""
         try:
             # First load the company names from CSV
             company_names = {}
@@ -231,38 +232,85 @@ class DashboardManager:
             else:
                 logger.warning(f"Company names CSV file not found: {COMPANY_NAMES_CSV}")
             
-            # Then load company URLs
-            if not os.path.exists(COMPANY_URLS_FILE):
-                logger.warning(f"Company URLs file not found: {COMPANY_URLS_FILE}")
-                return
-
-            with open(COMPANY_URLS_FILE, 'r') as f:
-                raw_companies = json.load(f)
-
-            self.companies = []
-            for company_id, company_data in raw_companies.items():
-                # Try to find a matching name in the CSV data first
-                name = None
+            # Load the manual company URL list
+            manual_companies = {}
+            if os.path.exists(COMPANY_URLS_MANUAL_FILE):
                 try:
-                    # Convert string ID to int if it's numeric
+                    with open(COMPANY_URLS_MANUAL_FILE, 'r') as f:
+                        manual_companies = json.load(f)
+                    logger.info(f"Loaded {len(manual_companies)} companies from manual URL list")
+                except json.JSONDecodeError:
+                    logger.warning(f"Could not parse manual company URLs file: {COMPANY_URLS_MANUAL_FILE}")
+                except Exception as e:
+                    logger.warning(f"Error loading manual company URLs: {e}")
+            else:
+                logger.warning(f"Manual company URLs file not found: {COMPANY_URLS_MANUAL_FILE}")
+            
+            # Then load auto-generated company URLs
+            raw_companies = {}
+            if os.path.exists(COMPANY_URLS_FILE):
+                try:
+                    with open(COMPANY_URLS_FILE, 'r') as f:
+                        raw_companies = json.load(f)
+                    logger.info(f"Loaded {len(raw_companies)} companies from URL cache")
+                except json.JSONDecodeError:
+                    logger.warning(f"Could not parse company URLs file: {COMPANY_URLS_FILE}")
+                except Exception as e:
+                    logger.warning(f"Error loading company URLs: {e}")
+            else:
+                logger.warning(f"Company URLs file not found: {COMPANY_URLS_FILE}")
+
+            # Merge company information from all sources
+            self.companies = []
+            
+            # Process auto-generated company data
+            for company_id, company_data in raw_companies.items():
+                # Try to find matching name in different sources with priority:
+                # 1. CSV file (numeric IDs)
+                # 2. Manual URL list (by ID match)
+                # 3. URL cache data or formatted ID as fallback
+                
+                name = None
+                url = company_data.get('url', '')
+                
+                # 1. Try CSV data for numeric IDs
+                try:
                     if company_id.isdigit():
                         name = company_names.get(int(company_id))
                 except (ValueError, TypeError):
                     pass
                 
-                # If no name found in CSV, use the one from URL cache or format the ID
+                # 2. Try manual URL list - check if the ID is in the manual list
+                manual_company = manual_companies.get(company_id)
+                if manual_company:
+                    if not name:  # Only use manual name if we didn't find one in CSV
+                        name = manual_company.get('name')
+                    if not url:   # Use manual URL if we don't have one
+                        url = manual_company.get('url', '')
+                
+                # 3. Use URL cache name or formatted ID as fallback
                 if not name:
                     name = company_data.get('name', company_id.replace('-', ' ').title())
                 
                 self.companies.append(Company(
                     id=company_id,
                     name=name,
-                    url=company_data.get('url', '')
+                    url=url
                 ))
+            
+            # Add any companies from the manual list that weren't in the auto-generated data
+            existing_ids = {company.id for company in self.companies}
+            for company_id, company_data in manual_companies.items():
+                if company_id not in existing_ids:
+                    self.companies.append(Company(
+                        id=company_id,
+                        name=company_data.get('name', company_id.replace('-', ' ').title()),
+                        url=company_data.get('url', '')
+                    ))
 
             # Sort companies by name
             self.companies.sort(key=lambda x: x.name)
-            logger.info(f"Loaded {len(self.companies)} companies from URL cache")
+            logger.info(f"Loaded {len(self.companies)} companies total after merging all sources")
         except Exception as e:
             logger.error(f"Error loading companies: {e}", exc_info=True)
             self.companies = []
