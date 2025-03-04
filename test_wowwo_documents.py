@@ -1,99 +1,73 @@
-#!/usr/bin/env python3
-import os
-import sys
+"""
+Test script for document extraction from Wowwo
+This tests the improved document scraper with a specific company.
+"""
+import json
 import logging
-import requests
-from bs4 import BeautifulSoup
 from datetime import datetime
+from bot.document_scraper import DocumentScraper
+from bot.logger import setup_logger
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-)
-logger = logging.getLogger('wowwo_documents_test')
+# Set up logger
+logger = setup_logger("test_wowwo_documents")
 
 def test_wowwo_documents():
     """Test fetching documents specifically for Wowwo company"""
-    logger.info("Testing Wowwo company document extraction")
+    logger.info("Starting document scraping test for Wowwo")
     
-    # Wowwo URL
-    url = "https://www.mintos.com/en/lending-companies/wowwo/"
+    # Create document scraper instance
+    scraper = DocumentScraper()
     
+    # Use a known working URL for testing
+    company_id = "wowwo"
+    company_name = "Wowwo"
+    company_url = "https://www.mintos.com/en/loan-originators/wowwo/"
+    
+    # Time the document extraction
+    start_time = datetime.now()
+    logger.info(f"Starting document extraction at {start_time}")
+    
+    # Try to extract documents
+    documents = scraper.get_company_documents(company_id, company_name, company_url)
+    
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    
+    logger.info(f"Document extraction completed in {duration:.2f} seconds")
+    logger.info(f"Found {len(documents)} documents for {company_name}")
+    
+    # Save results to a file for inspection
+    output_file = f"{company_id}_documents_test_results.json"
     try:
-        # Fetch the company page
-        logger.info(f"Fetching Wowwo company page from {url}")
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        html_content = response.text
-        
-        # Parse HTML content
-        soup = BeautifulSoup(html_content, 'html.parser')
-        
-        # Find all PDF links on the page
-        pdf_links = []
-        for link in soup.find_all('a'):
-            href = link.get('href', '')
-            if href and href.lower().endswith('.pdf'):
-                title = link.get_text(strip=True)
-                if not title:
-                    # Try to get title from the filename
-                    filename = href.split('/')[-1]
-                    title = filename.replace('-', ' ').replace('_', ' ').replace('.pdf', '')
-                
-                pdf_links.append({
-                    'title': title,
-                    'url': href if href.startswith('http') else f"https://www.mintos.com{href}" if href.startswith('/') else f"https://www.mintos.com/{href}"
-                })
-        
-        # Log results
-        logger.info(f"Found {len(pdf_links)} PDF links on Wowwo page")
-        for i, link in enumerate(pdf_links, 1):
-            logger.info(f"  Link {i}: {link['title']} - {link['url']}")
-            
-        # Analyze document titles for country-specific terms
-        country_terms = [
-            'turkey', 'turkish', 'europe', 'european', 'asia', 'asian',
-            'middle east', 'country', 'region', 'location'
-        ]
-        
-        country_specific_docs = []
-        for link in pdf_links:
-            title_lower = link['title'].lower()
-            if any(term in title_lower for term in country_terms):
-                country_specific_docs.append(link)
-                
-        logger.info(f"Found {len(country_specific_docs)} country-specific documents based on title")
-        for i, doc in enumerate(country_specific_docs, 1):
-            logger.info(f"  Country Document {i}: {doc['title']} - {doc['url']}")
-            
-        # Get company metadata
-        company_info = {}
-        
-        # Try to find company description
-        description_elem = soup.select_one('.company-description') or soup.select_one('.description')
-        if description_elem:
-            company_info['description'] = description_elem.get_text(strip=True)
-            
-        # Try to find company country of operations
-        country_elem = None
-        for elem in soup.find_all(['p', 'div', 'li']):
-            text = elem.get_text(strip=True).lower()
-            if 'country' in text or 'countries' in text or 'operations in' in text:
-                country_elem = elem
-                break
-                
-        if country_elem:
-            company_info['countries'] = country_elem.get_text(strip=True)
-            
-        logger.info("Company metadata:")
-        for key, value in company_info.items():
-            logger.info(f"  {key}: {value}")
-        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(documents, f, indent=2)
+        logger.info(f"Results saved to {output_file}")
     except Exception as e:
-        logger.error(f"Error: {e}")
-        
-    logger.info("Test completed")
+        logger.error(f"Error saving results: {e}")
+    
+    # Print a sample of the results
+    logger.info("Sample of extracted documents:")
+    sample_count = min(5, len(documents))
+    
+    for i, doc in enumerate(documents[:sample_count]):
+        logger.info(f"Document {i+1}:")
+        logger.info(f"  - Title: {doc.get('title', 'N/A')}")
+        logger.info(f"  - Date: {doc.get('date', 'N/A')}")
+        logger.info(f"  - Type: {doc.get('type', 'N/A')}")
+        logger.info(f"  - URL: {doc.get('url', 'N/A')}")
+    
+    return documents
 
 if __name__ == "__main__":
-    test_wowwo_documents()
+    documents = test_wowwo_documents()
+    print(f"\nFound {len(documents)} documents for Wowwo")
+    print("Sample of the first 5 documents found:")
+    
+    sample_count = min(5, len(documents))
+    
+    for i, doc in enumerate(documents[:sample_count]):
+        print(f"\nDocument {i+1}:")
+        print(f"  - Title: {doc.get('title', 'N/A')}")
+        print(f"  - Date: {doc.get('date', 'N/A')}")
+        print(f"  - Type: {doc.get('type', 'N/A')}")
+        print(f"  - URL: {doc.get('url', 'N/A')}")

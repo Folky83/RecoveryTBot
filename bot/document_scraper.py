@@ -67,11 +67,75 @@ class DocumentScraper:
         except Exception as e:
             logger.error(f"Error saving documents data: {e}", exc_info=True)
             
-    def _make_request(self, url: str) -> Optional[str]:
-        """Make an HTTP request with retries and error handling"""
+    def _make_request(self, url: str, use_js_rendering: bool = False) -> Optional[str]:
+        """Make an HTTP request with retries, error handling, and optional JavaScript rendering
+        
+        Args:
+            url: URL to request
+            use_js_rendering: Whether to use requests-html with JavaScript rendering
+            
+        Returns:
+            HTML content as string or None if request failed
+        """
         max_retries = 3
         retry_delay = 2
         
+        # Try using requests-html with JavaScript rendering if requested
+        if use_js_rendering:
+            try:
+                from requests_html import HTMLSession
+                
+                logger.debug(f"Using JavaScript rendering for: {url}")
+                html_session = HTMLSession()
+                
+                for attempt in range(max_retries):
+                    try:
+                        # Use longer timeouts for JavaScript rendering
+                        response = html_session.get(url, timeout=30)
+                        
+                        if response.status_code == 200:
+                            logger.debug(f"Successfully fetched {url}, rendering JavaScript...")
+                            
+                            try:
+                                # Render with JavaScript and wait for any dynamic content
+                                response.html.render(timeout=45, sleep=2)
+                                logger.debug(f"JavaScript rendering successful for {url}")
+                                
+                                html_content = response.html.html
+                                html_session.close()
+                                return html_content
+                            except Exception as js_error:
+                                logger.warning(f"JavaScript rendering failed for {url}: {js_error}")
+                                # Continue with regular content if rendering fails
+                                html_content = response.text
+                                html_session.close()
+                                return html_content
+                        elif response.status_code == 404:
+                            logger.warning(f"Page not found: {url}")
+                            html_session.close()
+                            return None
+                        else:
+                            logger.warning(f"Request failed with status code {response.status_code}: {url}")
+                    except Exception as e:
+                        logger.error(f"Request error for {url}: {e}")
+                        
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                
+                # Close session if it's still open
+                try:
+                    html_session.close()
+                except:
+                    pass
+                    
+                logger.error(f"Max retries reached for {url} with JavaScript rendering")
+                
+            except ImportError:
+                logger.warning("requests-html not available for JavaScript rendering, falling back to regular requests")
+            except Exception as e:
+                logger.error(f"Error using requests-html: {e}")
+        
+        # Fall back to regular requests
         for attempt in range(max_retries):
             try:
                 logger.debug(f"Fetching URL: {url} (attempt {attempt + 1}/{max_retries})")
@@ -369,6 +433,17 @@ class DocumentScraper:
         if company_url:
             # If we have a direct URL, use it
             logger.debug(f"Using provided company URL: {company_url}")
+            
+            # First try with JavaScript rendering for better document detection
+            html_content = self._make_request(company_url, use_js_rendering=True)
+            if html_content:
+                logger.info(f"Successfully fetched content from {company_url} with JS rendering")
+                documents = self._parse_documents(html_content, company_name)
+                if documents:
+                    logger.info(f"Found {len(documents)} documents at {company_url} with JS rendering")
+                    return documents
+            
+            # Fall back to regular request if JS rendering fails or finds no documents
             html_content = self._make_request(company_url)
             if html_content:
                 logger.info(f"Successfully fetched content from {company_url}")
@@ -396,6 +471,16 @@ class DocumentScraper:
                         documents_url = f"{base_url}{pattern}"
                         logger.debug(f"Trying document subpage: {documents_url}")
                         
+                        # Try with JavaScript rendering first
+                        html_content = self._make_request(documents_url, use_js_rendering=True)
+                        if html_content:
+                            logger.info(f"Successfully fetched content from {documents_url} with JS rendering")
+                            documents = self._parse_documents(html_content, company_name)
+                            if documents:
+                                logger.info(f"Found {len(documents)} documents at {documents_url} with JS rendering")
+                                return documents
+                        
+                        # Fall back to regular request
                         html_content = self._make_request(documents_url)
                         if html_content:
                             logger.info(f"Successfully fetched content from {documents_url}")
@@ -408,6 +493,17 @@ class DocumentScraper:
                     direct_documents_url = f"{company_url.rstrip('/')}/documents"
                     if direct_documents_url != f"{base_url}/documents":  # Skip if we already tried this
                         logger.debug(f"Trying direct documents URL: {direct_documents_url}")
+                        
+                        # Try with JavaScript rendering first
+                        html_content = self._make_request(direct_documents_url, use_js_rendering=True)
+                        if html_content:
+                            logger.info(f"Successfully fetched content from {direct_documents_url} with JS rendering")
+                            documents = self._parse_documents(html_content, company_name)
+                            if documents:
+                                logger.info(f"Found {len(documents)} documents at {direct_documents_url} with JS rendering")
+                                return documents
+                        
+                        # Fall back to regular request
                         html_content = self._make_request(direct_documents_url)
                         if html_content:
                             logger.info(f"Successfully fetched content from {direct_documents_url}")
@@ -427,6 +523,16 @@ class DocumentScraper:
         for url in common_patterns:
             logger.debug(f"Trying fallback URL: {url}")
             
+            # Try with JavaScript rendering first
+            html_content = self._make_request(url, use_js_rendering=True)
+            if html_content:
+                logger.info(f"Successfully fetched content from {url} with JS rendering")
+                documents = self._parse_documents(html_content, company_name)
+                if documents:
+                    logger.info(f"Found {len(documents)} documents at {url} with JS rendering")
+                    return documents
+            
+            # Fall back to regular request
             html_content = self._make_request(url)
             if html_content:
                 logger.info(f"Successfully fetched content from {url}")
