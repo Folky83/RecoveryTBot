@@ -14,6 +14,7 @@ logger.info("Starting Streamlit Dashboard")
 UPDATES_FILE = os.path.join('data', 'recovery_updates.json')
 CAMPAIGNS_FILE = os.path.join('data', 'campaigns.json')
 COMPANY_URLS_FILE = os.path.join('data', 'company_urls_cache.json')
+DOCUMENTS_CACHE_FILE = os.path.join('data', 'documents_cache.json')
 CACHE_REFRESH_SECONDS = 900  # 15 minutes
 
 def _convert_to_float(value: Any) -> Optional[float]:
@@ -59,6 +60,17 @@ class Campaign:
     type: Optional[int] = None
     
 @dataclass
+class Document:
+    """Represents a company document"""
+    title: str
+    url: str
+    date: str
+    company_name: str
+    document_type: Optional[str] = None
+    country_info: Optional[Dict[str, Any]] = None
+    id: Optional[str] = None
+
+@dataclass
 class Company:
     """Represents a Mintos lending company"""
     id: str
@@ -71,9 +83,11 @@ class DashboardManager:
         self.updates: List[CompanyUpdate] = []
         self.campaigns: List[Campaign] = []
         self.companies: List[Company] = []
+        self.documents: Dict[str, List[Document]] = {}
         self._load_updates()
         self._load_campaigns()
         self._load_companies()
+        self._load_documents()
 
     def _load_updates(self) -> None:
         """Load updates from file"""
@@ -203,6 +217,64 @@ class DashboardManager:
         except Exception as e:
             logger.error(f"Error loading company URLs: {e}", exc_info=True)
             self.companies = []
+            
+    def _load_documents(self) -> None:
+        """Load documents from the document cache file"""
+        try:
+            if not os.path.exists(DOCUMENTS_CACHE_FILE):
+                logger.warning(f"Documents cache file not found: {DOCUMENTS_CACHE_FILE}")
+                return
+
+            with open(DOCUMENTS_CACHE_FILE, 'r') as f:
+                raw_documents = json.load(f)
+
+            # Initialize an empty dictionary to store documents by company
+            self.documents = {}
+            total_documents = 0
+            
+            # Process each company's documents
+            for company_id, docs in raw_documents.items():
+                if not docs:  # Skip empty document lists
+                    continue
+                    
+                company_name = None
+                document_list = []
+                
+                # Process each document
+                for doc in docs:
+                    # Get company name from the first document if available
+                    if company_name is None and 'company_name' in doc:
+                        company_name = doc['company_name']
+                    
+                    # Create document object
+                    document_list.append(Document(
+                        title=doc.get('title', 'Untitled Document'),
+                        url=doc.get('url', ''),
+                        date=doc.get('date', 'Unknown Date'),
+                        company_name=doc.get('company_name', company_id.replace('-', ' ').title()),
+                        document_type=doc.get('document_type', None),
+                        country_info=doc.get('country_info', None),
+                        id=doc.get('id', None)
+                    ))
+                
+                # If we have documents, add them to the dictionary
+                if document_list:
+                    # Use company_name from documents if available, otherwise format company_id
+                    if company_name is None:
+                        company_name = company_id.replace('-', ' ').title()
+                        
+                    # Store documents sorted by date (newest first)
+                    self.documents[company_id] = sorted(
+                        document_list, 
+                        key=lambda x: x.date if x.date else '', 
+                        reverse=True
+                    )
+                    total_documents += len(document_list)
+            
+            logger.info(f"Loaded {total_documents} documents for {len(self.documents)} companies")
+        except Exception as e:
+            logger.error(f"Error loading documents: {e}", exc_info=True)
+            self.documents = {}
 
     def render_dashboard(self) -> None:
         """Render the main dashboard"""
@@ -211,8 +283,13 @@ class DashboardManager:
             self._apply_custom_css()
             self._render_header()
 
-            # Create tabs for recovery updates, company information, and campaigns
-            tab1, tab2, tab3 = st.tabs(["Recovery Updates", "Lending Companies", "Active Campaigns"])
+            # Create tabs for recovery updates, company information, documents, and campaigns
+            tab1, tab2, tab3, tab4 = st.tabs([
+                "Recovery Updates", 
+                "Lending Companies", 
+                "Company Documents", 
+                "Active Campaigns"
+            ])
             
             with tab1:
                 if not self.updates:
@@ -223,8 +300,11 @@ class DashboardManager:
             
             with tab2:
                 self._render_companies()
-            
+                
             with tab3:
+                self._render_documents_tab()
+            
+            with tab4:
                 if not self.campaigns:
                     st.warning("⚠️ No active campaigns available yet.")
                     st.info("The Telegram bot will automatically collect campaign data.")
@@ -388,9 +468,8 @@ class DashboardManager:
                             
                             # Add button to view documents
                             if st.button("View Documents", key=f"docs_{company.id}"):
-                                # This would open a modal or redirect to documents page
-                                # For now, just show a message
-                                st.info(f"Document viewer for {company.name} is not implemented yet.")
+                                # Show documents for this company if available
+                                self._render_company_documents(company.id, company.name)
                                 
                             # Display updates for this company if available
                             company_updates = [u for u in self.updates if u.company_name.lower() == company.name.lower()]
@@ -429,6 +508,118 @@ class DashboardManager:
                                     # Add link to updates tab
                                     st.markdown("[See all updates](#Recovery-Updates)")
     
+    def _render_documents_tab(self) -> None:
+        """Render the documents tab with company selection and documents view"""
+        st.subheader("📄 Company Documents")
+        
+        if not self.documents:
+            st.warning("⚠️ No documents available yet")
+            st.info("The Telegram bot will automatically collect document data from Mintos.")
+            return
+        
+        # Add company selector
+        companies = []
+        for company_id, docs in self.documents.items():
+            if docs:  # Only include companies with documents
+                # Get company name from the first document or use ID
+                company_name = docs[0].company_name if docs else company_id.replace('-', ' ').title()
+                companies.append((company_id, company_name))
+                
+        # Sort companies by name
+        companies.sort(key=lambda x: x[1])
+        
+        # Create selection box
+        company_names = [name for _, name in companies]
+        company_ids = [cid for cid, _ in companies]
+        
+        if not company_names:
+            st.warning("⚠️ No companies with documents found")
+            return
+            
+        selected_idx = st.selectbox(
+            "Select a company to view documents:",
+            range(len(company_names)),
+            format_func=lambda i: company_names[i]
+        )
+        
+        # Get selected company ID and name
+        selected_id = company_ids[selected_idx]
+        selected_name = company_names[selected_idx]
+        
+        # Display documents for the selected company
+        self._render_company_documents(selected_id, selected_name)
+    
+    def _render_company_documents(self, company_id: str, company_name: str) -> None:
+        """Render documents for a specific company
+        
+        Args:
+            company_id: The ID of the company
+            company_name: The name of the company
+        """
+        # Create a header for the document section
+        st.markdown(f"## 📄 Documents for {company_name}")
+        
+        # Check if we have documents for this company
+        if company_id not in self.documents or not self.documents[company_id]:
+            st.info(f"No documents found for {company_name}. The Telegram bot will automatically collect documents.")
+            return
+        
+        # Group documents by type or category if possible
+        documents = self.documents[company_id]
+        
+        # Create document type categories for better organization
+        document_categories = {}
+        
+        # Initialize standard categories
+        standard_categories = [
+            "financial", "presentation", "regulatory", "agreement", "general"
+        ]
+        for category in standard_categories:
+            document_categories[category] = []
+        
+        # Group documents by category
+        for doc in documents:
+            doc_type = doc.document_type or "general"
+            if doc_type not in document_categories:
+                document_categories[doc_type] = []
+            document_categories[doc_type].append(doc)
+        
+        # Display documents by category with appropriate emojis
+        category_emojis = {
+            "financial": "💰",
+            "presentation": "📊",
+            "regulatory": "⚖️",
+            "agreement": "📝",
+            "general": "📄"
+        }
+        
+        # Get the list of categories that actually have documents
+        active_categories = [cat for cat, docs in document_categories.items() if docs]
+        
+        # If there are at least 3 categories, use a tabbed interface
+        if len(active_categories) >= 3:
+            tabs = st.tabs([f"{category_emojis.get(cat, '📄')} {cat.capitalize()}" 
+                          for cat in active_categories])
+            
+            for i, category in enumerate(active_categories):
+                with tabs[i]:
+                    for doc in document_categories[category]:
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            st.markdown(f"[{doc.title}]({doc.url})")
+                        with col2:
+                            st.caption(f"Date: {doc.date}")
+                        st.markdown("---")
+        else:
+            # For fewer categories, use expanders
+            for category in active_categories:
+                with st.expander(f"{category_emojis.get(category, '📄')} {category.capitalize()} Documents", expanded=True):
+                    for doc in document_categories[category]:
+                        st.markdown(f"📎 [{doc.title}]({doc.url}) - {doc.date}")
+        
+        # Show total document count
+        st.caption(f"Total documents: {len(documents)}")
+        
     def _render_campaigns(self) -> None:
         """Render active campaigns"""
         st.subheader("🎯 Active Mintos Campaigns")
