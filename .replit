@@ -18,11 +18,25 @@ mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Dashboard"
+args = "Telegram Bot"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Telegram Bot"
+args = "Dashboard"
+
+[[workflows.workflow]]
+name = "Telegram Bot"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python start_bot.py"
 
 [[workflows.workflow]]
 name = "Dashboard"
@@ -38,20 +52,6 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "streamlit run dashboard.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"
 waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Telegram Bot"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python start_bot.py"
 
 [[ports]]
 localPort = 5000
