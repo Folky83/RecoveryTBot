@@ -187,6 +187,7 @@ class MintosBot:
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
             CommandHandler("documents", self.documents_command), # Show recent documents
+            CommandHandler("company_documents", self.company_documents_command), # Show documents by company
             CommandHandler("check_documents", self.check_documents_command), # Manually check for new documents
             CommandHandler("help", self.help_command), # Help command
             CallbackQueryHandler(self.handle_callback)
@@ -441,6 +442,7 @@ class MintosBot:
             "• /today - View all updates from today\n"
             "• /campaigns - View current Mintos campaigns\n"
             "• /documents - View recent company documents\n"
+            "• /company_documents - Filter documents by company\n"
             "• /check_documents - Manually check for new documents\n"
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
@@ -605,6 +607,14 @@ class MintosBot:
                 )
                 return
                 
+            elif query.data.startswith("doc_company_"):
+                # Extract company ID from callback data
+                company_id = query.data.split("_")[2]
+                
+                # Show documents for this company only
+                await self._show_company_documents(update, company_id)
+                return
+                
             elif query.data.startswith("trigger_today_"):
                 # Extract channel ID from callback data
                 target_channel = query.data.split("_")[2]
@@ -766,6 +776,11 @@ class MintosBot:
             elif query.data == "view_all_documents":
                 # Simulate /documents command
                 await self.documents_command(update, context)
+                return
+            
+            elif query.data == "company_documents_back":
+                # Return to company documents selection
+                await self.company_documents_command(update, context)
                 return
             
             elif query.data == "cancel":
@@ -2123,6 +2138,7 @@ class MintosBot:
             "/today - View all updates from today\n"
             "/campaigns - View current Mintos campaigns\n"
             "/documents - View recent company documents\n"
+            "/company_documents - Filter documents by company\n"
             "/check_documents - Manually check for new documents\n"
             "/trigger_today @channel - Send today's updates to a specified channel\n"
         )
@@ -2370,6 +2386,183 @@ class MintosBot:
             await self.send_message(
                 chat_id,
                 f"⚠️ Error checking documents: {str(e)}",
+                disable_web_page_preview=True
+            )
+
+    async def company_documents_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /company_documents command - show documents filtered by company"""
+        if not update.effective_chat or not update.message:
+            return
+            
+        chat_id = update.effective_chat.id
+        try:
+            # Try to delete the command message, continue if not possible
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+            
+            # Load document data to check if there are any documents
+            document_data = {}
+            try:
+                document_cache_path = os.path.join(self.document_scraper.CACHE_DIR, self.document_scraper.DOCUMENTS_CACHE_FILE)
+                if os.path.exists(document_cache_path):
+                    with open(document_cache_path, 'r', encoding='utf-8') as f:
+                        document_data = json.load(f)
+            except Exception as e:
+                logger.error(f"Error loading document data: {e}")
+                document_data = {}
+            
+            if not document_data:
+                await self.send_message(
+                    chat_id,
+                    "❓ No document data available. Use /check_documents to fetch the latest documents.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Create company buttons for selection - only show companies that have documents
+            company_buttons = []
+            
+            # Get companies that have documents
+            companies_with_docs = []
+            for company_id in document_data:
+                # Only add company if it has documents
+                if document_data[company_id]:
+                    company_name = self.data_manager.get_company_name(company_id) or company_id
+                    companies_with_docs.append((company_id, company_name))
+            
+            # Sort companies by name
+            companies_with_docs.sort(key=lambda x: x[1])
+            
+            # Create buttons, 2 per row
+            for i in range(0, len(companies_with_docs), 2):
+                row = []
+                for company_id, company_name in companies_with_docs[i:i+2]:
+                    row.append(InlineKeyboardButton(
+                        company_name,
+                        callback_data=f"doc_company_{company_id}"
+                    ))
+                company_buttons.append(row)
+            
+            # Add "All Companies" button at the top
+            company_buttons.insert(0, [InlineKeyboardButton("📄 All Companies", callback_data="view_all_documents")])
+            
+            # Add cancel button
+            company_buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
+            
+            if not companies_with_docs:
+                await self.send_message(
+                    chat_id,
+                    "❓ No companies with documents found. Use /check_documents to fetch the latest documents.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Show company selection menu
+            reply_markup = InlineKeyboardMarkup(company_buttons)
+            await self.send_message(
+                chat_id,
+                "📄 <b>Select a company to view documents:</b>",
+                reply_markup=reply_markup,
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in company_documents_command: {e}", exc_info=True)
+            await self.send_message(
+                chat_id,
+                "⚠️ Error retrieving company list. Please try again.",
+                disable_web_page_preview=True
+            )
+    
+    async def _show_company_documents(self, update: Update, company_id: str) -> None:
+        """Show documents for a specific company
+        
+        Args:
+            update: The update object from Telegram
+            company_id: The company ID to show documents for
+        """
+        query = update.callback_query
+        
+        try:
+            # Edit message to show loading
+            await query.edit_message_text("🔄 Loading documents... Please wait.", disable_web_page_preview=True)
+            
+            # Load document data
+            document_data = {}
+            try:
+                document_cache_path = os.path.join(self.document_scraper.CACHE_DIR, self.document_scraper.DOCUMENTS_CACHE_FILE)
+                if os.path.exists(document_cache_path):
+                    with open(document_cache_path, 'r', encoding='utf-8') as f:
+                        document_data = json.load(f)
+            except Exception as e:
+                logger.error(f"Error loading document data: {e}")
+                
+                # Show error message
+                await query.edit_message_text(
+                    "⚠️ Error loading document data. Please try again.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Get company name
+            company_name = self.data_manager.get_company_name(company_id) or company_id
+            
+            # Check if company has documents
+            if company_id not in document_data or not document_data[company_id]:
+                # No documents for this company
+                keyboard = [[InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await query.edit_message_text(
+                    f"❓ No documents found for <b>{company_name}</b>. Use /check_documents to fetch the latest documents.",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Get documents for this company
+            company_docs = document_data[company_id]
+            
+            # Sort by date (newest first)
+            company_docs.sort(key=lambda x: x.get('date', ''), reverse=True)
+            
+            # Take top 10 documents
+            company_docs = company_docs[:10]
+            
+            # Create message with document list
+            message = f"📄 <b>Documents for {company_name}</b>\n\n"
+            for i, doc in enumerate(company_docs, 1):
+                title = doc.get('title', 'Untitled Document')
+                date = doc.get('date', 'Unknown Date')
+                url = doc.get('url', '#')
+                doc_type = doc.get('document_type', '')
+                
+                # Add document type if available
+                type_text = f" ({doc_type})" if doc_type else ""
+                
+                message += f"{i}. <a href='{url}'>{title}</a>{type_text} - {date}\n\n"
+            
+            # Add check documents button and back button
+            keyboard = [
+                [InlineKeyboardButton("🔄 Check for New Documents", callback_data="check_documents")],
+                [InlineKeyboardButton("« Back to Companies", callback_data="company_documents_back")]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(
+                message,
+                reply_markup=reply_markup,
+                parse_mode='HTML',
+                disable_web_page_preview=False  # Enable preview for document links
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in _show_company_documents: {e}", exc_info=True)
+            await query.edit_message_text(
+                "⚠️ Error retrieving documents. Please try again.",
                 disable_web_page_preview=True
             )
 
