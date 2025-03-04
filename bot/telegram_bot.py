@@ -388,7 +388,8 @@ class MintosBot:
         return (
             "🚀 Welcome to Mintos Update Bot!\n\n"
             "📅 Update Schedule:\n"
-            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n\n"
+            "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n"
+            "• Document scraping happens daily\n\n"
             "Available Commands:\n"
             "• /company - Check updates for a specific company\n"
             "• /today - View all updates from today\n"
@@ -396,7 +397,7 @@ class MintosBot:
             "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
             f"{admin_command}\n"
-            "You'll receive updates about lending companies automatically. Stay tuned!"
+            "You'll receive updates about lending companies and new documents automatically. Stay tuned!"
         )
 
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
