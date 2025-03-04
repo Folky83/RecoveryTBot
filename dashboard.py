@@ -84,9 +84,13 @@ class DashboardManager:
         self.campaigns: List[Campaign] = []
         self.companies: List[Company] = []
         self.documents: Dict[str, List[Document]] = {}
+        
+        # Load companies first so we can use them for name mapping
+        self._load_companies()
+        
+        # Then load other data
         self._load_updates()
         self._load_campaigns()
-        self._load_companies()
         self._load_documents()
 
     def _load_updates(self) -> None:
@@ -107,7 +111,22 @@ class DashboardManager:
                 lender_id = update.get('lender_id')
                 
                 # Get company name from the update if available
-                company_name = update.get('company_name', f"Company {lender_id}")
+                company_name = update.get('company_name')
+                
+                # If no company name, try to find it from our company list
+                if not company_name:
+                    # Try to find a matching company by lender_id
+                    for company in self.companies:
+                        try:
+                            if int(company.id) == int(lender_id):
+                                company_name = company.name
+                                break
+                        except (ValueError, TypeError):
+                            pass
+                            
+                # Fallback to a generic name with ID if no match
+                if not company_name:
+                    company_name = f"Company {lender_id}"
 
                 items = []
                 for year_data in update["items"]:
