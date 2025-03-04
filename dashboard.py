@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import os
+import pandas as pd
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ UPDATES_FILE = os.path.join('data', 'recovery_updates.json')
 CAMPAIGNS_FILE = os.path.join('data', 'campaigns.json')
 COMPANY_URLS_FILE = os.path.join('data', 'company_urls_cache.json')
 DOCUMENTS_CACHE_FILE = os.path.join('data', 'documents_cache.json')
+COMPANY_NAMES_CSV = os.path.join('attached_assets', 'lo_names.csv')
 CACHE_REFRESH_SECONDS = 900  # 15 minutes
 
 def _convert_to_float(value: Any) -> Optional[float]:
@@ -213,8 +215,23 @@ class DashboardManager:
             self.campaigns = []
             
     def _load_companies(self) -> None:
-        """Load company information from URL cache file"""
+        """Load company information from URL cache file and company names from CSV"""
         try:
+            # First load the company names from CSV
+            company_names = {}
+            if os.path.exists(COMPANY_NAMES_CSV):
+                try:
+                    df = pd.read_csv(COMPANY_NAMES_CSV)
+                    company_names = df.set_index('id')['name'].to_dict()
+                    logger.info(f"Loaded {len(company_names)} company names from CSV")
+                except pd.errors.EmptyDataError:
+                    logger.warning(f"CSV file {COMPANY_NAMES_CSV} is empty")
+                except pd.errors.ParserError:
+                    logger.warning(f"Could not parse CSV file {COMPANY_NAMES_CSV}")
+            else:
+                logger.warning(f"Company names CSV file not found: {COMPANY_NAMES_CSV}")
+            
+            # Then load company URLs
             if not os.path.exists(COMPANY_URLS_FILE):
                 logger.warning(f"Company URLs file not found: {COMPANY_URLS_FILE}")
                 return
@@ -224,9 +241,22 @@ class DashboardManager:
 
             self.companies = []
             for company_id, company_data in raw_companies.items():
+                # Try to find a matching name in the CSV data first
+                name = None
+                try:
+                    # Convert string ID to int if it's numeric
+                    if company_id.isdigit():
+                        name = company_names.get(int(company_id))
+                except (ValueError, TypeError):
+                    pass
+                
+                # If no name found in CSV, use the one from URL cache or format the ID
+                if not name:
+                    name = company_data.get('name', company_id.replace('-', ' ').title())
+                
                 self.companies.append(Company(
                     id=company_id,
-                    name=company_data.get('name', company_id.replace('-', ' ').title()),
+                    name=name,
                     url=company_data.get('url', '')
                 ))
 
@@ -234,7 +264,7 @@ class DashboardManager:
             self.companies.sort(key=lambda x: x.name)
             logger.info(f"Loaded {len(self.companies)} companies from URL cache")
         except Exception as e:
-            logger.error(f"Error loading company URLs: {e}", exc_info=True)
+            logger.error(f"Error loading companies: {e}", exc_info=True)
             self.companies = []
             
     def _load_documents(self) -> None:
@@ -251,26 +281,41 @@ class DashboardManager:
             self.documents = {}
             total_documents = 0
             
+            # Create a mapping from company ID to company name based on our companies list
+            # This helps to ensure consistent company names across the application
+            company_name_mapping = {}
+            for company in self.companies:
+                company_name_mapping[company.id] = company.name
+            
             # Process each company's documents
             for company_id, docs in raw_documents.items():
                 if not docs:  # Skip empty document lists
                     continue
                     
-                company_name = None
+                # Get company name from our mapping if available
+                company_name = company_name_mapping.get(company_id)
+                
+                # If not in our mapping, try to get it from the first document
+                if company_name is None:
+                    for doc in docs:
+                        if 'company_name' in doc:
+                            company_name = doc['company_name']
+                            break
+                
+                # Fallback to formatting the company ID if still no name
+                if company_name is None:
+                    company_name = company_id.replace('-', ' ').title()
+                
                 document_list = []
                 
                 # Process each document
                 for doc in docs:
-                    # Get company name from the first document if available
-                    if company_name is None and 'company_name' in doc:
-                        company_name = doc['company_name']
-                    
-                    # Create document object
+                    # Create document object with consistent company name
                     document_list.append(Document(
                         title=doc.get('title', 'Untitled Document'),
                         url=doc.get('url', ''),
                         date=doc.get('date', 'Unknown Date'),
-                        company_name=doc.get('company_name', company_id.replace('-', ' ').title()),
+                        company_name=company_name,  # Use consistent company name
                         document_type=doc.get('document_type', None),
                         country_info=doc.get('country_info', None),
                         id=doc.get('id', None)
@@ -278,10 +323,6 @@ class DashboardManager:
                 
                 # If we have documents, add them to the dictionary
                 if document_list:
-                    # Use company_name from documents if available, otherwise format company_id
-                    if company_name is None:
-                        company_name = company_id.replace('-', ' ').title()
-                        
                     # Store documents sorted by date (newest first)
                     self.documents[company_id] = sorted(
                         document_list, 
