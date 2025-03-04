@@ -1,0 +1,27 @@
+{
+  "iuvo": {
+    "redirect_id": "finko",
+    "redirect_name": "Finko (formerly Iuvo)",
+    "notes": "Iuvo was renamed to Finko, all documents should be found under Finko now"
+  },
+  "iuvo-group": {
+    "redirect_id": "finko",
+    "redirect_name": "Finko (formerly Iuvo Group)",
+    "notes": "Iuvo Group was renamed to Finko, all documents should be found under Finko now"
+  },
+  "eleving": {
+    "redirect_id": "mogo",
+    "redirect_name": "Mogo (now Eleving Group)",
+    "notes": "Eleving Group was previously known as Mogo, documents may be found under Mogo"
+  },
+  "eleving-group": {
+    "redirect_id": "mogo",
+    "redirect_name": "Mogo (now Eleving Group)",
+    "notes": "Eleving Group was previously known as Mogo, documents may be found under Mogo"
+  },
+  "delfin-group": {
+    "redirect_id": "delfin",
+    "redirect_name": "Delfin",
+    "notes": "Delfin Group is now known simply as Delfin"
+  }
+}

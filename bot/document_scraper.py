@@ -417,6 +417,63 @@ class DocumentScraper:
         logger.info(f"Found {len(company_urls)} total company URLs")
         return company_urls
             
+    def _generate_url_variations(self, company_id: str, company_name: str) -> List[str]:
+        """Generate multiple URL variations for a company
+        
+        Args:
+            company_id: The ID of the company
+            company_name: The name of the company
+            
+        Returns:
+            List of possible URLs to try
+        """
+        # Create variations of the company ID
+        id_variations = [company_id]
+        
+        # Add variations with spaces/hyphens converted
+        if ' ' in company_id:
+            id_variations.append(company_id.replace(' ', '-'))
+        if '-' in company_id:
+            id_variations.append(company_id.replace('-', ''))
+            id_variations.append(company_id.replace('-', ' '))
+        
+        # Add variations with "group" added/removed
+        if 'group' not in company_id.lower():
+            id_variations.append(f"{company_id}-group")
+            id_variations.append(f"{company_id}group")
+        else:
+            # Try without "group"
+            clean_id = company_id.lower().replace('-group', '').replace('group', '')
+            if clean_id and clean_id != company_id:
+                id_variations.append(clean_id)
+        
+        # Same for company name - create a slug from the name for URL usage
+        name_slug = company_name.lower().replace(' ', '-')
+        if name_slug not in id_variations:
+            id_variations.append(name_slug)
+        
+        # Remove duplicates
+        id_variations = list(set(id_variations))
+        
+        # Base URL patterns
+        base_patterns = [
+            "https://www.mintos.com/en/lending-companies/{}",
+            "https://www.mintos.com/en/lending-companies/{}/documents",
+            "https://www.mintos.com/en/loan-originators/{}",
+            "https://www.mintos.com/en/loan-originators/{}/documents",
+            "https://www.mintos.com/en/investing/loan-originators/{}",
+            "https://www.mintos.com/en/investing/lending-companies/{}"
+        ]
+        
+        # Generate all combinations
+        urls = []
+        for pattern in base_patterns:
+            for variation in id_variations:
+                urls.append(pattern.format(variation))
+        
+        logger.debug(f"Generated {len(urls)} URL variations for {company_name}")
+        return urls
+
     def get_company_documents(self, company_id: str, company_name: str, company_url: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get documents for a specific company
         
@@ -430,9 +487,13 @@ class DocumentScraper:
         """
         logger.info(f"Fetching documents for {company_name} (ID: {company_id})")
         
+        # Track all URLs we've tried to avoid duplication
+        tried_urls = set()
+        
         if company_url:
             # If we have a direct URL, use it
             logger.debug(f"Using provided company URL: {company_url}")
+            tried_urls.add(company_url)
             
             # First try with JavaScript rendering for better document detection
             html_content = self._make_request(company_url, use_js_rendering=True)
@@ -469,6 +530,10 @@ class DocumentScraper:
                     
                     for pattern in document_page_patterns:
                         documents_url = f"{base_url}{pattern}"
+                        if documents_url in tried_urls:
+                            continue
+                        
+                        tried_urls.add(documents_url)
                         logger.debug(f"Trying document subpage: {documents_url}")
                         
                         # Try with JavaScript rendering first
@@ -491,7 +556,8 @@ class DocumentScraper:
                     
                     # Also try company page with /documents appended directly
                     direct_documents_url = f"{company_url.rstrip('/')}/documents"
-                    if direct_documents_url != f"{base_url}/documents":  # Skip if we already tried this
+                    if direct_documents_url != f"{base_url}/documents" and direct_documents_url not in tried_urls:  # Skip if we already tried this
+                        tried_urls.add(direct_documents_url)
                         logger.debug(f"Trying direct documents URL: {direct_documents_url}")
                         
                         # Try with JavaScript rendering first
@@ -512,16 +578,15 @@ class DocumentScraper:
                                 logger.info(f"Found {len(documents)} documents at {direct_documents_url}")
                                 return documents
         
-        # Fallback to common URL patterns if we don't have a URL or it didn't work
-        common_patterns = [
-            f"https://www.mintos.com/en/lending-companies/{company_id}",
-            f"https://www.mintos.com/en/lending-companies/{company_id}/documents",
-            f"https://www.mintos.com/en/loan-originators/{company_id}",
-            f"https://www.mintos.com/en/loan-originators/{company_id}/documents"
-        ]
+        # Generate all possible URL variations and try them
+        urls_to_try = self._generate_url_variations(company_id, company_name)
         
-        for url in common_patterns:
-            logger.debug(f"Trying fallback URL: {url}")
+        # Remove URLs we've already tried
+        urls_to_try = [url for url in urls_to_try if url not in tried_urls]
+        
+        for url in urls_to_try:
+            tried_urls.add(url)
+            logger.debug(f"Trying URL variation: {url}")
             
             # Try with JavaScript rendering first
             html_content = self._make_request(url, use_js_rendering=True)
@@ -541,9 +606,9 @@ class DocumentScraper:
                     logger.info(f"Found {len(documents)} documents at {url}")
                     return documents
                 else:
-                    logger.debug(f"No documents found at {url}, trying next pattern")
+                    logger.debug(f"No documents found at {url}, trying next variation")
         
-        logger.warning(f"Could not find any documents for {company_name} after trying all URLs")
+        logger.warning(f"Could not find any documents for {company_name} after trying {len(tried_urls)} URL variations")
         return []
         
     def _parse_documents(self, html_content: str, company_name: str) -> List[Dict[str, Any]]:
