@@ -1614,17 +1614,24 @@ class MintosBot:
                     message = self.format_document_message(document)
                     await self.send_message(chat_id, message, disable_web_page_preview=True, parse_mode='HTML')
             
-            # Add refresh button
-            keyboard = [[InlineKeyboardButton("🔄 Refresh Documents", callback_data="refresh_documents")]]
+            # Add refresh button with cancel button
+            keyboard = [
+                [InlineKeyboardButton("🔄 Refresh Documents", callback_data="refresh_documents")],
+                [InlineKeyboardButton("❌ Cancel", callback_data="cancel")]
+            ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             cache_age_hours = self.document_scraper.get_cache_age() / 3600
             
+            # Make the message wider with dashes to match other messages
             await self.send_message(
                 chat_id, 
-                f"Document cache is {cache_age_hours:.1f} hours old. Click refresh to check for new documents.",
+                f"📄 <b>Document Information</b>\n\n"
+                f"Document cache is {cache_age_hours:.1f} hours old.\n"
+                f"Use the buttons below to check for new documents or close this menu.",
                 reply_markup=reply_markup,
-                disable_web_page_preview=True
+                disable_web_page_preview=True,
+                parse_mode='HTML'
             )
             
         except Exception as e:
