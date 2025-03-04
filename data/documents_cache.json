@@ -35,7 +35,41 @@
       }
     }
   ],
-  "alexcredit": [],
+  "alexcredit": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/843FAA63-1606-E2D2-2A70-4D0B54CDCC7B.pdf",
+      "date": "2025-03-04",
+      "id": "b94bbfa36a7d803c1d34ab2048e342ba",
+      "company_name": "Alexcredit",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/34B20467-6A69-07E9-CEE5-13AC6ABCE6CF.pdf",
+      "date": "2025-03-04",
+      "id": "9edb0dc235476d1087bbd91e9f4dbd0e",
+      "company_name": "Alexcredit",
+      "document_type": "financial",
+      "country_info": {
+        "is_country_specific": false
+      }
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/F575D59A-7B60-8694-21E8-B83C6F70C7F0.pdf",
+      "date": "2025-03-04",
+      "id": "48dc8ae9b46311a8ba7a965036187df5",
+      "company_name": "Alexcredit",
+      "document_type": "agreement",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
   "alivio-capital": [],
   "avafin": [],
   "capem": [],
@@ -190,8 +224,32 @@
     }
   ],
   "mikro-kapital-uzbekistan": [],
-  "iuvo": [],
-  "iuvo-group": [],
+  "iuvo": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/A62AB5F3-14A6-7732-8506-C49FCFFA89F8.pdf",
+      "date": "2025-03-04",
+      "id": "9efb3153c28801464d8fd3d1c2320093",
+      "company_name": "Iuvo",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
+  "iuvo-group": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/A62AB5F3-14A6-7732-8506-C49FCFFA89F8.pdf",
+      "date": "2025-03-04",
+      "id": "9efb3153c28801464d8fd3d1c2320093",
+      "company_name": "Iuvo Group",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
   "creditstar": [
     {
       "title": "Presentation",
@@ -216,9 +274,89 @@
       }
     }
   ],
-  "creditstar-group": [],
-  "delfin-group": [],
-  "placet-group": [],
+  "creditstar-group": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/685E54EB-4C7D-F8CD-12C7-6DCCC0FF1DBC.pdf",
+      "date": "2025-03-04",
+      "id": "ec0e3231fdbc5a928fc96da0bc15c19d",
+      "company_name": "Creditstar Group",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/4C6EEB99-79D1-D775-6385-7274FD59938B.pdf",
+      "date": "2025-03-04",
+      "id": "e957c49b63b7c956968f36c934086911",
+      "company_name": "Creditstar Group",
+      "document_type": "financial",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
+  "delfin-group": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/F5F8B3E2-5464-2FD7-726C-AB487252B67C.pdf",
+      "date": "2025-03-04",
+      "id": "edd492475571c522acbb4009e4fdc792",
+      "company_name": "Delfin Group",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/1AF4DA95-5404-0356-3B56-D8A1C9C00C9E.pdf",
+      "date": "2025-03-04",
+      "id": "cfaece09532d307e42d2dd165f1b9e69",
+      "company_name": "Delfin Group",
+      "document_type": "financial",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
+  "placet-group": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/1B7A1813-B91D-7F1E-83A0-39FA15056486.pdf",
+      "date": "2025-03-04",
+      "id": "fbc223872f3b016899560f4be428a18e",
+      "company_name": "Placet Group",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    },
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/3A01DEB8-8C82-27E3-E604-6BB69A80EEBF.pdf",
+      "date": "2025-03-04",
+      "id": "7e3ec5fb23784dcc8eb0a58b836111b8",
+      "company_name": "Placet Group",
+      "document_type": "financial",
+      "country_info": {
+        "is_country_specific": false
+      }
+    },
+    {
+      "title": "Loan Agreement",
+      "url": "https://assets.mintos.com/A0329B2F-DB56-7697-79F4-4207C0C10AF5.pdf",
+      "date": "2025-03-04",
+      "id": "eb2a489014613d40a67da7443e945d40",
+      "company_name": "Placet Group",
+      "document_type": "agreement",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
   "capitalia": [
     {
       "title": "Presentation",
@@ -254,7 +392,19 @@
       }
     }
   ],
-  "eleving-group": [],
+  "eleving-group": [
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/7088750D-185F-D96A-67B0-BC4A9565AFA1.pdf",
+      "date": "2025-03-04",
+      "id": "d74b9ed6a2d8e6c3f46d314a8de68164",
+      "company_name": "Eleving Group",
+      "document_type": "financial",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
   "credius": [
     {
       "title": "Presentation",
@@ -408,6 +558,33 @@
       "id": "eb2a489014613d40a67da7443e945d40",
       "company_name": "Placet",
       "document_type": "agreement",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
+  "finko": [
+    {
+      "title": "Presentation",
+      "url": "https://assets.mintos.com/A62AB5F3-14A6-7732-8506-C49FCFFA89F8.pdf",
+      "date": "2025-03-04",
+      "id": "9efb3153c28801464d8fd3d1c2320093",
+      "company_name": "FINKO",
+      "document_type": "presentation",
+      "country_info": {
+        "is_country_specific": false
+      }
+    }
+  ],
+  "iute-group": [],
+  "mogo": [
+    {
+      "title": "Financials",
+      "url": "https://assets.mintos.com/7088750D-185F-D96A-67B0-BC4A9565AFA1.pdf",
+      "date": "2025-03-04",
+      "id": "d74b9ed6a2d8e6c3f46d314a8de68164",
+      "company_name": "Mogo",
+      "document_type": "financial",
       "country_info": {
         "is_country_specific": false
       }
