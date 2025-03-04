@@ -13,4 +13,6 @@ dependencies = [
     "streamlit>=1.41.1",
     "twilio>=9.4.4",
     "watchdog>=6.0.0",
+    "lxml>=5.3.1",
+    "lxml-html-clean>=0.4.1",
 ]
