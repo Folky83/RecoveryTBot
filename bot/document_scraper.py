@@ -170,60 +170,44 @@ class DocumentScraper:
         # The simplified approach uses the lending companies details page
         details_url = "https://www.mintos.com/en/lending-companies/#details"
         
-        # First try with requests-html for better JS support
-        try:
-            from requests_html import HTMLSession
-            
-            logger.info(f"Fetching details page with JS support: {details_url}")
-            html_session = HTMLSession()
-            
+        # Try using direct API endpoints first (most reliable)
+        api_endpoints = [
+            # Main lending companies API endpoint
+            "https://www.mintos.com/api/en/lending-companies/",
+            "https://www.mintos.com/api/en/loan-originators/",
+            # Alternative URLs with different formats
+            "https://www.mintos.com/api/loan-originators/",
+            "https://www.mintos.com/api/lending-companies/"
+        ]
+        
+        logger.info("Trying direct API approach first")
+        for endpoint in api_endpoints:
             try:
-                response = html_session.get(details_url, timeout=30)
+                logger.info(f"Fetching data from API endpoint: {endpoint}")
+                response = self.session.get(endpoint, timeout=self.REQUEST_TIMEOUT)
                 
-                # Render JavaScript content (important for this page)
-                response.html.render(timeout=45, sleep=2)
-                logger.info("Successfully rendered details page with JavaScript")
-                
-                # Parse the details page - the lending company details are in a table
-                soup = BeautifulSoup(response.html.html, 'html.parser')
-                
-                # Look for the table with lending company information
-                tables = soup.select('table')
-                if tables:
-                    logger.info(f"Found {len(tables)} tables on the page")
-                    
-                    # Process each table to find company information
-                    for table_index, table in enumerate(tables):
-                        logger.debug(f"Processing table {table_index+1}")
+                if response.status_code == 200:
+                    try:
+                        # Try to parse JSON response
+                        data = response.json()
+                        logger.info(f"Successfully got JSON data from API: {endpoint}")
                         
-                        # Look for table rows with company information
-                        rows = table.select('tbody tr')
-                        logger.debug(f"Table {table_index+1} has {len(rows)} rows")
-                        
-                        for row in rows:
-                            try:
-                                # Each row should have cells with company info
-                                cells = row.select('td')
-                                if len(cells) >= 2:  # Need at least name and possibly a link
-                                    # First cell usually contains the company name and link
-                                    name_cell = cells[0]
-                                    company_link = name_cell.select_one('a')
+                        # Process different API response formats
+                        if isinstance(data, list):
+                            # Direct list of companies
+                            for company in data:
+                                if isinstance(company, dict):
+                                    company_id = company.get('id') or company.get('slug')
+                                    company_name = company.get('name')
+                                    company_url = company.get('url')
                                     
-                                    if company_link and company_link.has_attr('href'):
-                                        company_url = company_link['href']
-                                        company_name = company_link.text.strip()
+                                    if company_id and company_name:
+                                        # Convert ID to string if it's numeric
+                                        company_id = str(company_id)
                                         
-                                        # Extract company ID from URL
-                                        path_parts = company_url.rstrip('/').split('/')
-                                        company_id = path_parts[-1] if len(path_parts) > 0 else None
-                                        
-                                        # Skip if not a valid company page
-                                        if (not company_id or
-                                            company_id in ['loan-originators', 'lending-companies', 'details', '#details'] or
-                                            '?' in company_id or
-                                            '#' in company_id or
-                                            company_id.isdigit()):
-                                            continue
+                                        # Create URL if not provided
+                                        if not company_url:
+                                            company_url = f"https://www.mintos.com/en/loan-originators/{company_id}/"
                                         
                                         # Ensure URL is absolute
                                         if not company_url.startswith('http'):
@@ -232,87 +216,212 @@ class DocumentScraper:
                                             else:
                                                 company_url = f"https://www.mintos.com/{company_url}"
                                         
-                                        # Add to our results if not already present
-                                        if company_id not in company_urls:
-                                            company_urls[company_id] = {
-                                                'name': company_name,
-                                                'url': company_url
-                                            }
-                                            logger.debug(f"Added company from details table: {company_name} ({company_id}) - {company_url}")
-                            except Exception as e:
-                                logger.warning(f"Error processing table row: {e}")
-                                continue
+                                        # Add to our results
+                                        company_urls[company_id] = {
+                                            'name': company_name,
+                                            'url': company_url
+                                        }
+                                        logger.debug(f"Added company from API list: {company_name} ({company_id})")
+                        
+                        elif isinstance(data, dict):
+                            # Look for companies in different possible nested structures
+                            for key in ['data', 'companies', 'lenders', 'loan_originators', 'results', 'items']:
+                                if key in data and isinstance(data[key], list):
+                                    companies_list = data[key]
+                                    for company in companies_list:
+                                        if isinstance(company, dict):
+                                            company_id = company.get('id') or company.get('slug')
+                                            company_name = company.get('name')
+                                            company_url = company.get('url')
+                                            
+                                            if company_id and company_name:
+                                                # Convert ID to string if it's numeric
+                                                company_id = str(company_id)
+                                                
+                                                # Create URL if not provided
+                                                if not company_url:
+                                                    company_url = f"https://www.mintos.com/en/loan-originators/{company_id}/"
+                                                
+                                                # Ensure URL is absolute
+                                                if not company_url.startswith('http'):
+                                                    if company_url.startswith('/'):
+                                                        company_url = f"https://www.mintos.com{company_url}"
+                                                    else:
+                                                        company_url = f"https://www.mintos.com/{company_url}"
+                                                
+                                                # Add to our results
+                                                company_urls[company_id] = {
+                                                    'name': company_name,
+                                                    'url': company_url
+                                                }
+                                                logger.debug(f"Added company from API nested structure: {company_name} ({company_id})")
+                        
+                        if company_urls:
+                            logger.info(f"Successfully found {len(company_urls)} companies from API endpoint: {endpoint}")
+                            break  # Exit loop if we found companies
+                            
+                    except json.JSONDecodeError:
+                        logger.warning(f"Invalid JSON response from API endpoint: {endpoint}")
                 else:
-                    logger.warning("No tables found on the details page")
+                    logger.warning(f"API request failed with status code {response.status_code}: {endpoint}")
                     
-                # Also try to extract company links directly from the page
-                # This works if the page structure changes but still contains company links
-                company_links = response.html.links
-                link_count = 0
-                
-                for link in company_links:
-                    if '/loan-originators/' in link or '/lending-companies/' in link:
-                        link_count += 1
-                        # Extract company ID from URL
-                        path_parts = link.rstrip('/').split('/')
-                        company_id = path_parts[-1] if len(path_parts) > 0 else None
-                        
-                        # Skip main category pages and invalid IDs
-                        if (not company_id or
-                            company_id in ['loan-originators', 'lending-companies', 'details', '#details'] or
-                            '?' in company_id or
-                            '#' in company_id or
-                            company_id.isdigit()):
-                            continue
-                        
-                        # Convert relative URL to absolute
-                        if not link.startswith('http'):
-                            if link.startswith('/'):
-                                link = f"https://www.mintos.com{link}"
-                            else:
-                                link = f"https://www.mintos.com/{link}"
-                        
-                        # Find the element with this link to get the name
-                        elements = response.html.find(f'a[href*="{company_id}"]')
-                        company_name = None
-                        
-                        if elements:
-                            # Get text from the first matching element
-                            element_text = elements[0].text.strip()
-                            if element_text and len(element_text) > 1:
-                                company_name = element_text
-                        
-                        # Fallback to ID-based name if element text not found
-                        if not company_name:
-                            company_name = company_id.replace('-', ' ').title()
-                        
-                        # Add to our results if not already present
-                        if company_id not in company_urls:
-                            company_urls[company_id] = {
-                                'name': company_name,
-                                'url': link
-                            }
-                            logger.debug(f"Added company using direct link: {company_name} ({company_id}) - {link}")
-                
-                logger.debug(f"Processed {link_count} company-related links")
-                
-                # Close the session
-                html_session.close()
-                
             except Exception as e:
-                logger.error(f"Error rendering/scraping details page with requests-html: {e}", exc_info=True)
+                logger.error(f"Error accessing API endpoint {endpoint}: {e}", exc_info=True)
+        
+        # If API approach didn't work, try with requests-html for JS rendering
+        if not company_urls:
+            try:
+                from requests_html import HTMLSession
+                
+                logger.info(f"Fetching details page with JS support: {details_url}")
+                html_session = HTMLSession()
+                
                 try:
+                    response = html_session.get(details_url, timeout=30)
+                    
+                    # Render JavaScript content (important for this page)
+                    response.html.render(timeout=45, sleep=2)
+                    logger.info("Successfully rendered details page with JavaScript")
+                    
+                    # Parse the details page - the lending company details are in a table
+                    soup = BeautifulSoup(response.html.html, 'html.parser')
+                    
+                    # Look for the table with lending company information
+                    tables = soup.select('table')
+                    if tables:
+                        logger.info(f"Found {len(tables)} tables on the page")
+                        
+                        # Process each table to find company information
+                        for table_index, table in enumerate(tables):
+                            logger.debug(f"Processing table {table_index+1}")
+                            
+                            # Look for table rows with company information
+                            rows = table.select('tbody tr')
+                            logger.debug(f"Table {table_index+1} has {len(rows)} rows")
+                            
+                            for row in rows:
+                                try:
+                                    # Each row should have cells with company info
+                                    cells = row.select('td')
+                                    if len(cells) >= 2:  # Need at least name and possibly a link
+                                        # First cell usually contains the company name and link
+                                        name_cell = cells[0]
+                                        company_link = name_cell.select_one('a')
+                                        
+                                        if company_link and company_link.has_attr('href'):
+                                            company_url = company_link['href']
+                                            company_name = company_link.text.strip()
+                                            
+                                            # Extract company ID from URL
+                                            url_str = company_url
+                                            if url_str.endswith('/'):
+                                                url_str = url_str[:-1]  # Remove trailing slash
+                                            path_parts = url_str.split('/')
+                                            company_id = path_parts[-1] if len(path_parts) > 0 else None
+                                            
+                                            # Skip if not a valid company page
+                                            if (not company_id or
+                                                company_id in ['loan-originators', 'lending-companies', 'details', '#details'] or
+                                                '?' in company_id or
+                                                '#' in company_id or
+                                                company_id.isdigit()):
+                                                continue
+                                            
+                                            # Ensure URL is absolute
+                                            if not company_url.startswith('http'):
+                                                if company_url.startswith('/'):
+                                                    company_url = f"https://www.mintos.com{company_url}"
+                                                else:
+                                                    company_url = f"https://www.mintos.com/{company_url}"
+                                            
+                                            # Add to our results if not already present
+                                            if company_id not in company_urls:
+                                                company_urls[company_id] = {
+                                                    'name': company_name,
+                                                    'url': company_url
+                                                }
+                                                logger.debug(f"Added company from details table: {company_name} ({company_id}) - {company_url}")
+                                except Exception as e:
+                                    logger.warning(f"Error processing table row: {e}")
+                                    continue
+                    else:
+                        logger.warning("No tables found on the details page")
+                        
+                    # Also try to extract company links directly from the page
+                    # This works if the page structure changes but still contains company links
+                    company_links = response.html.links
+                    link_count = 0
+                    
+                    for link in company_links:
+                        if '/loan-originators/' in link or '/lending-companies/' in link:
+                            link_count += 1
+                            # Extract company ID from URL
+                            url_str = link
+                            if isinstance(url_str, str):
+                                if url_str.endswith('/'):
+                                    url_str = url_str[:-1]  # Remove trailing slash
+                                path_parts = url_str.split('/')
+                                company_id = path_parts[-1] if len(path_parts) > 0 else None
+                            else:
+                                logger.warning(f"Non-string URL encountered: {link}")
+                                company_id = None
+                            
+                            # Skip main category pages and invalid IDs
+                            if (not company_id or
+                                company_id in ['loan-originators', 'lending-companies', 'details', '#details'] or
+                                '?' in company_id or
+                                '#' in company_id or
+                                company_id.isdigit()):
+                                continue
+                            
+                            # Convert relative URL to absolute
+                            if not link.startswith('http'):
+                                if link.startswith('/'):
+                                    link = f"https://www.mintos.com{link}"
+                                else:
+                                    link = f"https://www.mintos.com/{link}"
+                            
+                            # Find the element with this link to get the name
+                            elements = response.html.find(f'a[href*="{company_id}"]')
+                            company_name = None
+                            
+                            if elements:
+                                # Get text from the first matching element
+                                element_text = elements[0].text.strip()
+                                if element_text and len(element_text) > 1:
+                                    company_name = element_text
+                            
+                            # Fallback to ID-based name if element text not found
+                            if not company_name:
+                                company_name = company_id.replace('-', ' ').title()
+                            
+                            # Add to our results if not already present
+                            if company_id not in company_urls:
+                                company_urls[company_id] = {
+                                    'name': company_name,
+                                    'url': link
+                                }
+                                logger.debug(f"Added company using direct link: {company_name} ({company_id}) - {link}")
+                    
+                    logger.debug(f"Processed {link_count} company-related links")
+                    
+                    # Close the session
                     html_session.close()
-                except:
-                    pass
-            
-            if company_urls:
-                logger.info(f"Successfully found {len(company_urls)} companies using requests-html")
-            
-        except ImportError:
-            logger.warning("requests-html not available, will use regular requests")
-        except Exception as e:
-            logger.error(f"Error using requests-html: {e}", exc_info=True)
+                    
+                except Exception as e:
+                    logger.error(f"Error rendering/scraping details page with requests-html: {e}", exc_info=True)
+                    try:
+                        html_session.close()
+                    except:
+                        pass
+                
+                if company_urls:
+                    logger.info(f"Successfully found {len(company_urls)} companies using requests-html")
+                
+            except ImportError:
+                logger.warning("requests-html not available, will use regular requests")
+            except Exception as e:
+                logger.error(f"Error using requests-html: {e}", exc_info=True)
         
         # If we still don't have companies, try with regular requests
         if not company_urls:
@@ -327,8 +436,15 @@ class DocumentScraper:
                         href = link['href']
                         if '/loan-originators/' in href or '/lending-companies/' in href:
                             # Extract company ID from URL
-                            path_parts = href.rstrip('/').split('/')
-                            company_id = path_parts[-1] if len(path_parts) > 0 else None
+                            url_str = href
+                            if isinstance(url_str, str):
+                                if url_str.endswith('/'):
+                                    url_str = url_str[:-1]  # Remove trailing slash
+                                path_parts = url_str.split('/')
+                                company_id = path_parts[-1] if len(path_parts) > 0 else None
+                            else:
+                                logger.warning(f"Non-string URL encountered: {href}")
+                                company_id = None
                             
                             # Skip main category pages and invalid IDs
                             if (not company_id or
