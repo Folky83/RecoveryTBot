@@ -6,7 +6,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "gce"
-run = ["sh", "-c", "python3 run.py"]
+run = ["sh", "-c", "streamlit run dashboard.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"]
 
 [workflows]
 runButton = "Project"
@@ -18,25 +18,7 @@ mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Telegram Bot"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Dashboard"
-
-[[workflows.workflow]]
-name = "Telegram Bot"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python run.py"
 
 [[workflows.workflow]]
 name = "Dashboard"
@@ -50,7 +32,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run dashboard.py"
+args = "streamlit run dashboard.py --server.port=5000 --server.address=0.0.0.0 --server.headless=true"
 waitForPort = 5000
 
 [[ports]]

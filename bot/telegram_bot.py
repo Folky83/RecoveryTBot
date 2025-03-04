@@ -2444,9 +2444,16 @@ class MintosBot:
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
             
+            # Load company mapping to get all companies
+            company_mapping = self.data_manager.load_company_mapping()
+            
             # Load document data to check if there are any documents
             document_data = []
             documents_by_company = {}
+            
+            # Initialize documents_by_company with all companies from mapping
+            for company_id, company_name in company_mapping.items():
+                documents_by_company[company_id] = []
             
             try:
                 document_cache_path = "data/documents_cache.json"
@@ -2473,11 +2480,19 @@ class MintosBot:
                                 
                                 documents_by_company[company_id].append(doc)
                             
-                            logger.info(f"Successfully loaded document data with {len(documents_by_company)} companies for selection")
+                            # Count companies that actually have documents
+                            companies_with_docs_count = sum(1 for docs in documents_by_company.values() if docs)
+                            logger.info(f"Successfully loaded document data with {companies_with_docs_count} companies with documents (total: {len(documents_by_company)})")
                         else:
                             # Old format - direct dictionary
-                            documents_by_company = document_data
-                            logger.info(f"Successfully loaded document data with {len(documents_by_company)} companies for selection")
+                            # Add existing documents to our initialized dictionary
+                            for company_id, docs in document_data.items():
+                                if docs:  # Only add if there are documents
+                                    documents_by_company[company_id] = docs
+                            
+                            # Count companies with docs
+                            companies_with_docs_count = sum(1 for docs in documents_by_company.values() if docs)
+                            logger.info(f"Successfully loaded document data with {companies_with_docs_count} companies with documents (total: {len(documents_by_company)})")
                 else:
                     logger.error(f"Document cache file not found at {document_cache_path}")
             except Exception as e:
@@ -2492,58 +2507,53 @@ class MintosBot:
                 )
                 return
             
-            # Create company buttons for selection - only show companies that have documents
+            # Create company buttons for selection
             company_buttons = []
             
-            # Get companies that have documents
-            companies_with_docs = []
+            # Get all companies, not just those with documents
+            all_companies = []
             for company_id, docs in documents_by_company.items():
-                # Only add company if it has documents
-                if docs:
-                    company_name = self.data_manager.get_company_name(company_id) or company_id
+                company_name = self.data_manager.get_company_name(company_id) or company_id
+                
+                # If we don't have a name from data_manager but have docs, try to get from first document
+                if company_name == company_id and docs and 'company_name' in docs[0]:
+                    company_name = docs[0]['company_name']
+                
+                # Format company ID as fallback if needed
+                if company_name == company_id:
+                    company_name = company_id.replace('-', ' ').title()
                     
-                    # If we don't have a name from data_manager, try to get from first document
-                    if company_name == company_id and docs and 'company_name' in docs[0]:
-                        company_name = docs[0]['company_name']
-                    
-                    # Format company ID as fallback if needed
-                    if company_name == company_id:
-                        company_name = company_id.replace('-', ' ').title()
-                        
-                    companies_with_docs.append((company_id, company_name))
+                # Show a document indicator for companies with documents
+                has_docs = bool(docs)
+                display_name = f"{company_name} 📄" if has_docs else company_name
+                
+                all_companies.append((company_id, display_name, has_docs))
             
-            # Sort companies by name
-            companies_with_docs.sort(key=lambda x: x[1])
+            # Sort companies by name, with companies with documents first
+            all_companies.sort(key=lambda x: (not x[2], x[1]))
             
             # Create buttons, 2 per row
-            for i in range(0, len(companies_with_docs), 2):
+            for i in range(0, len(all_companies), 2):
                 row = []
-                for company_id, company_name in companies_with_docs[i:i+2]:
+                for company_id, display_name, _ in all_companies[i:i+2]:
                     row.append(InlineKeyboardButton(
-                        company_name,
+                        display_name,
                         callback_data=f"doc_company_{company_id}"
                     ))
                 company_buttons.append(row)
             
             # Add "All Companies" button at the top
-            company_buttons.insert(0, [InlineKeyboardButton("📄 All Companies", callback_data="view_all_documents")])
+            company_buttons.insert(0, [InlineKeyboardButton("📄 All Documents", callback_data="view_all_documents")])
             
             # Add cancel button
             company_buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
-            
-            if not companies_with_docs:
-                await self.send_message(
-                    chat_id,
-                    "❓ No companies with documents found. Use /check_documents to fetch the latest documents.",
-                    disable_web_page_preview=True
-                )
-                return
             
             # Show company selection menu
             reply_markup = InlineKeyboardMarkup(company_buttons)
             await self.send_message(
                 chat_id,
-                "📄 <b>Select a company to view documents:</b>",
+                "📄 <b>Select a company to view documents:</b>\n"
+                "Companies with documents are marked with 📄",
                 reply_markup=reply_markup,
                 disable_web_page_preview=True
             )
