@@ -1,0 +1,8 @@
+{
+  "tests": {
+    "iuvo_finko": true,
+    "eleving_mogo": true,
+    "creditstar": true
+  },
+  "success_rate": 100.0
+}
