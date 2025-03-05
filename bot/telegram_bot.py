@@ -182,12 +182,12 @@ class MintosBot:
             CommandHandler("start", self.start_command),
             CommandHandler("company", self.company_command),
             CommandHandler("today", self.today_command),
-            CommandHandler("refresh", self.refresh_command),
             CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("documents", self.documents_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
+            CommandHandler("refresh", self.refresh_command), # Admin only - moved to admin section
             CallbackQueryHandler(self.handle_callback)
         ]
 
@@ -386,7 +386,12 @@ class MintosBot:
 
     def _create_welcome_message(self, show_admin: bool = False) -> str:
         """Create formatted welcome message"""
-        admin_command = "• /admin - Admin control panel\n" if show_admin else ""
+        admin_commands = ""
+        if show_admin:
+            admin_commands = (
+                "• /admin - Admin control panel\n"
+                "• /refresh - Force an immediate update check\n"
+            )
         
         return (
             "🚀 Welcome to Mintos Update Bot!\n\n"
@@ -398,9 +403,8 @@ class MintosBot:
             "• /today - View all updates from today\n"
             "• /campaigns - View current Mintos campaigns\n"
             "• /documents - View recent company documents\n"
-            "• /refresh - Force an immediate update check\n"
             "• /start - Show this welcome message\n"
-            f"{admin_command}\n"
+            f"{admin_commands}\n"
             "You'll receive updates about lending companies and new documents automatically. Stay tuned!"
         )
 
@@ -472,6 +476,19 @@ class MintosBot:
                 except Exception as e:
                     logger.error(f"Error during refresh from callback: {e}")
                     await query.edit_message_text("⚠️ Error refreshing updates. Please try again.", disable_web_page_preview=True)
+                return
+                
+            elif query.data == "use_current_cache":
+                chat_id = update.effective_chat.id
+                await query.edit_message_text("Using current cached data...", disable_web_page_preview=True)
+                
+                try:
+                    # Create a fresh update but use existing context
+                    new_update = Update(update.update_id, message=update.effective_message)
+                    await self.today_command(new_update, context)
+                except Exception as e:
+                    logger.error(f"Error displaying cached updates: {e}")
+                    await query.edit_message_text("⚠️ Error displaying updates. Please try again.", disable_web_page_preview=True)
                 return
                 
             elif query.data == "refresh_documents":
@@ -579,6 +596,66 @@ class MintosBot:
                 )
                 return
                 
+            elif query.data == "admin_refresh_updates":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Edit message to show processing
+                await query.edit_message_text("🔄 Refreshing updates, please wait...", disable_web_page_preview=True)
+                
+                try:
+                    # Force update check regardless of hour
+                    await self._safe_update_check()
+                    
+                    # Add back button
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    # Get cache information
+                    cache_age_minutes = int(self.data_manager.get_cache_age() / 60) if not math.isinf(self.data_manager.get_cache_age()) else float('inf')
+                    
+                    # Format cache age for display
+                    if math.isinf(cache_age_minutes):
+                        cache_age_text = "Unknown"
+                    else:
+                        hours = cache_age_minutes // 60
+                        minutes = cache_age_minutes % 60
+                        if hours > 0:
+                            cache_age_text = f"{hours}h {minutes}m"
+                        else:
+                            cache_age_text = f"{minutes}m"
+                    
+                    # Get updates count
+                    updates = self.data_manager.load_previous_updates()
+                    update_count = len(updates) if updates else 0
+                    
+                    await query.edit_message_text(
+                        f"✅ <b>Update check completed successfully!</b>\n\n"
+                        f"📊 Total companies in cache: {update_count}\n"
+                        f"⏱️ Cache freshness: {cache_age_text}\n\n"
+                        f"<i>Updates are checked automatically on weekdays at 3-5 PM UTC.</i>",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True,
+                        parse_mode='HTML'
+                    )
+                except Exception as e:
+                    logger.error(f"Error refreshing updates: {e}", exc_info=True)
+                    # Add back button
+                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    await query.edit_message_text(
+                        f"⚠️ <b>Error refreshing updates</b>\n\n"
+                        f"{str(e)}\n\n"
+                        f"<i>Please check the logs for more information.</i>",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True,
+                        parse_mode='HTML'
+                    )
+                return
+                
             elif query.data == "admin_refresh_documents":
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
@@ -669,8 +746,9 @@ class MintosBot:
                 # Return to admin panel
                 keyboard = [
                     [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
-                    [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+                    [InlineKeyboardButton("🔄 Refresh Updates", callback_data="admin_refresh_updates")],
                     [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
+                    [InlineKeyboardButton("📤 Send Today's Updates", callback_data="admin_trigger_today")],
                     [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
@@ -1580,11 +1658,29 @@ class MintosBot:
     _refresh_cooldown_minutes = 10
 
     async def refresh_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Force an immediate update check with cooldown period"""
-        if not update.effective_chat:
+        """Force an immediate update check with cooldown period (admin only)"""
+        if not update.effective_chat or not update.effective_user:
             return
 
         chat_id = update.effective_chat.id
+        user_id = update.effective_user.id
+        
+        # Check if user is admin
+        if not await self.is_admin(user_id):
+            logger.warning(f"Non-admin user {user_id} attempted to use /refresh command")
+            await self.send_message(
+                chat_id,
+                "⚠️ This command is only available to administrators.", 
+                disable_web_page_preview=True
+            )
+            # Try to delete the command message
+            try:
+                if update.message:
+                    await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+            return
+            
         current_time = datetime.now()
 
         # Try to delete the command message, continue if not possible
@@ -2207,8 +2303,9 @@ class MintosBot:
         # Create admin panel with inline keyboard
         keyboard = [
             [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
-            [InlineKeyboardButton("🔄 Send Today's Updates to Channel", callback_data="admin_trigger_today")],
+            [InlineKeyboardButton("🔄 Refresh Updates", callback_data="admin_refresh_updates")],
             [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
+            [InlineKeyboardButton("📤 Send Today's Updates", callback_data="admin_trigger_today")],
             [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
