@@ -2311,9 +2311,12 @@ class MintosBot:
         reply_markup = InlineKeyboardMarkup(keyboard)
         await self.send_message(
             chat_id,
-            "🔐 <b>Admin Control Panel</b>\n\nPlease select an admin function:",
+            "🔐 <b>Admin Control Panel</b>\n\n"
+            "Please select an admin function:\n\n"
+            "<i>You can also use /refresh command directly to force an immediate update check.</i>",
             reply_markup=reply_markup,
-            disable_web_page_preview=True
+            disable_web_page_preview=True,
+            parse_mode='HTML'
         )
 
 if __name__ == "__main__":
