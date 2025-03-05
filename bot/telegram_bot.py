@@ -1809,6 +1809,10 @@ class MintosBot:
             # Always fetch fresh campaigns when command is triggered
             await self.send_message(chat_id, "🔄 Fetching latest campaigns...", disable_web_page_preview=True)
 
+            # Load previous campaigns for comparison
+            previous_campaigns = self.data_manager.load_previous_campaigns()
+            logger.info(f"Loaded {len(previous_campaigns)} previous campaigns for comparison")
+
             try:
                 # Fetch new campaigns directly from Mintos
                 new_campaigns = self.mintos_client.get_campaigns()
@@ -1819,6 +1823,47 @@ class MintosBot:
                 # Save for future use
                 self.data_manager.save_campaigns(new_campaigns)
                 logger.info(f"Fetched and saved {len(new_campaigns)} campaigns")
+                
+                # Find new or updated campaigns
+                added_campaigns = self.data_manager.compare_campaigns(new_campaigns, previous_campaigns)
+                
+                # Notify all users about new campaigns, not just the requester
+                if added_campaigns:
+                    logger.info(f"Found {len(added_campaigns)} new or updated campaigns to broadcast to all users")
+                    
+                    # Filter out Special Promotion (type 4) campaigns and unsent campaigns
+                    unsent_campaigns = [
+                        campaign for campaign in added_campaigns 
+                        if not self.data_manager.is_campaign_sent(campaign) and campaign.get('type') != 4
+                    ]
+                    
+                    if unsent_campaigns:
+                        users = self.user_manager.get_all_users()
+                        logger.info(f"Broadcasting {len(unsent_campaigns)} new campaigns to {len(users)} users")
+                        
+                        # Send notification to the requesting user first
+                        await self.send_message(
+                            chat_id, 
+                            f"🔔 <b>Found {len(unsent_campaigns)} new campaign(s)!</b>\n"
+                            f"Broadcasting to all {len(users)} subscribers...",
+                            disable_web_page_preview=True
+                        )
+                        
+                        # Send to all users
+                        for i, campaign in enumerate(unsent_campaigns, 1):
+                            message = self.format_campaign_message(campaign)
+                            for user_id in users:
+                                try:
+                                    await self.send_message(user_id, message, disable_web_page_preview=True)
+                                    # Mark as sent to prevent duplicate notifications
+                                    self.data_manager.save_sent_campaign(campaign)
+                                    logger.info(f"Successfully sent campaign {i}/{len(unsent_campaigns)} to user {user_id}")
+                                except Exception as e:
+                                    logger.error(f"Failed to send campaign to user {user_id}: {e}")
+                                    
+                            # Add a delay between campaigns
+                            await asyncio.sleep(1)
+                    
             except Exception as e:
                 logger.error(f"Error fetching campaigns: {e}")
                 # If fetching fails, try to use cached data as fallback
