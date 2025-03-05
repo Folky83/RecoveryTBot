@@ -1806,33 +1806,28 @@ class MintosBot:
 
             logger.info(f"Processing /campaigns command for chat_id: {chat_id}")
 
-            # Check if campaigns cache exists and age
-            cache_age = self.data_manager.get_campaigns_cache_age()
-            cache_age_minutes = int(cache_age / 60) if not math.isinf(cache_age) else float('inf')
+            # Always fetch fresh campaigns when command is triggered
+            await self.send_message(chat_id, "🔄 Fetching latest campaigns...", disable_web_page_preview=True)
 
-            # If cache is older than 6 hours (360 minutes) or doesn't exist, do a fresh check
-            if cache_age_minutes > 360:
-                logger.info(f"Campaigns cache is old ({cache_age_minutes} minutes), doing a fresh campaigns check")
-                await self.send_message(chat_id, "🔄 Fetching latest campaigns...", disable_web_page_preview=True)
-
-                try:
-                    # Fetch new campaigns directly
-                    new_campaigns = self.mintos_client.get_campaigns()
-                    if not new_campaigns:
-                        await self.send_message(chat_id, "⚠️ No campaigns available right now.", disable_web_page_preview=True)
-                        return
-
-                    # Save for future use
-                    self.data_manager.save_campaigns(new_campaigns)
-                    logger.info(f"Fetched and saved {len(new_campaigns)} campaigns")
-                except Exception as e:
-                    logger.error(f"Error fetching campaigns: {e}")
-                    await self.send_message(chat_id, "⚠️ Error fetching campaigns. Please try again later.", disable_web_page_preview=True)
+            try:
+                # Fetch new campaigns directly from Mintos
+                new_campaigns = self.mintos_client.get_campaigns()
+                if not new_campaigns:
+                    await self.send_message(chat_id, "⚠️ No campaigns available right now.", disable_web_page_preview=True)
                     return
-            else:
-                # Load from cache
+
+                # Save for future use
+                self.data_manager.save_campaigns(new_campaigns)
+                logger.info(f"Fetched and saved {len(new_campaigns)} campaigns")
+            except Exception as e:
+                logger.error(f"Error fetching campaigns: {e}")
+                # If fetching fails, try to use cached data as fallback
                 new_campaigns = self.data_manager.load_previous_campaigns()
-                logger.info(f"Using cached campaigns data ({cache_age_minutes} minutes old)")
+                if not new_campaigns:
+                    await self.send_message(chat_id, "⚠️ Error fetching campaigns and no cache available. Please try again later.", disable_web_page_preview=True)
+                    return
+                logger.info(f"Using cached campaigns data as fallback after fetch error")
+                await self.send_message(chat_id, "⚠️ Could not fetch new campaigns, using cached data instead.", disable_web_page_preview=True)
 
             if not new_campaigns:
                 await self.send_message(chat_id, "No campaigns found. Try again later.", disable_web_page_preview=True)
