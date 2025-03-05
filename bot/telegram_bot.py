@@ -390,7 +390,6 @@ class MintosBot:
         if show_admin:
             admin_commands = (
                 "• /admin - Admin control panel\n"
-                "• /refresh - Force an immediate update check\n"
             )
         
         return (
