@@ -1194,27 +1194,32 @@ class MintosBot:
                 logger.info(f"Found {len(added_updates)} new updates to process for {len(users)} users")
 
                 today = time.strftime("%Y-%m-%d")
-                new_today_updates = [update for update in added_updates if update.get('date') == today]
-                logger.info(f"Found {len(new_today_updates)} updates for today ({today})")
+                # Get all updates for today (both new and existing)
+                today_updates = [update for update in added_updates if update.get('date') == today]
+                logger.info(f"Found {len(today_updates)} updates for today ({today})")
 
-                if new_today_updates:
+                if today_updates:
+                    # Filter for updates that haven't been sent yet
                     unsent_updates = [
-                        update for update in new_today_updates 
+                        update for update in today_updates 
                         if not self.data_manager.is_update_sent(update)
                     ]
                     logger.info(f"Found {len(unsent_updates)} unsent updates for today")
 
                     if unsent_updates:
-                        logger.info(f"Sending {len(unsent_updates)} unsent updates to {len(users)} users")
+                        # Send each individual update to all users
+                        logger.info(f"Broadcasting {len(unsent_updates)} unsent updates to {len(users)} users")
                         for i, update in enumerate(unsent_updates):
                             message = self.format_update_message(update)
                             for user_id in users:
                                 try:
                                     await self.send_message(user_id, message, disable_web_page_preview=True)
-                                    self.data_manager.save_sent_update(update)
                                     logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
                                 except Exception as e:
                                     logger.error(f"Failed to send update to user {user_id}: {e}")
+                            
+                            # Mark as sent after broadcasting to all users
+                            self.data_manager.save_sent_update(update)
                     else:
                         logger.info("No new unsent updates to send")
                 else:
