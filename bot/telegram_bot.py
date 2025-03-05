@@ -1398,6 +1398,7 @@ class MintosBot:
             # Check cache age and refresh if needed
             cache_age = self.data_manager.get_cache_age()
             cache_age_minutes = int(cache_age / 60) if not math.isinf(cache_age) else float('inf')
+            cache_age_hours = cache_age_minutes / 60
 
             # If cache is older than 6 hours (360 minutes), do a fresh check
             if cache_age_minutes > 360:
@@ -1409,11 +1410,26 @@ class MintosBot:
                     logger.info("Cache refreshed successfully")
                 except Exception as e:
                     logger.error(f"Failed to refresh cache: {e}")
+            # If cache is older than 3 hours but less than 6 hours, offer refresh option
+            elif cache_age_hours > 3:
+                logger.info(f"Cache is moderately old ({cache_age_hours:.1f} hours), offering refresh option")
+                keyboard = [
+                    [InlineKeyboardButton("🔄 Refresh Cache", callback_data="refresh_cache")],
+                    [InlineKeyboardButton("Continue with current data", callback_data="use_current_cache")]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await self.send_message(
+                    chat_id, 
+                    f"📊 Cache is {cache_age_hours:.1f} hours old. Would you like to refresh before viewing updates?", 
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=True
+                )
+                return  # Exit and wait for callback
 
             updates = self.data_manager.load_previous_updates()
             if not updates:
                 logger.warning("No updates found in cache")
-                await self.send_message(chat_id, "No cached updates found. Try /refresh first.", disable_web_page_preview=True)
+                await self.send_message(chat_id, "No cached updates found. Try using the admin refresh option.", disable_web_page_preview=True)
                 return
 
             # Get the (possibly new) cache age
