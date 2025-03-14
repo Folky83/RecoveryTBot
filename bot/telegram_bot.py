@@ -1378,20 +1378,27 @@ class MintosBot:
             
             # Send to all users
             user_count = 0
-            for chat_id in users:
-                for document in added_documents:
-                    # Check if document has already been sent
-                    if self.document_scraper.is_document_sent(document):
-                        logger.debug(f"Document {document.get('title')} for {document.get('company_name')} already sent, skipping")
-                        continue
-                        
-                    message = self.format_document_message(document)
-                    
+            # First, filter only documents that haven't been sent today
+            unsent_documents = []
+            for document in added_documents:
+                if not self.document_scraper.is_document_sent(document):
+                    unsent_documents.append(document)
+                else:
+                    logger.debug(f"Document {document.get('title')} for {document.get('company_name')} already sent today, skipping")
+            
+            logger.info(f"Found {len(unsent_documents)} unsent documents of {len(added_documents)} total")
+            
+            # Send each unsent document to all users
+            for document in unsent_documents:
+                message = self.format_document_message(document)
+                sent_to_users = 0
+                
+                # Send to all users
+                for chat_id in users:
                     try:
                         await self.send_message(chat_id, message, disable_web_page_preview=True)
-                        self.document_scraper.save_sent_document(document)
-                        logger.info(f"Sent document notification to {chat_id}")
-                        user_count += 1
+                        sent_to_users += 1
+                        logger.info(f"Sent document notification for {document.get('company_name')} to {chat_id}")
                     except Exception as e:
                         logger.error(f"Error sending document update to {chat_id}: {e}")
                         # Add to failed messages for retry
@@ -1401,6 +1408,13 @@ class MintosBot:
                             'parse_mode': 'HTML',
                             'disable_web_page_preview': True
                         })
+                
+                # Mark as sent after trying to send to all users
+                self.document_scraper.save_sent_document(document)
+                logger.info(f"Document for {document.get('company_name')} sent to {sent_to_users} users and marked as sent")
+                
+                # Update user count
+                user_count += sent_to_users
                         
             if user_count > 0:
                 logger.info(f"Sent document updates to {user_count} users")

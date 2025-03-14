@@ -96,7 +96,7 @@ class DocumentScraper:
             logger.error(f"Error creating sent documents files: {e}")
 
     def save_sent_document(self, document: Dict[str, Any]) -> None:
-        """Mark a document as sent with backup"""
+        """Mark a document as sent with backup and timestamp"""
         try:
             # Create document ID
             doc_id = self._create_document_id(document)
@@ -104,12 +104,32 @@ class DocumentScraper:
             # Add to set
             self.sent_documents.add(doc_id)
             
-            # Save to both files
-            with open(self.sent_documents_file, 'w', encoding='utf-8') as f:
-                json.dump(list(self.sent_documents), f)
+            # Load existing data to add timestamps
+            sent_data = []
+            try:
+                with open(self.sent_documents_file, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                    # Convert simple list to dict format if needed
+                    sent_data = [entry if isinstance(entry, dict) else {'id': entry} for entry in existing_data]
+            except (FileNotFoundError, json.JSONDecodeError):
+                pass
                 
-            with open(self.sent_documents_backup_file, 'w', encoding='utf-8') as f:
-                json.dump(list(self.sent_documents), f)
+            # Add or update entry with timestamp
+            now = time.time()
+            updated = False
+            for entry in sent_data:
+                if entry.get('id') == doc_id:
+                    entry['timestamp'] = now
+                    updated = True
+                    break
+            
+            if not updated:
+                sent_data.append({'id': doc_id, 'timestamp': now})
+            
+            # Save to both files
+            for file_path in [self.sent_documents_file, self.sent_documents_backup_file]:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(sent_data, f)
                 
             logger.debug(f"Marked document as sent: {doc_id}")
             
@@ -117,10 +137,46 @@ class DocumentScraper:
             logger.error(f"Error saving sent document: {e}")
 
     def is_document_sent(self, document: Dict[str, Any]) -> bool:
-        """Check if a document has already been sent"""
+        """Check if a document has already been sent on the same day"""
         try:
             doc_id = self._create_document_id(document)
-            return doc_id in self.sent_documents
+            
+            # Quick check if not in sent documents at all
+            if doc_id not in self.sent_documents:
+                return False
+                
+            # Now check when it was last sent
+            try:
+                with open(self.sent_documents_file, 'r', encoding='utf-8') as f:
+                    sent_data = json.load(f)
+                    
+                # Get timestamp if available
+                for entry in sent_data:
+                    if isinstance(entry, dict) and entry.get('id') == doc_id:
+                        last_sent = entry.get('timestamp', 0)
+                        
+                        # If we have a timestamp, check if it was today
+                        if last_sent > 0:
+                            last_sent_date = time.strftime("%Y-%m-%d", time.localtime(last_sent))
+                            current_date = time.strftime("%Y-%m-%d")
+                            
+                            # Don't resend if it was sent today
+                            if last_sent_date == current_date:
+                                logger.info(f"Document {doc_id} already sent today ({current_date}), skipping")
+                                return True
+                            
+                            # If it wasn't sent today, can resend
+                            logger.info(f"Document {doc_id} was sent on {last_sent_date}, can send again today")
+                            return False
+                        
+                # If we reach here with no timestamp, assume it was sent recently
+                return True
+                
+            except Exception as e:
+                logger.error(f"Error checking document sent timestamp: {e}")
+                # Default to treating as sent if we can't verify
+                return True
+                
         except Exception as e:
             logger.error(f"Error checking if document sent: {e}")
             return False

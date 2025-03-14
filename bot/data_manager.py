@@ -152,7 +152,7 @@ class DataManager:
             logger.error(f"Error saving sent update: {e}", exc_info=True)
 
     def is_update_sent(self, update: Dict[str, Any]) -> bool:
-        """Check if an update has already been sent or was sent too recently"""
+        """Check if an update has already been sent on the same day"""
         update_id = self._create_update_id(update)
         
         # First check if it's in sent updates
@@ -168,10 +168,29 @@ class DataManager:
             for entry in sent_data:
                 if isinstance(entry, dict) and entry.get('id') == update_id:
                     last_sent = entry.get('timestamp', 0)
-                    # Don't resend if less than 12 hours have passed
-                    return (time.time() - last_sent) < 43200
                     
-            return True  # If no timestamp found, assume it was sent
+                    # Get the date from timestamp
+                    last_sent_date = time.strftime("%Y-%m-%d", time.localtime(last_sent))
+                    current_date = time.strftime("%Y-%m-%d")
+                    
+                    # Don't resend if it was sent today (same calendar day)
+                    if last_sent_date == current_date:
+                        logger.info(f"Update {update_id} already sent today ({current_date}), skipping")
+                        return True
+                    
+                    # Don't resend if same day as in the update
+                    update_date = update.get('date', '')
+                    if update_date and last_sent_date == update_date:
+                        logger.info(f"Update {update_id} already sent on the update date ({update_date}), skipping")
+                        return True
+                    
+                    # If we reach here, it wasn't sent today or on update date
+                    logger.info(f"Update {update_id} was last sent on {last_sent_date}, can send again today")
+                    return False
+                    
+            # If no timestamp found but ID is in sent_updates, assume it was sent
+            logger.info(f"Update {update_id} is in sent list but has no timestamp, assuming sent")
+            return True  
         except Exception as e:
             logger.error(f"Error checking update timestamp: {e}")
             return True
