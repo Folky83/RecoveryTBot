@@ -115,23 +115,66 @@ class DataManager:
             logger.error(f"Error loading sent updates: {e}", exc_info=True)
 
     def save_sent_update(self, update: Dict[str, Any]) -> None:
-        """Mark an update as sent with backup"""
+        """Mark an update as sent with backup and timestamp"""
         try:
             update_id = self._create_update_id(update)
             self.sent_updates.add(update_id)
+            
+            # Load existing data
+            sent_data = []
+            try:
+                with open(self.sent_updates_file, 'r') as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        sent_data = [entry if isinstance(entry, dict) else {'id': entry} for entry in data]
+            except (FileNotFoundError, json.JSONDecodeError):
+                pass
+                
+            # Add or update entry
+            now = time.time()
+            updated = False
+            for entry in sent_data:
+                if entry.get('id') == update_id:
+                    entry['timestamp'] = now
+                    updated = True
+                    break
+            
+            if not updated:
+                sent_data.append({'id': update_id, 'timestamp': now})
 
             # Save to both main and backup files
             for file_path in [self.sent_updates_file, self.backup_sent_updates_file]:
                 with open(file_path, 'w') as f:
-                    json.dump(list(self.sent_updates), f)
+                    json.dump(sent_data, f)
 
             logger.info(f"Saved sent update ID: {update_id}")
         except Exception as e:
             logger.error(f"Error saving sent update: {e}", exc_info=True)
 
     def is_update_sent(self, update: Dict[str, Any]) -> bool:
-        """Check if an update has already been sent"""
-        return self._create_update_id(update) in self.sent_updates
+        """Check if an update has already been sent or was sent too recently"""
+        update_id = self._create_update_id(update)
+        
+        # First check if it's in sent updates
+        if update_id not in self.sent_updates:
+            return False
+            
+        # Check when it was last sent
+        try:
+            with open(self.sent_updates_file, 'r') as f:
+                sent_data = json.load(f)
+                
+            # Get timestamp if available
+            for entry in sent_data:
+                if isinstance(entry, dict) and entry.get('id') == update_id:
+                    last_sent = entry.get('timestamp', 0)
+                    # Don't resend if less than 12 hours have passed
+                    return (time.time() - last_sent) < 43200
+                    
+            return True  # If no timestamp found, assume it was sent
+        except Exception as e:
+            logger.error(f"Error checking update timestamp: {e}")
+            return True
 
     def _load_sent_campaigns(self) -> None:
         """Load set of already sent campaign IDs with verification and backup"""
