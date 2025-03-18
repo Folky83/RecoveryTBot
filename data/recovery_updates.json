@@ -64,6 +64,22 @@
                 "substatus": "repayment_agreement",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "165661.000",
+                        "remainingAmount": "4424671.000",
+                        "expectedRecoveryFrom": "0.0",
+                        "expectedRecoveryTo": "25.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>Based on the latest information from the collection company, the total collected amount has increased to approximately 9.4 million UAH (about &euro;215k at the current exchange rate). Restrictions are still in place that prevent the transfer of these funds to Mintos.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "165661.000",
                         "remainingAmount": "4424671.000",
@@ -689,6 +705,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "16641.000",
+                        "remainingAmount": "125417.122",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "litigation",
+                        "substatus": null,
+                        "description": "<p>The court has approved the start of bankruptcy proceedings for Alivio, entering the conciliation phase. Mintos is now recognized as one of the creditors, and Alivio will soon propose a way forward for its creditors including Mintos.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "16641.000",
                         "remainingAmount": "125417.122",
@@ -1209,6 +1241,22 @@
                 "status": "restructuring",
                 "substatus": "repayment_agreement",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "8490304.000",
+                        "remainingAmount": "11436230.000",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2027,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>We received a payment of &euro;345k in February from Capital Service. The company has repaid a total of &euro;8.5 million.</p>",
+                        "isRecoveredAmountIncreased": true,
+                        "isRemainingAmountIncreased": false,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "8144855.000",
@@ -1975,6 +2023,22 @@
                 "substatus": "enforcing_liquidation",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "296477.870",
+                        "remainingAmount": "1708581.120",
+                        "expectedRecoveryFrom": "0.0",
+                        "expectedRecoveryTo": "25.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "litigation",
+                        "substatus": "enforcing_liquidation",
+                        "description": "<p>There&rsquo;s no update from Cashwagon Philippines. As the company had accrued significant tax debt and is not actively operating, it&rsquo;s currently unlikely that anything could be recovered from the remaining balance.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "296477.870",
                         "remainingAmount": "1708581.120",
@@ -2615,6 +2679,22 @@
                 "status": "litigation",
                 "substatus": "enforcing_liquidation",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "1440165.290",
+                        "remainingAmount": "5233726.170",
+                        "expectedRecoveryFrom": "0.0",
+                        "expectedRecoveryTo": "25.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "litigation",
+                        "substatus": "enforcing_liquidation",
+                        "description": "<p>The lawyers are trying to meet with the court representatives to whom the documents were previously submitted, as they haven&rsquo;t received a response so far.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "1440165.290",
@@ -4861,6 +4941,38 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-03-14",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We received &euro;445k this week. We expect Dinerito Xtra to make the next payment by 25 March 2025.&nbsp;</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We received &euro;42k this week. We expect Dinerito Xtra to make the next payment of &euro;400k by 10 March 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-28",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -5055,6 +5167,22 @@
                 "status": "restructuring",
                 "substatus": "repayment_agreement",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "16180502.000",
+                        "remainingAmount": "1161761.000",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>A payment of &euro;300k was made in February according to the payment schedule. The funds are in the process of being distributed to Mintos investors.</p>",
+                        "isRecoveredAmountIncreased": true,
+                        "isRemainingAmountIncreased": false,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "15580519.000",
@@ -6241,6 +6369,22 @@
                 "status": "litigation",
                 "substatus": "enforcing_claim_rights",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "461472.000",
+                        "remainingAmount": "599306.000",
+                        "expectedRecoveryFrom": "25.0",
+                        "expectedRecoveryTo": "50.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "litigation",
+                        "substatus": "enforcing_claim_rights",
+                        "description": "<p>We&rsquo;re reviewing options to make a claim against the former management of the company or to review and reverse previous transactions, if any, by the company. Neither of these alternatives provides a guaranteed result, so we&rsquo;ll evaluate their potential cost-benefit.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "461472.000",
@@ -8186,6 +8330,22 @@
                 "substatus": "repayment_agreement",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "7043692.000",
+                        "remainingAmount": "2871726.000",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2026,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>Fenchurch made a payment of &euro;366k in February that was released to investors. &nbsp;Fenchurch is ahead of the latest agreed repayment schedule as can be seen in the <a href=\"https://assets.mintos.com/17A812CC-383B-D305-07D2-6031108FDFA4.png\">table</a>.</p>",
+                        "isRecoveredAmountIncreased": true,
+                        "isRemainingAmountIncreased": false,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "6677071.000",
                         "remainingAmount": "3238347.000",
@@ -8699,6 +8859,38 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-03-14",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>\r\n<style type=\"text/css\"><!--td {border: 1px solid #cccccc;}br {mso-data-placement:same-cell;}-->\r\n</style>\r\nA payment of &euro;25K is expected to be processed by the end of today. We expect Finclusion to make the next payment by 31 March 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We expect Finclusion to make the next payment by 15 March 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-28",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -8957,6 +9149,22 @@
                 "status": "restructuring",
                 "substatus": "repayment_agreement",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "19123056.000",
+                        "remainingAmount": "8803610.000",
+                        "expectedRecoveryFrom": "50.0",
+                        "expectedRecoveryTo": "75.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2026,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>Payments due from Finko Armenia (Varks) to both Mintos and investors on Mintos are transferred regularly on a monthly basis. An amount of &euro;29.8k was repaid in February, although we don&rsquo;t have the detailed cost breakdown yet.</p>",
+                        "isRecoveredAmountIncreased": true,
+                        "isRemainingAmountIncreased": false,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "19093273.000",
@@ -9599,6 +9807,22 @@
                 "substatus": "repayment_agreement",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "16180502.000",
+                        "remainingAmount": "1161761.000",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>A payment of &euro;300k was made in February according to the payment schedule. The funds are in the process of being distributed to Mintos investors.</p>",
+                        "isRecoveredAmountIncreased": true,
+                        "isRemainingAmountIncreased": false,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "15580519.000",
                         "remainingAmount": "1761744.000",
@@ -10240,6 +10464,22 @@
                 "substatus": "enforcing_claim_rights",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "3458669.000",
+                        "remainingAmount": "4549561.000",
+                        "expectedRecoveryFrom": "25.0",
+                        "expectedRecoveryTo": "50.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "litigation",
+                        "substatus": "enforcing_claim_rights",
+                        "description": "<p>We&rsquo;re waiting for potential buyers to undergo a due diligence process and submit their binding offers. The next update is expected for April or May.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "3458669.000",
                         "remainingAmount": "4549561.000",
@@ -10880,6 +11120,22 @@
                 "status": "litigation",
                 "substatus": "enforcing_claim_rights",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "20001.500",
+                        "remainingAmount": "4297282.010",
+                        "expectedRecoveryFrom": "0.0",
+                        "expectedRecoveryTo": "25.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "litigation",
+                        "substatus": "enforcing_claim_rights",
+                        "description": "<p>We were informed that another entity previously in the same group as GetBucks Zambia, which might be linked to the company and potentially serve as a source of recovery, was becoming insolvent. This decreases the already slim chances of any recovery options. We&rsquo;ll still wait for the results of the recoveries from GetBucks Botswana to understand the recovery chances of a claim against the former management of the company.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "20001.500",
@@ -13079,6 +13335,22 @@
                 "substatus": "repayment_agreement",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "1465271.000",
+                        "remainingAmount": "5294933.000",
+                        "expectedRecoveryFrom": "50.0",
+                        "expectedRecoveryTo": "75.0",
+                        "expectedRecoveryYearFrom": 2025,
+                        "expectedRecoveryYearTo": 2026,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>The payments for February are in progress and being reviewed by the banks involved.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "1465271.000",
                         "remainingAmount": "5294933.000",
@@ -13624,6 +13896,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>IDF has made the payments and provided proof of payment. The payments will be distributed to investors as soon as they arrive.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-01-10",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -13857,6 +14145,22 @@
                 "status": "restructuring",
                 "substatus": "repayment_agreement",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "9373925.000",
+                        "remainingAmount": "175982.000",
+                        "expectedRecoveryFrom": "75.0",
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>No update since last month.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "9373925.000",
@@ -14594,6 +14898,22 @@
                 "substatus": "enforcing_claim_rights",
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "3458669.000",
+                        "remainingAmount": "4549561.000",
+                        "expectedRecoveryFrom": "25.0",
+                        "expectedRecoveryTo": "50.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "litigation",
+                        "substatus": "enforcing_claim_rights",
+                        "description": "<p>We&rsquo;re waiting for potential buyers to undergo a due diligence process and submit their binding offers. The next update is expected for April or May.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "3458669.000",
                         "remainingAmount": "4549561.000",
@@ -15235,6 +15555,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "11109.000",
+                        "remainingAmount": "175956.000",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "20.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "liquidation",
+                        "substatus": null,
+                        "description": "<p>The amount collected in February was &euro;176. The funds collected will be transferred to Mintos by the administrator this week and distributed to investors as soon as they arrive. There&rsquo;s an ongoing due diligence process from the potential buyer of the remaining portfolio. Once this process is finished, the administrator will work with the buyer and the FCA to progress the sale to completion.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "11109.000",
                         "remainingAmount": "175956.000",
@@ -15625,6 +15961,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "2819092.000",
+                        "remainingAmount": "10695596.000",
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2027,
+                        "status": "restructuring",
+                        "substatus": null,
+                        "description": "<p>Planet42 made a payment of &euro;0.6 million in February which was distributed to investors. We expect monthly payments to continue based on net proceeds from the underlying car contracts.</p>",
+                        "isRecoveredAmountIncreased": true,
+                        "isRemainingAmountIncreased": false,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-02-06",
                         "recoveredAmount": "1602093.000",
                         "remainingAmount": "11912595.000",
@@ -15787,6 +16139,38 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-03-14",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We mutually agreed with Rapidcredit to wind down the cooperation by the end of April 2025. We expect to receive the next payment around mid March.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We mutually agreed with Rapidcredit to wind down the cooperation by the end of April 2025. We expect to receive the next payment around mid March.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-28",
                         "recoveredAmount": null,
@@ -16301,6 +16685,22 @@
                 "status": "restructuring",
                 "substatus": "repayment_agreement",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "48215.000",
+                        "remainingAmount": "1512197.000",
+                        "expectedRecoveryFrom": "0.0",
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": null,
+                        "status": "restructuring",
+                        "substatus": "repayment_agreement",
+                        "description": "<p>There are no changes from the previous month. Payments out of Ukraine are currently not possible as martial law is still in place.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "48215.000",
@@ -16874,6 +17274,22 @@
                 "status": "litigation",
                 "substatus": "enforcing_claim_rights",
                 "items": [
+                    {
+                        "date": "2025-03-07",
+                        "recoveredAmount": "514.230",
+                        "remainingAmount": "18451455.120",
+                        "expectedRecoveryFrom": "75.0",
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": 2025,
+                        "expectedRecoveryYearTo": 2028,
+                        "status": "litigation",
+                        "substatus": "enforcing_claim_rights",
+                        "description": "<p>The court hearing was held at the beginning of February. The next hearing is scheduled for the end of March. It&rsquo;s expected that discussing the materials will take several hearings, some of which might be regarding specific items while some might be more technical and postponed if requested by any side. At this point we can&rsquo;t disclose what was discussed during the hearings, as this might impact the court process or give additional information to Wowwo.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-02-06",
                         "recoveredAmount": "514.230",
