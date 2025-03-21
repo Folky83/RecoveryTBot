@@ -1,0 +1,128 @@
+2025-03-21 17:46:08.99
+b0c019cc
+User
+2025-03-21 16:46:08,994 - ERROR - Error cleaning up lock file: [Errno 2] No such file or directory: 'bot.lock'
+2025-03-21 17:46:09.49
+b0c019cc
+User
+2025-03-21 16:46:09,495 - INFO - Cleanup completed
+2025-03-21 17:46:09.49
+b0c019cc
+User
+Traceback (most recent call last):
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/home/runner/workspace/run.py", line 258, in
+2025-03-21 17:46:09.49
+b0c019cc
+User
+asyncio.run(main())
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/runners.py", line 190, in run
+2025-03-21 17:46:09.49
+b0c019cc
+User
+return runner.run(main)
+2025-03-21 17:46:09.49
+b0c019cc
+User
+^^^^^^^^^^^^^^^^
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/runners.py", line 118, in run
+2025-03-21 17:46:09.49
+b0c019cc
+User
+return self._loop.run_until_complete(task)
+2025-03-21 17:46:09.49
+b0c019cc
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 641, in run_until_complete
+2025-03-21 17:46:09.49
+b0c019cc
+User
+self.run_forever()
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 608, in run_forever
+2025-03-21 17:46:09.49
+b0c019cc
+User
+self._run_once()
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 1898, in _run_once
+2025-03-21 17:46:09.49
+b0c019cc
+User
+event_list = self._selector.select(timeout)
+2025-03-21 17:46:09.49
+b0c019cc
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/selectors.py", line 468, in select
+2025-03-21 17:46:09.49
+b0c019cc
+User
+fd_event_list = self._selector.poll(timeout, max_ev)
+2025-03-21 17:46:09.49
+b0c019cc
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/home/runner/workspace/run.py", line 246, in signal_handler
+2025-03-21 17:46:09.49
+b0c019cc
+User
+asyncio.get_event_loop().run_until_complete(ProcessManager().cleanup_processes())
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 630, in run_until_complete
+2025-03-21 17:46:09.49
+b0c019cc
+User
+self._check_running()
+2025-03-21 17:46:09.49
+b0c019cc
+User
+File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/asyncio/base_events.py", line 589, in _check_running
+2025-03-21 17:46:09.49
+b0c019cc
+User
+raise RuntimeError('This event loop is already running')
+2025-03-21 17:46:09.49
+b0c019cc
+User
+RuntimeError: This event loop is already running
+2025-03-21 17:46:09.65
+b0c019cc
+User
+sys:1: RuntimeWarning: coroutine 'ProcessManager.cleanup_processes' was never awaited
+2025-03-21 17:46:09.82
+b0c019cc
+System
+command finished with error [sh -c python3 run.py]: exit status 1
+2025-03-21 17:46:09.90
+b0c019cc
+System
+main done, exiting
+
+Wrap
+
+Colors
