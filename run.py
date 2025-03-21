@@ -62,7 +62,7 @@ class ProcessManager:
                 try:
                     if (hasattr(conn, 'laddr') and 
                         isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
-                        conn.laddr[1] == port):
+                        isinstance(conn.laddr[1], int) and conn.laddr[1] == port):
                         pid = conn.pid
                         if pid and psutil.pid_exists(pid):
                             self.logger.info(f"Killing process {pid} using port {port}")
@@ -116,7 +116,7 @@ class ProcessManager:
                         # Check if this connection is our streamlit server
                         if (hasattr(conn, 'laddr') and 
                             isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
-                            conn.laddr[1] == STREAMLIT_PORT and 
+                            isinstance(conn.laddr[1], int) and conn.laddr[1] == STREAMLIT_PORT and 
                             hasattr(conn, 'status') and conn.status == 'LISTEN'):
                             self.logger.info(f"Streamlit running on port {STREAMLIT_PORT}")
                             await asyncio.sleep(2)  # Give it a moment to fully initialize
@@ -139,7 +139,10 @@ class ProcessManager:
             if self.lock_file:
                 try:
                     self.lock_file.close()
-                    os.unlink(LOCK_FILE)
+                    if os.path.exists(LOCK_FILE):
+                        os.unlink(LOCK_FILE)
+                except FileNotFoundError:
+                    self.logger.warning(f"Lock file {LOCK_FILE} not found during cleanup")
                 except Exception as e:
                     self.logger.error(f"Error cleaning up lock file: {e}")
 
@@ -243,13 +246,24 @@ async def main():
 
 def signal_handler(sig, frame):
     logging.info("Received shutdown signal")
-    asyncio.get_event_loop().run_until_complete(ProcessManager().cleanup_processes())
+    
+    # Create a new event loop for the cleanup instead of using the running one
+    cleanup_loop = asyncio.new_event_loop()
     try:
-        os.unlink(LOCK_FILE)
-    except FileNotFoundError:
-        pass  # Ignore if the file does not exist
+        cleanup_loop.run_until_complete(ProcessManager().cleanup_processes())
+        
+        # Clean up lock file
+        try:
+            os.unlink(LOCK_FILE)
+        except FileNotFoundError:
+            pass  # Ignore if the file does not exist
+        except Exception as e:
+            logging.error(f"Error removing lock file: {e}")
     except Exception as e:
-        logging.error(f"Error removing lock file: {e}")
+        logging.error(f"Error during signal handler cleanup: {e}")
+    finally:
+        cleanup_loop.close()
+        
     sys.exit(0)
 
 if __name__ == "__main__":
