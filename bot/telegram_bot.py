@@ -399,7 +399,7 @@ class MintosBot:
             "• Document scraping happens daily\n\n"
             "Available Commands:\n"
             "• /company - Check updates for a specific company\n"
-            "• /today - View all updates from today\n"
+            "• /today [YYYY-MM-DD] - View updates for today or a specific date\n"
             "• /campaigns - View current Mintos campaigns\n"
             "• /documents - View recent company documents\n"
             "• /start - Show this welcome message\n"
@@ -1475,7 +1475,7 @@ class MintosBot:
         return message
             
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /today command to show today's updates"""
+        """Handle /today command to show updates for today or a specified date (format: YYYY-MM-DD)"""
         chat_id = None
         try:
             if not update.message or not update.effective_chat:
@@ -1483,7 +1483,31 @@ class MintosBot:
                 return
 
             chat_id = update.effective_chat.id
-            logger.info(f"Processing /today command for chat_id: {chat_id}")
+            
+            # Check if a date was specified in the command arguments
+            target_date = time.strftime("%Y-%m-%d")  # Default to today
+            
+            # Extract the date parameter from context.args if provided
+            args = context.args if context and hasattr(context, 'args') else None
+            if args and args[0]:
+                try:
+                    # Validate date format (YYYY-MM-DD)
+                    specified_date = args[0].strip()
+                    # Simple validation of the date format
+                    if len(specified_date) == 10 and specified_date[4] == '-' and specified_date[7] == '-':
+                        # Further validate it's a proper date
+                        datetime.strptime(specified_date, "%Y-%m-%d")
+                        target_date = specified_date
+                        logger.info(f"Using specified date: {target_date}")
+                    else:
+                        await self.send_message(chat_id, "⚠️ Invalid date format. Please use YYYY-MM-DD format.", disable_web_page_preview=True)
+                        return
+                except ValueError as e:
+                    logger.error(f"Invalid date format: {e}")
+                    await self.send_message(chat_id, "⚠️ Invalid date. Please use YYYY-MM-DD format (e.g., 2025-04-19).", disable_web_page_preview=True)
+                    return
+            
+            logger.info(f"Processing /today command for chat_id: {chat_id}, date: {target_date}")
 
             # Always try to delete the command message
             try:
@@ -1532,9 +1556,8 @@ class MintosBot:
             cache_age = self.data_manager.get_cache_age()
             logger.debug(f"Using cached data (age: {cache_age:.0f} seconds)")
 
-            today = time.strftime("%Y-%m-%d")
-            logger.debug(f"Searching for updates on date: {today}")
-            today_updates = []
+            logger.debug(f"Searching for updates on date: {target_date}")
+            date_updates = []
 
             for company_update in updates:
                 if not isinstance(company_update, dict):
@@ -1564,18 +1587,18 @@ class MintosBot:
                         continue
 
                     for item in items:
-                        if item.get('date') == today:
+                        if item.get('date') == target_date:
                             update_with_company = {
                                 "lender_id": lender_id,
                                 "company_name": company_name,
                                 **year_data,
                                 **item
                             }
-                            today_updates.append(update_with_company)
-                            logger.debug(f"Found update for {company_name} on {today}")
+                            date_updates.append(update_with_company)
+                            logger.debug(f"Found update for {company_name} on {target_date}")
 
             # Check if we have any updates
-            have_updates = len(today_updates) > 0
+            have_updates = len(date_updates) > 0
 
             if not have_updates:
                 cache_message = ""
@@ -1591,7 +1614,11 @@ class MintosBot:
                     else:
                         cache_message = f"Cache last updated {minutes_old} minutes ago"
 
-                logger.info(f"No updates found for today. {cache_message}")
+                # Format message differently depending on whether we're looking at today or a specific date
+                is_today = target_date == time.strftime("%Y-%m-%d")
+                date_desc = "today" if is_today else f"date {target_date}"
+                
+                logger.info(f"No updates found for {date_desc}. {cache_message}")
 
                 # Create a message with a refresh button if cache is old
                 if minutes_old > 120:  # If cache is older than 2 hours
@@ -1599,35 +1626,36 @@ class MintosBot:
                     reply_markup = InlineKeyboardMarkup(keyboard)
                     await self.send_message(
                         chat_id, 
-                        f"No updates found for today ({cache_message}).\nWould you like to check for new updates?",
+                        f"No updates found for {date_desc} ({cache_message}).\nWould you like to check for new updates?",
                         reply_markup=reply_markup,
                         disable_web_page_preview=True
                     )
                 else:
-                    await self.send_message(chat_id, f"No updates found for today ({cache_message.lower()}).", disable_web_page_preview=True)
+                    await self.send_message(chat_id, f"No updates found for {date_desc} ({cache_message.lower()}).", disable_web_page_preview=True)
                 return
 
             # If we have updates, send them
             # Send header message with total count
-            header_message = f"📅 Found {len(today_updates)} updates for today:\n"
+            date_desc = "today" if target_date == time.strftime("%Y-%m-%d") else target_date
+            header_message = f"📅 Found {len(date_updates)} updates for {date_desc}:\n"
             await self.send_message(chat_id, header_message, disable_web_page_preview=True)
 
             # Send each update individually
-            for i, update_item in enumerate(today_updates, 1):
+            for i, update_item in enumerate(date_updates, 1):
                 try:
                     message = self.format_update_message(update_item)
                     await self.send_message(chat_id, message, disable_web_page_preview=True)
-                    logger.debug(f"Successfully sent update {i}/{len(today_updates)} to {chat_id}")
+                    logger.debug(f"Successfully sent update {i}/{len(date_updates)} to {chat_id}")
                     await asyncio.sleep(1)  # Small delay between messages
                 except Exception as e:
-                    logger.error(f"Error sending update {i}/{len(today_updates)}: {e}", exc_info=True)
+                    logger.error(f"Error sending update {i}/{len(date_updates)}: {e}", exc_info=True)
                     continue
 
         except Exception as e:
             error_msg = f"Error in today_command: {str(e)}"
             logger.error(error_msg, exc_info=True)
             if chat_id:
-                await self.send_message(chat_id, "⚠️ Error getting today's updates. Please try again.", disable_web_page_preview=True)
+                await self.send_message(chat_id, "⚠️ Error getting updates. Please try again.", disable_web_page_preview=True)
             raise
 
     async def should_check_updates(self) -> bool:
@@ -1960,17 +1988,22 @@ class MintosBot:
             return True
 
     async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Trigger an update check for today's updates"""
+        """Trigger an update check for today's updates or for a specified date"""
         if not update.effective_chat:
             return
 
         chat_id = update.effective_chat.id
         try:
-            await self.send_message(chat_id, "🔄 Checking today's updates...", disable_web_page_preview=True)
+            # Check if a date was specified
+            date_text = "today's"
+            if context and hasattr(context, 'args') and context.args:
+                date_text = f"updates for {context.args[0]}"
+            
+            await self.send_message(chat_id, f"🔄 Checking {date_text}...", disable_web_page_preview=True)
             await self.today_command(update, context)
         except Exception as e:
             logger.error(f"Error in trigger_today command: {e}")
-            await self.send_message(chat_id, "⚠️ Error checking today's updates", disable_web_page_preview=True)
+            await self.send_message(chat_id, "⚠️ Error checking updates", disable_web_page_preview=True)
 
     async def _resolve_channel_id(self, channel_identifier: str) -> str:
         """Validate channel/user ID format and verify permissions"""
@@ -2068,7 +2101,7 @@ class MintosBot:
             return False
 
     async def trigger_today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /trigger_today command with user selection"""
+        """Handle /trigger_today command with user selection and optional date parameter"""
         try:
             if not update.message or not update.effective_chat or not update.effective_user:
                 return
@@ -2092,35 +2125,59 @@ class MintosBot:
             except Exception as e:
                 logger.warning(f"Could not delete command message: {e}")
 
-            # Check if number or user was specified in args
+            # Check for arguments
             args = context.args if context and hasattr(context, 'args') else None
+            
+            # Default to today's date
+            target_date = time.strftime("%Y-%m-%d")
+            has_date_param = False
+            
+            # Process arguments
             if args:
-                # Attempt to use the provided argument (channel ID or number selection)
-                target_channel = args[0]
-                
-                # Check if it's a number referencing a user in the list
-                try:
-                    index = int(target_channel)
-                    users = list(self.user_manager.get_all_users())
+                # If last argument looks like a date, extract it
+                if len(args) >= 2 and len(args[-1]) == 10 and args[-1][4] == '-' and args[-1][7] == '-':
+                    try:
+                        # Validate it's a proper date
+                        datetime.strptime(args[-1], "%Y-%m-%d")
+                        target_date = args[-1]
+                        has_date_param = True
+                        logger.info(f"Using specified date: {target_date}")
+                        # Remove date from args for further processing
+                        remaining_args = args[:-1]
+                    except ValueError:
+                        # Not a valid date, treat all args as target specification
+                        remaining_args = args
+                else:
+                    # No date parameter
+                    remaining_args = args
                     
-                    # If number is between 1 and number of users, use it as a user index
-                    if 1 <= index <= len(users):
-                        target_channel = users[index-1]
-                        logger.info(f"Selected user by index {index}: {target_channel}")
-                    else:
-                        # If it's a number but not a valid index, use it directly as a channel ID
-                        # This allows entering any channel ID manually
-                        target_channel = str(target_channel)
-                        logger.info(f"Using provided numeric channel ID: {target_channel}")
-                except ValueError:
-                    # Not a number, use as is (should be a channel ID)
-                    logger.info(f"Using provided channel ID: {target_channel}")
-                
-                # Continue with sending updates to the target channel
-                await self._send_today_updates_to_channel(chat_id, target_channel)
-                return
-                
-            # No arguments provided, display user selection interface
+                # Check if we have a target channel in the arguments
+                if remaining_args:
+                    target_channel = remaining_args[0]
+                    
+                    # Check if it's a number referencing a user in the list
+                    try:
+                        index = int(target_channel)
+                        users = list(self.user_manager.get_all_users())
+                        
+                        # If number is between 1 and number of users, use it as a user index
+                        if 1 <= index <= len(users):
+                            target_channel = users[index-1]
+                            logger.info(f"Selected user by index {index}: {target_channel}")
+                        else:
+                            # If it's a number but not a valid index, use it directly as a channel ID
+                            # This allows entering any channel ID manually
+                            target_channel = str(target_channel)
+                            logger.info(f"Using provided numeric channel ID: {target_channel}")
+                    except ValueError:
+                        # Not a number, use as is (should be a channel ID)
+                        logger.info(f"Using provided channel ID: {target_channel}")
+                    
+                    # Continue with sending updates to the target channel
+                    await self._send_today_updates_to_channel(chat_id, target_channel, target_date)
+                    return
+            
+            # No target channel specified, display user selection interface
             # Get all registered users
             users = self.user_manager.get_all_users()
             
@@ -2129,16 +2186,25 @@ class MintosBot:
             for i, user_id in enumerate(users, 1):
                 username = self.user_manager.get_user_info(user_id) or "Unknown"
                 button_text = f"{i}. {username} ({user_id})"
-                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"trigger_today_{user_id}")])
+                # Include the date in the callback data if specified
+                callback_data = f"trigger_today_{user_id}_{target_date}" if has_date_param else f"trigger_today_{user_id}"
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
             
             # Add button for manual ID entry
-            keyboard.append([InlineKeyboardButton("✏️ Enter custom channel ID", callback_data="trigger_today_custom")])
+            callback_data = "trigger_today_custom" if not has_date_param else f"trigger_today_custom_{target_date}"
+            keyboard.append([InlineKeyboardButton("✏️ Enter custom channel ID", callback_data=callback_data)])
+            
+            # Create appropriate title based on whether we're showing today or a specific date
+            title = "today's" if not has_date_param else f"updates for {target_date}"
             
             reply_markup = InlineKeyboardMarkup(keyboard)
+            usage_example = "You can also use:\n" \
+                           f"<code>/trigger_today [number] {target_date if has_date_param else 'YYYY-MM-DD'}</code>\n" \
+                           f"<code>/trigger_today [channel_id] {target_date if has_date_param else 'YYYY-MM-DD'}</code>"
+            
             await self.send_message(
                 chat_id,
-                "📲 <b>Select a channel to send today's updates to:</b>\n\n"
-                "You can also use <code>/trigger_today [number]</code> or <code>/trigger_today [channel_id]</code>",
+                f"📲 <b>Select a channel to send {title} to:</b>\n\n{usage_example}",
                 reply_markup=reply_markup,
                 disable_web_page_preview=True
             )
@@ -2151,11 +2217,25 @@ class MintosBot:
                 disable_web_page_preview=True
             )
             
-    async def _send_today_updates_to_channel(self, admin_chat_id: Union[int, str], target_channel: str) -> None:
-        """Send today's updates to the specified channel"""
+    async def _send_today_updates_to_channel(self, admin_chat_id: Union[int, str], target_channel: str, target_date: Optional[str] = None) -> None:
+        """
+        Send updates for a specific date to the specified channel
+        
+        Args:
+            admin_chat_id: ID of the admin who triggered the command
+            target_channel: Channel to send updates to
+            target_date: Date in YYYY-MM-DD format (defaults to today)
+        """
         try:
+            # Use the provided target_date or default to today
+            date_to_check = target_date if target_date else time.strftime("%Y-%m-%d")
+            
+            # Create appropriate message based on whether we're checking today or a specific date
+            is_today = date_to_check == time.strftime("%Y-%m-%d")
+            date_desc = "today" if is_today else f"date {date_to_check}"
+            
             # Inform user that command is being processed
-            await self.send_message(admin_chat_id, "🔄 Processing command...", disable_web_page_preview=True)
+            await self.send_message(admin_chat_id, f"🔄 Processing updates for {date_desc}...", disable_web_page_preview=True)
             logger.info(f"Target channel specified: {target_channel}")
 
             try:
@@ -2200,11 +2280,10 @@ class MintosBot:
                     )
                 return
 
-            # Retrieve today's updates
-            logger.info("Getting today's updates")
-            today = time.strftime("%Y-%m-%d")
+            # Retrieve updates for the target date
+            logger.info(f"Getting updates for {date_desc}")
             updates = self.data_manager.load_previous_updates()
-            today_updates = []
+            date_updates = []
 
             # Process updates
             for company_update in updates:
@@ -2214,36 +2293,40 @@ class MintosBot:
 
                     for year_data in company_update["items"]:
                         for item in year_data.get("items", []):
-                            if item.get('date') == today:
+                            if item.get('date') == date_to_check:
                                 update_with_company = {
                                     "lender_id": lender_id,
                                     "company_name": company_name,
                                     **year_data,
                                     **item
                                 }
-                                today_updates.append(update_with_company)
+                                date_updates.append(update_with_company)
 
-            logger.info(f"Found {len(today_updates)} updates for today")
+            logger.info(f"Found {len(date_updates)} updates for {date_desc}")
 
             # Handle no updates case - only notify the command sender, not the channel
-            if not today_updates:
-                await self.send_message(admin_chat_id, "✅ No updates found for today", disable_web_page_preview=True)
+            if not date_updates:
+                await self.send_message(admin_chat_id, f"✅ No updates found for {date_desc}", disable_web_page_preview=True)
                 return
 
             # Send updates to the channel
             successful_sends = 0
 
             # Only send header if there are updates to show
-            if today_updates:
+            if date_updates:
+                header_text = f"📊 Updates for {date_desc}:"
+                if not is_today:
+                    header_text = f"📊 Updates for {date_to_check}:"
+                    
                 await self.application.bot.send_message(
                     chat_id=resolved_channel,
-                    text=f"📊 Updates for today ({today}):",
+                    text=header_text,
                     parse_mode='HTML',
                     disable_web_page_preview=True
                 )
 
                 # Send updates
-                for update_item in today_updates:
+                for update_item in date_updates:
                     try:
                         message = self.format_update_message(update_item)
                         await self.application.bot.send_message(
@@ -2267,7 +2350,7 @@ class MintosBot:
                 pass  # If we can't get the name, use the ID
 
             # Send status only to the user who triggered the command
-            status = f"✅ Successfully sent {successful_sends} of {len(today_updates)} updates to {channel_name}"
+            status = f"✅ Successfully sent {successful_sends} of {len(date_updates)} updates for {date_desc} to {channel_name}"
             logger.info(status)
             await self.send_message(admin_chat_id, status, disable_web_page_preview=True)
 
@@ -2292,9 +2375,9 @@ class MintosBot:
             "/refresh - Force refresh updates data\n"
             "/users - View registered users (admin only)\n"
             "/company - Check updates for a specific company\n"
-            "/today - View all updates from today\n"
+            "/today [YYYY-MM-DD] - View updates for today or a specific date\n"
             "/campaigns - View current Mintos campaigns\n"
-            "/trigger_today @channel - Send today's updates to a specified channel\n"
+            "/trigger_today [@channel] [YYYY-MM-DD] - Send updates to a channel\n"
         )
         await update.message.reply_text(help_text)
         # Delete the command message
