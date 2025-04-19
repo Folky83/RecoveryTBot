@@ -554,46 +554,101 @@ class MintosBot:
                 await query.edit_message_text(user_text, reply_markup=reply_markup, parse_mode='HTML')
                 return
                 
-            elif query.data == "admin_trigger_today":
+            elif query.data.startswith("admin_trigger_today"):
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
                     await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
                     return
                 
-                # Get all registered users
-                users = self.user_manager.get_all_users()
+                # Check if there's a date parameter
+                parts = query.data.split("_")
+                target_date = None
+                if len(parts) >= 3:
+                    # Format should be admin_trigger_today_YYYY-MM-DD
+                    target_date = parts[3]
                 
-                if not users:
-                    # No users found
-                    keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
-                    reply_markup = InlineKeyboardMarkup(keyboard)
+                # First show date selection options if no date was specified
+                if query.data == "admin_trigger_today":
+                    keyboard = [
+                        [InlineKeyboardButton("Today's Updates", callback_data="admin_trigger_today_select")],
+                        [InlineKeyboardButton("Specify Custom Date", callback_data="admin_trigger_today_date")]
+                    ]
+                    # Add back button
+                    keyboard.append([InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")])
                     
+                    reply_markup = InlineKeyboardMarkup(keyboard)
                     await query.edit_message_text(
-                        "🔄 <b>Send Today's Updates</b>\n\n"
-                        "No registered users found.",
+                        "📅 <b>Send Updates</b>\n\n"
+                        "Select an option:",
                         reply_markup=reply_markup,
                         parse_mode='HTML'
                     )
                     return
                 
-                # Create buttons for each user
-                keyboard = []
-                for i, user_id in enumerate(users, 1):
-                    username = self.user_manager.get_user_info(user_id) or "Unknown"
-                    button_text = f"{i}. {username} ({user_id})"
-                    keyboard.append([InlineKeyboardButton(button_text, callback_data=f"trigger_today_{user_id}")])
+                # Handle custom date input request
+                elif query.data == "admin_trigger_today_date":
+                    await query.edit_message_text(
+                        "📅 <b>Enter Custom Date</b>\n\n"
+                        "Please enter the date in YYYY-MM-DD format.\n"
+                        "Example: 2025-04-19\n\n"
+                        "Reply directly to this message with the date.",
+                        parse_mode='HTML'
+                    )
+                    # The date input will be handled by a message handler
+                    return
                 
-                # Add back button
-                keyboard.append([InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")])
-                
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                await query.edit_message_text(
-                    "🔄 <b>Send Today's Updates</b>\n\n"
-                    "Select a channel to send today's updates to:",
-                    reply_markup=reply_markup,
-                    parse_mode='HTML'
-                )
-                return
+                # Continue with user selection using either today's date or the specified date
+                elif query.data == "admin_trigger_today_select" or target_date:
+                    # Get all registered users
+                    users = self.user_manager.get_all_users()
+                    
+                    if not users:
+                        # No users found
+                        keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                        reply_markup = InlineKeyboardMarkup(keyboard)
+                        
+                        date_text = "Today's" if not target_date else f"{target_date}"
+                        await query.edit_message_text(
+                            f"🔄 <b>Send {date_text} Updates</b>\n\n"
+                            "No registered users found.",
+                            reply_markup=reply_markup,
+                            parse_mode='HTML'
+                        )
+                        return
+                    
+                    # Create buttons for each user
+                    keyboard = []
+                    for i, user_id in enumerate(users, 1):
+                        username = self.user_manager.get_user_info(user_id) or "Unknown"
+                        button_text = f"{i}. {username} ({user_id})"
+                        
+                        # Add date parameter to callback data if specified
+                        if target_date:
+                            callback_data = f"trigger_today_{user_id}_{target_date}"
+                        else:
+                            callback_data = f"trigger_today_{user_id}"
+                            
+                        keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+                    
+                    # Add custom channel button
+                    if target_date:
+                        custom_callback = f"trigger_today_custom_{target_date}"
+                    else:
+                        custom_callback = "trigger_today_custom"
+                    keyboard.append([InlineKeyboardButton("✏️ Enter custom channel ID", callback_data=custom_callback)])
+                    
+                    # Add back button
+                    keyboard.append([InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")])
+                    
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    date_text = "today's" if not target_date else f"updates for {target_date}"
+                    await query.edit_message_text(
+                        f"🔄 <b>Send {date_text.capitalize()}</b>\n\n"
+                        f"Select a channel to send {date_text} to:",
+                        reply_markup=reply_markup,
+                        parse_mode='HTML'
+                    )
+                    return
                 
             elif query.data == "admin_refresh_updates":
                 # Check if user is admin
@@ -715,20 +770,55 @@ class MintosBot:
                 return
                 
             elif query.data.startswith("trigger_today_"):
-                # Extract channel ID from callback data
-                target_channel = query.data.split("_")[2]
+                # Extract data from callback
+                callback_parts = query.data.split("_")
+                
+                # Check if it's the custom input callback
+                if len(callback_parts) >= 3 and callback_parts[2] == "custom":
+                    # Handle the custom channel ID entry request
+                    # Check if there's a date parameter
+                    target_date = None
+                    if len(callback_parts) >= 4:
+                        target_date = callback_parts[3]
+                        date_text = f" for date {target_date}"
+                    else:
+                        date_text = ""
+                        
+                    await query.edit_message_text(
+                        f"📝 Please enter the channel ID to send updates{date_text} to.\n\n"
+                        "Format: -100xxxxxxxxxx\n"
+                        "Example: -1001234567890\n\n"
+                        "Reply directly to this message with the channel ID.",
+                        disable_web_page_preview=True
+                    )
+                    # The actual sending will be handled in a message handler
+                    return
+                
+                # Regular channel selection from the list
+                target_channel = callback_parts[2]
                 chat_id = update.effective_chat.id
+                
+                # Check for a date parameter in the callback data
+                target_date = None
+                if len(callback_parts) >= 4:
+                    # The format is trigger_today_channelid_date
+                    target_date = callback_parts[3]
                 
                 # Check if user is admin
                 if not await self.is_admin(update.effective_user.id):
                     await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
                     return
                 
+                # Create appropriate message based on whether we're checking today or a specific date
+                date_text = ""
+                if target_date:
+                    date_text = f" for {target_date}"
+                
                 # Edit message to show processing
-                await query.edit_message_text("🔄 Processing, please wait...", disable_web_page_preview=True)
+                await query.edit_message_text(f"🔄 Processing updates{date_text}, please wait...", disable_web_page_preview=True)
                 
                 # Send updates to the selected channel
-                await self._send_today_updates_to_channel(chat_id, target_channel)
+                await self._send_today_updates_to_channel(chat_id, target_channel, target_date)
                 return
                 
             elif query.data == "admin_exit":
@@ -747,7 +837,7 @@ class MintosBot:
                     [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
                     [InlineKeyboardButton("🔄 Refresh Updates", callback_data="admin_refresh_updates")],
                     [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
-                    [InlineKeyboardButton("📤 Send Today's Updates", callback_data="admin_trigger_today")],
+                    [InlineKeyboardButton("📤 Send Updates", callback_data="admin_trigger_today")],
                     [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
@@ -2446,7 +2536,7 @@ class MintosBot:
             [InlineKeyboardButton("👥 View Users", callback_data="admin_users")],
             [InlineKeyboardButton("🔄 Refresh Updates", callback_data="admin_refresh_updates")],
             [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
-            [InlineKeyboardButton("📤 Send Today's Updates", callback_data="admin_trigger_today")],
+            [InlineKeyboardButton("📤 Send Updates", callback_data="admin_trigger_today")],
             [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
