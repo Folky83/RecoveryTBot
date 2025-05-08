@@ -7,6 +7,7 @@ import os
 import time
 import hashlib
 import logging
+import shutil
 from typing import Dict, List, Optional, Set, Any, Union
 import pandas as pd
 from .logger import setup_logger
@@ -94,23 +95,49 @@ class DataManager:
         try:
             if os.path.exists(self.sent_updates_file):
                 with open(self.sent_updates_file, 'r') as f:
-                    self.sent_updates = set(json.load(f))
+                    data = json.load(f)
+                    # Extract just the IDs from dictionaries if necessary
+                    if data and isinstance(data, list):
+                        if all(isinstance(item, dict) and 'id' in item for item in data):
+                            # Format with IDs and timestamps
+                            self.sent_updates = set(item['id'] for item in data)
+                        else:
+                            # Old format with just IDs
+                            self.sent_updates = set(data)
                 logger.info(f"Loaded {len(self.sent_updates)} sent update IDs")
 
                 # Create backup if needed
                 if not os.path.exists(self.backup_sent_updates_file):
                     with open(self.backup_sent_updates_file, 'w') as f:
-                        json.dump(list(self.sent_updates), f)
+                        # Use the same format as the main file for consistency
+                        if os.path.exists(self.sent_updates_file):
+                            with open(self.sent_updates_file, 'r') as main_f:
+                                shutil.copyfileobj(main_f, f)
+                        else:
+                            json.dump(list(self.sent_updates), f)
                     logger.info("Created backup of sent updates")
             elif os.path.exists(self.backup_sent_updates_file):
                 logger.warning("Main sent updates file not found, loading from backup")
                 with open(self.backup_sent_updates_file, 'r') as f:
-                    self.sent_updates = set(json.load(f))
+                    data = json.load(f)
+                    # Extract just the IDs from dictionaries if necessary
+                    if data and isinstance(data, list):
+                        if all(isinstance(item, dict) and 'id' in item for item in data):
+                            # Format with IDs and timestamps
+                            self.sent_updates = set(item['id'] for item in data)
+                        else:
+                            # Old format with just IDs
+                            self.sent_updates = set(data)
                 logger.info(f"Loaded {len(self.sent_updates)} sent update IDs from backup")
 
                 # Recreate main file
                 with open(self.sent_updates_file, 'w') as f:
-                    json.dump(list(self.sent_updates), f)
+                    # Use the same format as the backup file for consistency
+                    if os.path.exists(self.backup_sent_updates_file):
+                        with open(self.backup_sent_updates_file, 'r') as backup_f:
+                            shutil.copyfileobj(backup_f, f)
+                    else:
+                        json.dump(list(self.sent_updates), f)
         except Exception as e:
             logger.error(f"Error loading sent updates: {e}", exc_info=True)
 
@@ -200,34 +227,84 @@ class DataManager:
         try:
             if os.path.exists(self.sent_campaigns_file):
                 with open(self.sent_campaigns_file, 'r') as f:
-                    self.sent_campaigns = set(json.load(f))
+                    data = json.load(f)
+                    # Extract just the IDs from dictionaries if necessary
+                    if data and isinstance(data, list):
+                        if all(isinstance(item, dict) and 'id' in item for item in data):
+                            # Format with IDs and timestamps
+                            self.sent_campaigns = set(item['id'] for item in data)
+                        else:
+                            # Old format with just IDs
+                            self.sent_campaigns = set(data)
                 logger.info(f"Loaded {len(self.sent_campaigns)} sent campaign IDs")
 
                 # Create backup if needed
                 if not os.path.exists(self.backup_sent_campaigns_file):
                     with open(self.backup_sent_campaigns_file, 'w') as f:
-                        json.dump(list(self.sent_campaigns), f)
+                        # Use the same format as the main file for consistency
+                        if os.path.exists(self.sent_campaigns_file):
+                            with open(self.sent_campaigns_file, 'r') as main_f:
+                                shutil.copyfileobj(main_f, f)
+                        else:
+                            json.dump(list(self.sent_campaigns), f)
+                    logger.info("Created backup of sent campaigns")
             elif os.path.exists(self.backup_sent_campaigns_file):
                 logger.warning("Main sent campaigns file not found, loading from backup")
                 with open(self.backup_sent_campaigns_file, 'r') as f:
-                    self.sent_campaigns = set(json.load(f))
+                    data = json.load(f)
+                    # Extract just the IDs from dictionaries if necessary
+                    if data and isinstance(data, list):
+                        if all(isinstance(item, dict) and 'id' in item for item in data):
+                            # Format with IDs and timestamps
+                            self.sent_campaigns = set(item['id'] for item in data)
+                        else:
+                            # Old format with just IDs
+                            self.sent_campaigns = set(data)
+                logger.info(f"Loaded {len(self.sent_campaigns)} sent campaign IDs from backup")
 
                 # Recreate main file
                 with open(self.sent_campaigns_file, 'w') as f:
-                    json.dump(list(self.sent_campaigns), f)
+                    # Use the same format as the backup file for consistency
+                    if os.path.exists(self.backup_sent_campaigns_file):
+                        with open(self.backup_sent_campaigns_file, 'r') as backup_f:
+                            shutil.copyfileobj(backup_f, f)
+                    else:
+                        json.dump(list(self.sent_campaigns), f)
         except Exception as e:
             logger.error(f"Error loading sent campaigns: {e}", exc_info=True)
 
     def save_sent_campaign(self, campaign: Dict[str, Any]) -> None:
-        """Mark a campaign as sent with backup"""
+        """Mark a campaign as sent with backup and timestamp"""
         try:
             campaign_id = self._create_campaign_id(campaign)
             self.sent_campaigns.add(campaign_id)
+            
+            # Load existing data
+            sent_data = []
+            try:
+                with open(self.sent_campaigns_file, 'r') as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        sent_data = [entry if isinstance(entry, dict) else {'id': entry} for entry in data]
+            except (FileNotFoundError, json.JSONDecodeError):
+                pass
+                
+            # Add or update entry
+            now = time.time()
+            updated = False
+            for entry in sent_data:
+                if entry.get('id') == campaign_id:
+                    entry['timestamp'] = now
+                    updated = True
+                    break
+            
+            if not updated:
+                sent_data.append({'id': campaign_id, 'timestamp': now})
 
             # Save to both main and backup files
             for file_path in [self.sent_campaigns_file, self.backup_sent_campaigns_file]:
                 with open(file_path, 'w') as f:
-                    json.dump(list(self.sent_campaigns), f)
+                    json.dump(sent_data, f)
 
             logger.info(f"Saved sent campaign ID: {campaign_id}")
         except Exception as e:
