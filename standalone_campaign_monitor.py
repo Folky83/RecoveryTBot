@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Campaign Monitor for Mintos Telegram Bot
+Standalone Campaign Monitor for Mintos Telegram Bot
 
-This standalone script checks for new Mintos campaigns every minute and sends
-notifications via Telegram. It can be run independently from the main bot.
+This completely self-contained script checks for new Mintos campaigns every minute
+and sends notifications via Telegram. It can be run independently without any
+dependencies on the main bot code.
 
 Usage:
-    python campaign_monitor.py [--check-interval SECONDS]
+    python standalone_campaign_monitor.py [--check-interval SECONDS]
 
 Options:
     --check-interval SECONDS    Check interval in seconds (default: 60 seconds)
@@ -19,36 +20,364 @@ import os
 import sys
 import signal
 import time
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+import json
+import re
+import hashlib
+from typing import Optional, Dict, Any, List, Union
+from datetime import datetime, timezone
 import traceback
-
-# Add the current directory to sys.path to ensure imports work properly
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Import bot modules
-from bot.data_manager import DataManager
-from bot.mintos_client import MintosClient
-from bot.user_manager import UserManager
-from bot.logger import setup_logger
-from bot.config import TELEGRAM_TOKEN
+import requests
 
 # Import telegram components
-from telegram import Bot
-from telegram.error import TelegramError, RetryAfter
+try:
+    from telegram import Bot
+    from telegram.error import TelegramError, RetryAfter
+except ImportError:
+    print("Error: python-telegram-bot package is required.")
+    print("Please install it with: pip install python-telegram-bot")
+    sys.exit(1)
 
 # Set up logging
-logger = setup_logger("campaign_monitor")
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("campaign_monitor")
+
+# Configuration - use normalized paths for cross-platform compatibility
+DATA_DIR = "data"
+CAMPAIGNS_FILE = os.path.normpath(os.path.join(DATA_DIR, "campaigns.json"))
+SENT_CAMPAIGNS_FILE = os.path.normpath(os.path.join(DATA_DIR, "sent_campaigns.json"))
+BACKUP_SENT_CAMPAIGNS_FILE = os.path.normpath(os.path.join(DATA_DIR, "sent_campaigns.json.bak"))
+USERS_FILE = os.path.normpath(os.path.join(DATA_DIR, "users.json"))
+MINTOS_CAMPAIGNS_URL = "https://www.mintos.com/webapp/api/en/webapp-api/user/campaigns"
+REQUEST_DELAY = 0.1  # seconds between requests
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds
+REQUEST_TIMEOUT = 30  # seconds
+
+# Default test user - used if no users.json exists
+DEFAULT_USER_ID = "114691530"  # Default to bot creator's ID
+
+# Telegram bot token - hardcoded for local use
+TELEGRAM_BOT_TOKEN = "7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M"
+
+class UserManager:
+    """Manages user registration and data"""
+    
+    def __init__(self):
+        """Initialize the user manager"""
+        self.users = {}
+        self._ensure_data_directory()
+        self._load_users()
+        
+    def _ensure_data_directory(self) -> None:
+        """Ensure data directory exists"""
+        os.makedirs(DATA_DIR, exist_ok=True)
+        logger.info(f"Data directory checked: {DATA_DIR}")
+        
+    def _load_users(self) -> None:
+        """Load users from file"""
+        try:
+            if os.path.exists(USERS_FILE):
+                with open(USERS_FILE, 'r') as f:
+                    self.users = json.load(f)
+                logger.info(f"Loaded {len(self.users)} users")
+            else:
+                logger.warning(f"Users file not found at {USERS_FILE}")
+                # Create a default users file with the bot creator's ID
+                self.users = {DEFAULT_USER_ID: "default_user"}
+                self.save_users()
+                logger.info(f"Created default users file with user ID: {DEFAULT_USER_ID}")
+        except Exception as e:
+            logger.error(f"Error loading users: {e}")
+            # Create a default user if there was an error
+            self.users = {DEFAULT_USER_ID: "default_user"}
+            
+    def save_users(self) -> None:
+        """Save users to file"""
+        try:
+            with open(USERS_FILE, 'w') as f:
+                json.dump(self.users, f)
+            logger.info(f"Users saved successfully: {self.users}")
+            
+            # Verify the file was written correctly
+            with open(USERS_FILE, 'r') as f:
+                content = f.read()
+                logger.info(f"Verification - users.json contains: {content}")
+        except Exception as e:
+            logger.error(f"Error saving users: {e}")
+            
+    def add_user(self, user_id: str, username: Optional[str] = None) -> None:
+        """Add or update a user"""
+        self.users[user_id] = username
+        self.save_users()
+        logger.info(f"Added/updated user: {user_id} (username: {username})")
+        
+    def remove_user(self, user_id: str) -> None:
+        """Remove a user"""
+        if user_id in self.users:
+            del self.users[user_id]
+            self.save_users()
+            logger.info(f"Removed user: {user_id}")
+        else:
+            logger.warning(f"Attempted to remove non-existent user: {user_id}")
+            
+    def get_all_users(self) -> List[str]:
+        """Get all users"""
+        return list(self.users.keys())
+        
+    def get_user_info(self, user_id: str) -> Optional[str]:
+        """Get user information"""
+        return self.users.get(user_id)
+
+class DataManager:
+    """Manages data persistence and caching"""
+    
+    def __init__(self):
+        """Initialize the data manager"""
+        self._sent_campaigns = set()
+        self._ensure_data_directory()
+        self._load_sent_campaigns()
+        
+    def _ensure_data_directory(self) -> None:
+        """Ensure data directory exists"""
+        os.makedirs(DATA_DIR, exist_ok=True)
+        
+    def _load_sent_campaigns(self) -> None:
+        """Load set of already sent campaign IDs with verification and backup"""
+        try:
+            if os.path.exists(SENT_CAMPAIGNS_FILE):
+                with open(SENT_CAMPAIGNS_FILE, 'r') as f:
+                    data = json.load(f)
+                    self._sent_campaigns = set(data)
+                logger.info(f"Loaded {len(self._sent_campaigns)} sent campaign IDs")
+            else:
+                logger.warning(f"Sent campaigns file not found at {SENT_CAMPAIGNS_FILE}")
+                self._sent_campaigns = set()
+                
+                # Create an empty file with proper structure
+                with open(SENT_CAMPAIGNS_FILE, 'w') as f:
+                    json.dump([], f)
+                logger.info(f"Created empty sent campaigns file at {SENT_CAMPAIGNS_FILE}")
+                
+            # Create backup if file exists but no backup
+            if os.path.exists(SENT_CAMPAIGNS_FILE) and not os.path.exists(BACKUP_SENT_CAMPAIGNS_FILE):
+                logger.info("Creating backup of sent campaigns file")
+                with open(SENT_CAMPAIGNS_FILE, 'r') as f:
+                    data = f.read()
+                with open(BACKUP_SENT_CAMPAIGNS_FILE, 'w') as f:
+                    f.write(data)
+        except Exception as e:
+            logger.error(f"Error loading sent campaigns: {e}")
+            
+            # Try to recover from backup
+            if os.path.exists(BACKUP_SENT_CAMPAIGNS_FILE):
+                try:
+                    logger.info("Attempting to recover sent campaigns from backup")
+                    with open(BACKUP_SENT_CAMPAIGNS_FILE, 'r') as f:
+                        data = json.load(f)
+                        self._sent_campaigns = set(data)
+                    logger.info(f"Recovered {len(self._sent_campaigns)} sent campaign IDs from backup")
+                except Exception as backup_error:
+                    logger.error(f"Failed to recover from backup: {backup_error}")
+                    self._sent_campaigns = set()
+                    
+                    # Create a new empty file as last resort
+                    with open(SENT_CAMPAIGNS_FILE, 'w') as f:
+                        json.dump([], f)
+                    logger.info(f"Created new empty sent campaigns file at {SENT_CAMPAIGNS_FILE}")
+            else:
+                self._sent_campaigns = set()
+                
+                # Create a new empty file as last resort
+                with open(SENT_CAMPAIGNS_FILE, 'w') as f:
+                    json.dump([], f)
+                logger.info(f"Created new empty sent campaigns file at {SENT_CAMPAIGNS_FILE}")
+                
+    def save_sent_campaign(self, campaign: Dict[str, Any]) -> None:
+        """Mark a campaign as sent with backup and timestamp"""
+        campaign_id = self._create_campaign_id(campaign)
+        
+        if campaign_id:
+            logger.debug(f"Marking campaign {campaign_id} as sent")
+            self._sent_campaigns.add(campaign_id)
+            
+            # Save to file
+            try:
+                with open(SENT_CAMPAIGNS_FILE, 'w') as f:
+                    json.dump(list(self._sent_campaigns), f)
+                    
+                # Create backup
+                with open(BACKUP_SENT_CAMPAIGNS_FILE, 'w') as f:
+                    json.dump(list(self._sent_campaigns), f)
+                    
+                logger.debug(f"Saved {len(self._sent_campaigns)} sent campaign IDs")
+            except Exception as e:
+                logger.error(f"Error saving sent campaigns: {e}")
+                
+    def is_campaign_sent(self, campaign: Dict[str, Any]) -> bool:
+        """Check if a campaign has already been sent"""
+        campaign_id = self._create_campaign_id(campaign)
+        return campaign_id in self._sent_campaigns if campaign_id else False
+        
+    def _create_campaign_id(self, campaign: Dict[str, Any]) -> str:
+        """Create a unique identifier for a campaign"""
+        try:
+            # Use campaign ID if available
+            if 'id' in campaign:
+                return str(campaign['id'])
+                
+            # Fallback to hash of name and validity period
+            identifier = f"{campaign.get('name', '')}-{campaign.get('validFrom', '')}-{campaign.get('validTo', '')}"
+            return hashlib.md5(identifier.encode()).hexdigest()
+        except Exception as e:
+            logger.error(f"Error creating campaign ID: {e}")
+            return ""
+            
+    def get_campaigns_cache_age(self) -> float:
+        """Get age of campaigns cache in seconds"""
+        try:
+            if os.path.exists(CAMPAIGNS_FILE):
+                file_modified_time = os.path.getmtime(CAMPAIGNS_FILE)
+                current_time = time.time()
+                age = current_time - file_modified_time
+                logger.debug(f"Campaigns cache age: {age:.2f} seconds")
+                return age
+            return float('inf')  # Return infinity if file doesn't exist
+        except Exception as e:
+            logger.error(f"Error getting cache age: {e}")
+            return float('inf')
+            
+    def load_previous_campaigns(self) -> List[Dict[str, Any]]:
+        """Load previous campaigns from cache file"""
+        try:
+            if os.path.exists(CAMPAIGNS_FILE):
+                with open(CAMPAIGNS_FILE, 'r') as f:
+                    campaigns = json.load(f)
+                logger.info(f"Loaded {len(campaigns)} campaigns from cache")
+                return campaigns
+            return []
+        except Exception as e:
+            logger.error(f"Error loading previous campaigns: {e}")
+            return []
+            
+    def save_campaigns(self, campaigns: List[Dict[str, Any]]) -> None:
+        """Save campaigns to cache file"""
+        try:
+            with open(CAMPAIGNS_FILE, 'w') as f:
+                json.dump(campaigns, f)
+            logger.info(f"Successfully saved {len(campaigns)} campaigns")
+            logger.debug(f"Campaigns file size: {os.path.getsize(CAMPAIGNS_FILE)} bytes")
+        except Exception as e:
+            logger.error(f"Error saving campaigns: {e}")
+            
+    def compare_campaigns(self, new_campaigns: List[Dict[str, Any]], 
+                        previous_campaigns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Compare campaigns to find new or updated ones"""
+        logger.debug(f"Comparing {len(new_campaigns)} new campaigns with {len(previous_campaigns)} previous campaigns")
+        
+        # If there were no previous campaigns, all are new
+        if not previous_campaigns:
+            logger.info(f"Found {len(new_campaigns)} new campaigns (no previous campaigns)")
+            return new_campaigns
+            
+        added_campaigns = []
+        prev_campaigns_map = {self._create_campaign_id(c): c for c in previous_campaigns if self._create_campaign_id(c)}
+        
+        for new_campaign in new_campaigns:
+            campaign_id = self._create_campaign_id(new_campaign)
+            if not campaign_id:
+                continue
+                
+            # Check if campaign is new or updated
+            if campaign_id not in prev_campaigns_map:
+                logger.debug(f"Found new campaign: {campaign_id}")
+                added_campaigns.append(new_campaign)
+            elif not self._are_campaigns_identical(new_campaign, prev_campaigns_map[campaign_id]):
+                logger.debug(f"Found updated campaign: {campaign_id}")
+                added_campaigns.append(new_campaign)
+                
+        logger.info(f"Found {len(added_campaigns)} new or updated campaigns")
+        return added_campaigns
+        
+    def _are_campaigns_identical(self, new_campaign: Dict[str, Any], 
+                               prev_campaign: Dict[str, Any]) -> bool:
+        """Compare two campaigns for equality in significant fields"""
+        try:
+            # Define which fields we consider significant for comparison
+            significant_fields = [
+                'name', 'shortDescription', 'validFrom', 'validTo', 
+                'bonusAmount', 'requiredPrincipalExposure', 
+                'additionalBonusEnabled', 'bonusCoefficient'
+            ]
+            
+            for field in significant_fields:
+                if new_campaign.get(field) != prev_campaign.get(field):
+                    logger.debug(f"Field '{field}' differs: {new_campaign.get(field)} vs {prev_campaign.get(field)}")
+                    return False
+                    
+            return True
+        except Exception as e:
+            logger.error(f"Error comparing campaigns: {e}")
+            return False  # Conservative approach: if error, treat as different
+
+class MintosClient:
+    """Client for the Mintos API"""
+    
+    def __init__(self):
+        """Initialize the client"""
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.mintos.com/en/',
+            'Origin': 'https://www.mintos.com'
+        })
+        
+    def _make_request(self, url: str) -> Optional[Any]:
+        """Make a request to the Mintos API with retries"""
+        for attempt in range(MAX_RETRIES):
+            try:
+                logger.debug(f"Making request to {url} (attempt {attempt + 1}/{MAX_RETRIES})")
+                response = self.session.get(url, timeout=REQUEST_TIMEOUT)
+                time.sleep(REQUEST_DELAY)  # Avoid rate limiting
+                
+                if response.status_code == 200:
+                    return response.json()
+                else:
+                    logger.warning(f"Request failed with status code {response.status_code}: {response.text}")
+                    
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Request error: {e}")
+                
+            # Wait before retry
+            logger.debug(f"Retrying in {RETRY_DELAY} seconds...")
+            time.sleep(RETRY_DELAY)
+            
+        logger.error(f"Failed to make request to {url} after {MAX_RETRIES} attempts")
+        return None
+        
+    def get_campaigns(self) -> Optional[List[Dict[str, Any]]]:
+        """Fetch current Mintos campaigns"""
+        response = self._make_request(MINTOS_CAMPAIGNS_URL)
+        
+        if response:
+            logger.info(f"Successfully retrieved {len(response)} campaigns")
+            return response
+            
+        logger.error(f"Failed to get campaigns after {MAX_RETRIES} attempts")
+        return None
 
 class CampaignMonitor:
     """Monitor for Mintos campaigns with Telegram notifications"""
     
     def __init__(self, check_interval: int = 60):
-        """Initialize the campaign monitor
-        
-        Args:
-            check_interval: Check interval in seconds (default: 60)
-        """
+        """Initialize the campaign monitor"""
         self.check_interval = check_interval
         self.data_manager = DataManager()
         self.mintos_client = MintosClient()
@@ -57,16 +386,17 @@ class CampaignMonitor:
         self._failed_messages = []
         self.running = False
         
-        # Verify TELEGRAM_TOKEN is set
-        if not TELEGRAM_TOKEN:
-            logger.error("TELEGRAM_BOT_TOKEN environment variable not set")
-            raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
-        
+        # Use the hardcoded token variable
+        self.telegram_token = TELEGRAM_BOT_TOKEN
+        if not self.telegram_token:
+            logger.error("Telegram bot token not available")
+            raise ValueError("The hardcoded Telegram bot token is not valid. Please check the TELEGRAM_BOT_TOKEN value in the script.")
+            
         logger.info(f"Campaign monitor initialized with {check_interval}s check interval")
         
     async def initialize(self) -> None:
         """Initialize Telegram bot"""
-        self.bot = Bot(token=TELEGRAM_TOKEN)
+        self.bot = Bot(token=self.telegram_token)
         
         # Verify connection to Telegram
         try:
@@ -75,6 +405,30 @@ class CampaignMonitor:
         except Exception as e:
             logger.error(f"Failed to connect to Telegram: {e}")
             raise
+            
+    def _is_campaign_active(self, campaign: Dict[str, Any]) -> bool:
+        """Check if a campaign is currently active based on its dates"""
+        try:
+            valid_from = campaign.get('validFrom')
+            valid_to = campaign.get('validTo')
+            
+            if not valid_from or not valid_to:
+                # Default to active if dates aren't provided
+                return True
+                
+            # Convert string dates to datetime objects
+            from_date = datetime.fromisoformat(valid_from.replace('Z', '+00:00'))
+            to_date = datetime.fromisoformat(valid_to.replace('Z', '+00:00'))
+            
+            # Get current time in UTC
+            now = datetime.now(timezone.utc)
+            
+            # Check if current time is within the campaign validity period
+            return from_date <= now <= to_date
+        except Exception as e:
+            logger.warning(f"Error checking campaign activity: {e}")
+            # Default to active if there's an error parsing dates
+            return True
             
     async def format_campaign_message(self, campaign: Dict[str, Any]) -> str:
         """Format campaign message with rich information from Mintos API"""
@@ -163,7 +517,6 @@ class CampaignMonitor:
         # Description if available
         if campaign.get('shortDescription'):
             # Clean HTML tags and safely handle entity references
-            import re
             description = campaign.get('shortDescription', '')
 
             # First, handle escaped characters
@@ -210,42 +563,11 @@ class CampaignMonitor:
         message += f"\n🔗 <a href='https://www.mintos.com/en/campaigns/'>View on Mintos</a>"
 
         return message.strip()
-
-    def _is_campaign_active(self, campaign: Dict[str, Any]) -> bool:
-        """Check if a campaign is currently active based on its dates"""
-        try:
-            valid_from = campaign.get('validFrom')
-            valid_to = campaign.get('validTo')
-            
-            if not valid_from or not valid_to:
-                # Default to active if dates aren't provided
-                return True
-                
-            # Convert string dates to datetime objects
-            from_date = datetime.fromisoformat(valid_from.replace('Z', '+00:00'))
-            to_date = datetime.fromisoformat(valid_to.replace('Z', '+00:00'))
-            
-            # Get current time in UTC
-            now = datetime.now(timezone.utc)
-            
-            # Check if current time is within the campaign validity period
-            return from_date <= now <= to_date
-        except Exception as e:
-            logger.warning(f"Error checking campaign activity: {e}")
-            # Default to active if there's an error parsing dates
-            return True
             
     async def send_message(self, chat_id: str, text: str, 
                          disable_web_page_preview: bool = False, 
                          parse_mode: Optional[str] = None) -> None:
-        """Send a message to a Telegram chat
-        
-        Args:
-            chat_id: Telegram chat ID
-            text: Message text
-            disable_web_page_preview: Whether to disable web page previews
-            parse_mode: Parse mode for the message
-        """
+        """Send a message to a Telegram chat"""
         if not self.bot:
             logger.error("Bot not initialized")
             raise RuntimeError("Bot not initialized")
@@ -265,6 +587,8 @@ class CampaignMonitor:
                     parse_mode=parse_mode or 'HTML',
                     disable_web_page_preview=disable_web_page_preview
                 )
+                logger.debug(f"Message sent successfully to {chat_id} (length: {message_length} chars)")
+                logger.debug(f"Waiting {adaptive_delay}s before next message")
                 # Adaptive delay after successful send based on message length
                 await asyncio.sleep(adaptive_delay)
                 return
@@ -279,7 +603,7 @@ class CampaignMonitor:
                 
             except TelegramError as e:
                 if attempt == max_retries - 1:
-                    logger.error(f"Error sending message to {chat_id}: {e}", exc_info=True)
+                    logger.error(f"Error sending message to {chat_id}: {e}")
                     # Store failed message for later retry
                     self._failed_messages.append({
                         'chat_id': chat_id,
@@ -485,40 +809,40 @@ async def main() -> None:
                       help="Check interval in seconds (default: 60)")
     args = parser.parse_args()
     
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler()
-        ]
-    )
-    
     # Create data directory if it doesn't exist
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(DATA_DIR, exist_ok=True)
     
     # Create monitor instance
-    monitor = CampaignMonitor(check_interval=args.check_interval)
-    
-    # Set up signal handlers
-    loop = asyncio.get_event_loop()
-    handler = signal_handler(monitor, loop)
-    signal.signal(signal.SIGINT, handler)
-    signal.signal(signal.SIGTERM, handler)
-    
     try:
-        # Run the monitor
-        await monitor.run()
-    except KeyboardInterrupt:
-        logger.info("Interrupted by user")
+        monitor = CampaignMonitor(check_interval=args.check_interval)
+        
+        # Set up signal handlers
+        loop = asyncio.get_event_loop()
+        handler = signal_handler(monitor, loop)
+        signal.signal(signal.SIGINT, handler)
+        signal.signal(signal.SIGTERM, handler)
+        
+        try:
+            # Run the monitor
+            await monitor.run()
+        except KeyboardInterrupt:
+            logger.info("Interrupted by user")
+        finally:
+            # Ensure graceful shutdown
+            if monitor.running:
+                await monitor.stop()
+            logger.info("Campaign monitor shutdown complete")
+    except ValueError as e:
+        # Handle token error gracefully
+        logger.error(f"Error: {e}")
+        print(f"\nERROR: {e}")
+        print("\nThere was a problem with the Telegram bot token.")
+        print("Please check that the hardcoded token in the script is valid.")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"Fatal error: {traceback.format_exc()}")
+        print(f"\nFatal error: {e}")
         sys.exit(1)
-    finally:
-        # Ensure graceful shutdown
-        if monitor.running:
-            await monitor.stop()
-        logger.info("Campaign monitor shutdown complete")
 
 if __name__ == "__main__":
     asyncio.run(main())
