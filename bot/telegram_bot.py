@@ -1736,7 +1736,20 @@ class MintosBot:
                     message = self.format_update_message(update_item)
                     await self.send_message(chat_id, message, disable_web_page_preview=True)
                     logger.debug(f"Successfully sent update {i}/{len(date_updates)} to {chat_id}")
-                    await asyncio.sleep(1)  # Small delay between messages
+                    # The send_message method already has adaptive delays built in
+                except RetryAfter as e:
+                    # If we hit rate limiting, wait the required time plus a buffer
+                    wait_time = e.retry_after + 0.5
+                    logger.warning(f"Rate limited by Telegram. Waiting {wait_time} seconds")
+                    await asyncio.sleep(wait_time)
+                    
+                    # Retry sending after waiting
+                    try:
+                        await self.send_message(chat_id, message, disable_web_page_preview=True)
+                        logger.debug(f"Successfully sent update {i}/{len(date_updates)} after rate limit wait")
+                    except Exception as retry_err:
+                        logger.error(f"Failed to send update {i} after rate limit wait: {retry_err}", exc_info=True)
+                        continue
                 except Exception as e:
                     logger.error(f"Error sending update {i}/{len(date_updates)}: {e}", exc_info=True)
                     continue
@@ -2426,7 +2439,20 @@ class MintosBot:
                             disable_web_page_preview=True
                         )
                         successful_sends += 1
-                        await asyncio.sleep(0.5)  # Rate limiting
+                        await asyncio.sleep(1.0)  # Increased delay for better rate limiting
+                    except RetryAfter as e:
+                        # Handle rate limiting from Telegram by waiting the specified amount
+                        logger.warning(f"Rate limited by Telegram. Waiting {e.retry_after} seconds")
+                        await asyncio.sleep(e.retry_after)
+                        # Try again after waiting
+                        await self.application.bot.send_message(
+                            chat_id=resolved_channel,
+                            text=message,
+                            parse_mode='HTML',
+                            disable_web_page_preview=True
+                        )
+                        successful_sends += 1
+                        await asyncio.sleep(1.0)  # Additional wait after retry
                     except Exception as e:
                         logger.error(f"Error sending update: {e}")
 
