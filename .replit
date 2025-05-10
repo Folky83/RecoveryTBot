@@ -14,12 +14,16 @@ runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
-author = "agent" 
+author = "agent"
 mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Telegram Bot"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Campaign Monitor"
 
 [[workflows.workflow]]
 name = "Telegram Bot"
@@ -35,6 +39,14 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "python run.py"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Campaign Monitor"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python campaign_monitor.py --check-interval 60"
 
 [[ports]]
 localPort = 5000
