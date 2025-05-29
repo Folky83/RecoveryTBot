@@ -93,7 +93,7 @@ class MintosBot:
 
     async def _cancel_tasks(self) -> None:
         """Cancel running background tasks"""
-        for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("rss", self._rss_task)]:
+        for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("campaign", self._campaign_task), ("rss", self._rss_task)]:
             if task and not task.done():
                 task.cancel()
                 try:
@@ -1359,8 +1359,7 @@ class MintosBot:
             except Exception as e:
                 logger.error(f"Error verifying cache file update: {e}")
 
-            # Check for new campaigns
-            await self.check_campaigns()
+            # Campaign checking is now handled by the separate scheduled_campaign_updates task
 
             logger.info(f"Update check completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Found {len(added_updates)} new updates.")
 
@@ -1423,16 +1422,24 @@ class MintosBot:
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
 
                 if unsent_campaigns:
-                    logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns to {len(users)} users")
+                    admin_id = 114691530  # Hardcoded admin ID
+                    
                     for i, campaign in enumerate(unsent_campaigns):
                         message = self.format_campaign_message(campaign)
-                        for user_id in users:
-                            try:
-                                await self.send_message(user_id, message, disable_web_page_preview=True)
-                                self.data_manager.save_sent_campaign(campaign)
-                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
-                            except Exception as e:
-                                logger.error(f"Failed to send campaign to user {user_id}: {e}")
+                        
+                        # Send immediately to admin
+                        try:
+                            await self.send_message(admin_id, message, disable_web_page_preview=True)
+                            logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to admin {admin_id}")
+                        except Exception as e:
+                            logger.error(f"Failed to send campaign to admin {admin_id}: {e}")
+                        
+                        # Add to pending notifications for other users (4-hour delay)
+                        self.data_manager.add_pending_campaign(campaign, admin_notified=True)
+                        logger.info(f"Added campaign {campaign.get('id')} to pending notifications for delayed sending")
+                        
+                        # Mark as sent to admin but not to other users yet
+                        # We'll mark it as fully sent when we process pending campaigns
                 else:
                     logger.info("No new unsent campaigns to send")
 
@@ -2635,6 +2642,65 @@ class MintosBot:
                 logger.error(f"RSS check failed: {e}", exc_info=True)
                 # Wait 5 minutes on error before retrying
                 await asyncio.sleep(5 * 60)
+
+    async def scheduled_campaign_updates(self) -> None:
+        """Handle campaign checks every 5 minutes with 4-hour delay for non-admin users"""
+        while True:
+            try:
+                await asyncio.sleep(5 * 60)  # Check every 5 minutes
+                
+                logger.info("Running scheduled campaign check")
+                await self.check_campaigns()
+                
+                # Also check for ready pending campaigns
+                await self.process_pending_campaigns()
+                
+            except asyncio.CancelledError:
+                logger.info("Scheduled campaign updates cancelled")
+                break
+            except Exception as e:
+                logger.error(f"Campaign check failed: {e}", exc_info=True)
+                # Wait 2 minutes on error before retrying
+                await asyncio.sleep(2 * 60)
+
+    async def process_pending_campaigns(self) -> None:
+        """Process campaigns that are ready to be sent after the delay"""
+        try:
+            ready_campaigns = self.data_manager.get_ready_pending_campaigns(delay_hours=4)
+            
+            if not ready_campaigns:
+                return
+                
+            logger.info(f"Processing {len(ready_campaigns)} ready pending campaigns")
+            
+            # Get all non-admin users
+            all_users = self.user_manager.get_all_users()
+            admin_id = 114691530  # Hardcoded admin ID
+            non_admin_users = [user_id for user_id in all_users if user_id != admin_id]
+            
+            for pending_item in ready_campaigns:
+                campaign = pending_item['campaign']
+                campaign_id = campaign.get('id')
+                
+                if not campaign_id:
+                    continue
+                    
+                # Send to non-admin users
+                message = self.format_campaign_message(campaign)
+                
+                for user_id in non_admin_users:
+                    try:
+                        await self.send_message(user_id, message, disable_web_page_preview=True)
+                        logger.info(f"Sent delayed campaign {campaign_id} to user {user_id}")
+                    except Exception as e:
+                        logger.error(f"Failed to send delayed campaign to user {user_id}: {e}")
+                
+                # Remove from pending list and mark as sent
+                self.data_manager.remove_pending_campaign(campaign_id)
+                self.data_manager.save_sent_campaign(campaign)
+                
+        except Exception as e:
+            logger.error(f"Error processing pending campaigns: {e}", exc_info=True)
 
     async def rss_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Toggle RSS notifications for the user"""
