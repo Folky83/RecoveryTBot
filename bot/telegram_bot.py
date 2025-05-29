@@ -301,6 +301,10 @@ class MintosBot:
             await self.check_documents()
             logger.info("Document check completed")
             
+            # Check for RSS updates
+            await self.check_rss_updates()
+            logger.info("RSS check completed")
+            
         except Exception as e:
             logger.error(f"Update check error: {e}", exc_info=True)
 
@@ -858,6 +862,21 @@ class MintosBot:
                 )
                 return
 
+            elif query.data.startswith("rss_toggle_"):
+                chat_id = query.data.split("_")[2]
+                current_preference = self.user_manager.get_rss_preference(chat_id)
+                new_preference = not current_preference
+                self.user_manager.set_rss_preference(chat_id, new_preference)
+                
+                status = "enabled" if new_preference else "disabled"
+                await query.edit_message_text(
+                    f"✅ <b>RSS Notifications {status.title()}</b>\n\n"
+                    f"NASDAQ Baltic news notifications are now <b>{status}</b>.",
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
+                
             elif query.data == "cancel":
                 # Make the cancellation message more attractive and consistent
                 await query.edit_message_text(
@@ -2541,6 +2560,123 @@ class MintosBot:
         await update.message.reply_text(user_text)
         # Delete the command message
         await update.message.delete()
+
+    async def check_rss_updates(self) -> None:
+        """Check for new RSS items and send notifications to users who opted in"""
+        try:
+            # Get users who have RSS notifications enabled
+            rss_users = self.user_manager.get_users_with_rss_enabled()
+            if not rss_users:
+                logger.info("No users have RSS notifications enabled")
+                return
+
+            # Get new RSS items
+            new_items = await self.rss_reader.check_and_get_new_items()
+            if not new_items:
+                logger.info("No new RSS items found")
+                return
+
+            logger.info(f"Found {len(new_items)} new RSS items, sending to {len(rss_users)} users")
+
+            # Send notifications to users
+            for item in new_items:
+                message = self.rss_reader.format_rss_message(item)
+                
+                for chat_id in rss_users:
+                    try:
+                        await self.send_message(
+                            chat_id,
+                            message,
+                            parse_mode='HTML',
+                            disable_web_page_preview=True
+                        )
+                        await asyncio.sleep(0.1)  # Rate limiting
+                    except Exception as e:
+                        logger.error(f"Error sending RSS notification to {chat_id}: {e}")
+                        if "bot was blocked" in str(e).lower():
+                            self.user_manager.remove_user(chat_id)
+
+                # Mark item as sent after sending to all users
+                self.rss_reader.mark_item_as_sent(item)
+
+        except Exception as e:
+            logger.error(f"Error checking RSS updates: {e}", exc_info=True)
+
+    async def rss_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Toggle RSS notifications for the user"""
+        if not update.effective_user or not update.effective_chat or not update.message:
+            return
+            
+        chat_id = str(update.effective_chat.id)
+        current_preference = self.user_manager.get_rss_preference(chat_id)
+        
+        try:
+            await update.message.delete()
+        except Exception as e:
+            logger.warning(f"Could not delete command message: {e}")
+        
+        keyboard = [
+            [InlineKeyboardButton("✅ Enable RSS News" if not current_preference else "🔕 Disable RSS News", 
+                                callback_data=f"rss_toggle_{chat_id}")],
+            [InlineKeyboardButton("❌ Cancel", callback_data="cancel")]
+        ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        status = "enabled" if current_preference else "disabled"
+        
+        await self.send_message(
+            chat_id,
+            f"📰 <b>NASDAQ Baltic News Notifications</b>\n\n"
+            f"Current status: <b>{status}</b>\n\n"
+            f"RSS notifications include filtered news from NASDAQ Baltic about:\n"
+            f"• Mintos, DelfinGroup, Grenardi, Iute, Eleving\n"
+            f"• Creditstar, BB Finance, Sun Finance, and more\n\n"
+            f"Would you like to change your notification preference?",
+            reply_markup=reply_markup,
+            parse_mode='HTML'
+        )
+
+    async def rss_on_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Enable RSS notifications for the user"""
+        if not update.effective_user or not update.effective_chat or not update.message:
+            return
+            
+        chat_id = str(update.effective_chat.id)
+        self.user_manager.set_rss_preference(chat_id, True)
+        
+        try:
+            await update.message.delete()
+        except Exception as e:
+            logger.warning(f"Could not delete command message: {e}")
+        
+        await self.send_message(
+            chat_id,
+            "✅ <b>RSS Notifications Enabled</b>\n\n"
+            "You will now receive NASDAQ Baltic news notifications for filtered companies.\n\n"
+            "Use /rss_off to disable notifications anytime.",
+            parse_mode='HTML'
+        )
+
+    async def rss_off_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Disable RSS notifications for the user"""
+        if not update.effective_user or not update.effective_chat or not update.message:
+            return
+            
+        chat_id = str(update.effective_chat.id)
+        self.user_manager.set_rss_preference(chat_id, False)
+        
+        try:
+            await update.message.delete()
+        except Exception as e:
+            logger.warning(f"Could not delete command message: {e}")
+        
+        await self.send_message(
+            chat_id,
+            "🔕 <b>RSS Notifications Disabled</b>\n\n"
+            "You will no longer receive NASDAQ Baltic news notifications.\n\n"
+            "Use /rss_on to enable notifications anytime.",
+            parse_mode='HTML'
+        )
         
     async def admin_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Admin command panel with various admin functions"""
