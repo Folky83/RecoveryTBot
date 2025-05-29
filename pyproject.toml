@@ -49,4 +49,4 @@ include = ["mintos_bot*"]
 exclude = ["tests*", "data*", "logs*", "attached_assets*", "bot*"]
 
 [tool.setuptools.package-data]
-mintos_bot = ["*.md", "*.txt", "*.json", "data/*.csv", "data/*.json"]
+mintos_bot = ["*.md", "*.txt", "*.json", "data/*.csv", "data/*.json", "data/*.txt"]

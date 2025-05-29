@@ -83,10 +83,13 @@ class RSSReader(BaseManager):
     def _load_keywords(self) -> None:
         """Load keywords from file"""
         try:
-            if os.path.exists(self.keywords_file):
-                with open(self.keywords_file, 'r', encoding='utf-8') as f:
+            # Try package data first, then local file
+            keywords_path = self._find_data_file('rss_keywords.txt', self.keywords_file)
+            
+            if keywords_path and os.path.exists(keywords_path):
+                with open(keywords_path, 'r', encoding='utf-8') as f:
                     self.keywords = {line.strip().lower() for line in f if line.strip()}
-                logger.info(f"Loaded {len(self.keywords)} keywords for RSS filtering")
+                logger.info(f"Loaded {len(self.keywords)} keywords for RSS filtering from {keywords_path}")
             else:
                 # Create default keywords file
                 default_keywords = [
@@ -98,6 +101,22 @@ class RSSReader(BaseManager):
         except Exception as e:
             logger.error(f"Error loading keywords: {e}")
             self.keywords = set()
+
+    def _find_data_file(self, package_filename: str, fallback_path: str) -> str:
+        """Find data file in package or fallback to local path"""
+        try:
+            # Try to find in package data
+            import mintos_bot
+            package_dir = os.path.dirname(mintos_bot.__file__)
+            package_data_path = os.path.join(package_dir, 'data', package_filename)
+            
+            if os.path.exists(package_data_path):
+                return package_data_path
+        except Exception:
+            pass
+        
+        # Fallback to local path
+        return fallback_path
     
     def _save_keywords(self) -> None:
         """Save keywords to file"""
