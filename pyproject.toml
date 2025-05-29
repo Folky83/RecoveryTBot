@@ -48,8 +48,5 @@ where = ["."]
 include = ["mintos_bot*"]
 exclude = ["tests*", "data*", "logs*", "attached_assets*", "bot*"]
 
-[tool.setuptools]
-packages = ["mintos_bot"]
-
 [tool.setuptools.package-data]
 mintos_bot = ["*.md", "*.txt", "*.json"]
