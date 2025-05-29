@@ -5,15 +5,21 @@
 2. **Important**: Check "Add Python to PATH" during installation
 3. Restart your command prompt after installation
 
-## Step 2: Install the Bot
+## Step 2: Download the Bot Files
 
-### Option A: One-Click Install (Recommended)
-1. Download `install.bat` from this repository
-2. Double-click `install.bat` to run it
-3. Follow the prompts
+### Option A: Download ZIP (No Git Required - Easiest)
+1. Go to the GitHub repository page
+2. Click the green "Code" button
+3. Select "Download ZIP"
+4. Extract the ZIP file to a folder (like `C:\mintos-bot\`)
 
-### Option B: Manual Install
-Open Command Prompt and run:
+### Option B: Install Dependencies Only (If you downloaded ZIP)
+1. Download `install_no_git.bat` from this repository
+2. Double-click `install_no_git.bat` to install just the dependencies
+3. This installs all needed Python packages without requiring Git
+
+### Option C: Full Install with Git (Advanced Users)
+First install Git from [git-scm.com](https://git-scm.com), then run:
 ```bash
 pip install --upgrade git+https://github.com/yourusername/mintos-telegram-bot.git
 ```
