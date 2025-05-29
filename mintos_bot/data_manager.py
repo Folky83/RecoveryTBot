@@ -47,23 +47,40 @@ class DataManager(BaseManager):
                 os.makedirs('attached_assets')
                 logger.info("Created attached_assets directory")
 
-            csv_path = COMPANY_NAMES_CSV
+            # Try package data first, then local file
+            csv_path = self._find_data_file('lo_names.csv', COMPANY_NAMES_CSV)
             self.company_names: Dict[int, str] = {}
 
-            if os.path.exists(csv_path):
+            if csv_path and os.path.exists(csv_path):
                 try:
                     df = pd.read_csv(csv_path)
                     self.company_names = df.set_index('id')['name'].to_dict()
-                    logger.info(f"Loaded {len(self.company_names)} company names")
+                    logger.info(f"Loaded {len(self.company_names)} company names from {csv_path}")
                     logger.debug(f"Company IDs loaded: {list(self.company_names.keys())}")
                 except pd.errors.EmptyDataError:
                     logger.warning(f"CSV file {csv_path} is empty")
                 except pd.errors.ParserError:
                     logger.warning(f"Could not parse CSV file {csv_path}")
             else:
-                logger.warning(f"CSV file {csv_path} not found")
+                logger.warning(f"CSV file {COMPANY_NAMES_CSV} not found")
         except Exception as e:
             logger.error(f"Error loading company names: {e}", exc_info=True)
+
+    def _find_data_file(self, package_filename: str, fallback_path: str) -> str:
+        """Find data file in package or fallback to local path"""
+        try:
+            # Try to find in package data
+            import mintos_bot
+            package_dir = os.path.dirname(mintos_bot.__file__)
+            package_data_path = os.path.join(package_dir, 'data', package_filename)
+            
+            if os.path.exists(package_data_path):
+                return package_data_path
+        except Exception:
+            pass
+        
+        # Fallback to local path
+        return fallback_path
 
 
 
