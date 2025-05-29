@@ -187,8 +187,6 @@ class MintosBot:
             CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("documents", self.documents_command),
             CommandHandler("rss", self.rss_command),
-            CommandHandler("rss_on", self.rss_on_command),
-            CommandHandler("rss_off", self.rss_off_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
@@ -412,8 +410,6 @@ class MintosBot:
             "• /campaigns - View current Mintos campaigns\n"
             "• /documents - View recent company documents\n"
             "• /rss - Toggle NASDAQ Baltic news notifications\n"
-            "• /rss_on - Enable NASDAQ Baltic news notifications\n"
-            "• /rss_off - Disable NASDAQ Baltic news notifications\n"
             "• /start - Show this welcome message\n"
             f"{admin_commands}\n"
             "You'll receive updates about lending companies, new documents, and NASDAQ Baltic news automatically. Stay tuned!"
@@ -2636,47 +2632,7 @@ class MintosBot:
             parse_mode='HTML'
         )
 
-    async def rss_on_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Enable RSS notifications for the user"""
-        if not update.effective_user or not update.effective_chat or not update.message:
-            return
-            
-        chat_id = str(update.effective_chat.id)
-        self.user_manager.set_rss_preference(chat_id, True)
-        
-        try:
-            await update.message.delete()
-        except Exception as e:
-            logger.warning(f"Could not delete command message: {e}")
-        
-        await self.send_message(
-            chat_id,
-            "✅ <b>RSS Notifications Enabled</b>\n\n"
-            "You will now receive NASDAQ Baltic news notifications for filtered companies.\n\n"
-            "Use /rss_off to disable notifications anytime.",
-            parse_mode='HTML'
-        )
 
-    async def rss_off_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Disable RSS notifications for the user"""
-        if not update.effective_user or not update.effective_chat or not update.message:
-            return
-            
-        chat_id = str(update.effective_chat.id)
-        self.user_manager.set_rss_preference(chat_id, False)
-        
-        try:
-            await update.message.delete()
-        except Exception as e:
-            logger.warning(f"Could not delete command message: {e}")
-        
-        await self.send_message(
-            chat_id,
-            "🔕 <b>RSS Notifications Disabled</b>\n\n"
-            "You will no longer receive NASDAQ Baltic news notifications.\n\n"
-            "Use /rss_on to enable notifications anytime.",
-            parse_mode='HTML'
-        )
         
     async def admin_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Admin command panel with various admin functions"""

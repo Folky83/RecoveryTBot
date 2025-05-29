@@ -145,14 +145,6 @@
   },
   {
     "company_name": "capitalservice",
-    "type": "presentation",
-    "title": "Presentation",
-    "url": "https://assets.mintos.com/10461955-C2DE-AB2B-FD55-32A855773953.PDF",
-    "company_page_url": "https://www.mintos.com/en/lending-companies/capitalservice/",
-    "date": "2018-08-31"
-  },
-  {
-    "company_name": "capitalservice",
     "type": "financials",
     "title": "Financials",
     "url": "https://assets.mintos.com/8A39DA15-F547-4570-460A-6C946B532651.pdf",
@@ -166,6 +158,14 @@
     "url": "https://assets.mintos.com/4A0B703A-C644-4972-77F8-AE20526782B2.pdf",
     "company_page_url": "https://www.mintos.com/en/lending-companies/capitalservice/",
     "date": "2020-04-16"
+  },
+  {
+    "company_name": "capitalservice",
+    "type": "presentation",
+    "title": "Presentation",
+    "url": "https://assets.mintos.com/10461955-C2DE-AB2B-FD55-32A855773953.PDF",
+    "company_page_url": "https://www.mintos.com/en/lending-companies/capitalservice/",
+    "date": "2018-08-31"
   },
   {
     "company_name": "cashcredit",
@@ -525,7 +525,7 @@
     "title": "Loan Agreement",
     "url": "https://assets.mintos.com/366A1F42-4655-55C6-D0F6-4CC347F38D91.PDF",
     "company_page_url": "https://www.mintos.com/en/lending-companies/e-cash/",
-    "date": "2019-09-20"
+    "date": "2020-11-09"
   },
   {
     "company_name": "ecofinance",
@@ -745,19 +745,19 @@
   },
   {
     "company_name": "GFM",
-    "type": "financials",
-    "title": "Financials",
-    "url": "https://assets.mintos.com/5F22734F-8C46-87CA-B935-792CEAF4B6EA.PDF",
-    "company_page_url": "https://www.mintos.com/en/lending-companies/GFM/",
-    "date": "2022-07-26"
-  },
-  {
-    "company_name": "GFM",
     "type": "loan_agreement",
     "title": "Loan Agreement",
     "url": "https://assets.mintos.com/01C1E963-BAB0-8D58-D981-3CD154ECE5A4.pdf",
     "company_page_url": "https://www.mintos.com/en/lending-companies/GFM/",
     "date": "2020-01-29"
+  },
+  {
+    "company_name": "GFM",
+    "type": "financials",
+    "title": "Financials",
+    "url": "https://assets.mintos.com/5F22734F-8C46-87CA-B935-792CEAF4B6EA.PDF",
+    "company_page_url": "https://www.mintos.com/en/lending-companies/GFM/",
+    "date": "2021-07-05"
   },
   {
     "company_name": "GoCredit",
