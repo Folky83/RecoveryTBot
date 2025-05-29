@@ -36,12 +36,21 @@ def install_dependencies():
     ]
     
     print("Installing Python packages...")
+    print("This may take a few minutes...")
+    
     for package in packages:
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-            print(f"✓ Installed {package.split('>=')[0].split('==')[0]}")
-        except subprocess.CalledProcessError:
-            print(f"✗ Failed to install {package}")
+            print(f"Installing {package.split('>=')[0].split('==')[0]}...")
+            result = subprocess.run([sys.executable, "-m", "pip", "install", package, "--user"], 
+                                 capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"✓ Installed {package.split('>=')[0].split('==')[0]}")
+            else:
+                print(f"✗ Failed to install {package}")
+                print(f"Error: {result.stderr}")
+                return False
+        except Exception as e:
+            print(f"✗ Failed to install {package}: {e}")
             return False
     return True
 
