@@ -1,0 +1,45 @@
+D:\python\mintos>install.bat
+Installing Mintos Telegram Bot...
+
+Python found. Installing bot...
+Defaulting to user installation because normal site-packages is not writeable
+Collecting git+https://github.com/Folky83/RecoveryTBot.git
+  Cloning https://github.com/Folky83/RecoveryTBot.git to c:\users\gebruiker\appdata\local\temp\pip-req-build-11m1ewty
+  Running command git clone --filter=blob:none --quiet https://github.com/Folky83/RecoveryTBot.git 'C:\Users\Gebruiker\AppData\Local\Temp\pip-req-build-11m1ewty'
+  Resolved https://github.com/Folky83/RecoveryTBot.git to commit 338459e47b63803b8993e5873b68ddc56fd017a5
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... error
+  error: subprocess-exited-with-error
+
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [14 lines of output]
+      error: Multiple top-level packages discovered in a flat-layout: ['bot', 'data', 'logs', 'attached_assets'].
+
+      To avoid accidental inclusion of unwanted files or directories,
+      setuptools will not proceed with this build.
+
+      If you are trying to create a single distribution with multiple packages
+      on purpose, you should not rely on automatic discovery.
+      Instead, consider the following options:
+
+      1. set up custom discovery (`find` directive with `include` or `exclude`)
+      2. use a `src-layout`
+      3. explicitly set `py_modules` or `packages` with a list of names
+
+      To find more information, look for "package discovery" on setuptools docs.
+      [end of output]
+
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+
+[notice] A new release of pip is available: 24.2 -> 25.1.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+error: subprocess-exited-with-error
+
+× Getting requirements to build wheel did not run successfully.
+│ exit code: 1
+╰─> See above for output.
+
+note: This error originates from a subprocess, and is likely not a problem with pip.
+Installation failed. Please check your internet connection and try again.
+Press any key to continue . . .
