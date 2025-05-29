@@ -61,3 +61,9 @@ REQUEST_DELAY = 0.5  # seconds between requests
 
 # Environment Variables
 TELEGRAM_BOT_TOKEN_VAR = 'TELEGRAM_BOT_TOKEN'
+
+# Error Messages
+ERROR_MISSING_TOKEN = f"{TELEGRAM_BOT_TOKEN_VAR} environment variable is not set"
+ERROR_INVALID_LENDER_ID = "Invalid lender ID format"
+ERROR_DATA_LOADING = "Error loading data from file"
+ERROR_DATA_SAVING = "Error saving data to file"

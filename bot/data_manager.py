@@ -2,43 +2,42 @@
 Data Manager for the Mintos Telegram Bot
 Handles data persistence, caching, and updates management.
 """
-import json
-import os
-import time
 import hashlib
+import json
 import logging
+import os
 import shutil
+import time
 from typing import Dict, List, Optional, Set, Any, Union
 import pandas as pd
-from .logger import setup_logger
-from .config import DATA_DIR, UPDATES_FILE, CAMPAIGNS_FILE
+from .base_manager import BaseManager
+from .constants import (
+    DATA_DIR, UPDATES_FILE, CAMPAIGNS_FILE, COMPANY_NAMES_CSV,
+    SENT_UPDATES_FILE, SENT_CAMPAIGNS_FILE
+)
+from .utils import create_unique_id
 
-logger = setup_logger(__name__)
+logger = logging.getLogger(__name__)
 
-class DataManager:
+class DataManager(BaseManager):
     """Manages data persistence and caching for the bot"""
 
     def __init__(self):
         """Initialize DataManager with necessary data structures"""
-        self.ensure_data_directory()
+        super().__init__(UPDATES_FILE)
+        self.company_names: Dict[int, str] = {}
+        self.sent_updates: Set[str] = set()
+        self.sent_campaigns: Set[str] = set()
+        
+        # File paths for tracking sent items
+        self.sent_updates_file = SENT_UPDATES_FILE
+        self.sent_campaigns_file = SENT_CAMPAIGNS_FILE
+        self.backup_sent_updates_file = f"{SENT_UPDATES_FILE}.bak"
+        self.backup_sent_campaigns_file = f"{SENT_CAMPAIGNS_FILE}.bak"
+        
         self._load_company_names()
         self._load_sent_updates()
-
-        # Initialize sent_campaigns tracking
-        self.sent_campaigns: Set[str] = set()
-        self.sent_campaigns_file = os.path.join(DATA_DIR, 'sent_campaigns.json')
-        self.backup_sent_campaigns_file = os.path.join(DATA_DIR, 'sent_campaigns.json.bak')
-
-        try:
-            self._load_sent_campaigns()
-        except Exception as e:
-            logger.error(f"Error loading sent campaigns: {e}", exc_info=True)
-
-    def ensure_data_directory(self) -> None:
-        """Ensure data directory exists"""
-        if not os.path.exists(DATA_DIR):
-            os.makedirs(DATA_DIR)
-            logger.info(f"Created data directory: {DATA_DIR}")
+        self._load_sent_campaigns()
 
     def _load_company_names(self) -> None:
         """Load company names from CSV file"""
@@ -48,7 +47,7 @@ class DataManager:
                 os.makedirs('attached_assets')
                 logger.info("Created attached_assets directory")
 
-            csv_path = 'attached_assets/lo_names.csv'
+            csv_path = COMPANY_NAMES_CSV
             self.company_names: Dict[int, str] = {}
 
             if os.path.exists(csv_path):
@@ -66,30 +65,28 @@ class DataManager:
         except Exception as e:
             logger.error(f"Error loading company names: {e}", exc_info=True)
 
+
+
     def _create_update_id(self, update: Dict[str, Any]) -> str:
         """Create a unique identifier for an update"""
-        hash_content = "_".join([
-            str(update.get('lender_id', '')),
-            str(update.get('date', '')),
-            str(update.get('year', '')),
-            str(update.get('description', ''))
-        ])
-        return hashlib.md5(hash_content.encode()).hexdigest()
+        return create_unique_id(
+            update.get('lender_id', ''),
+            update.get('date', ''),
+            update.get('year', ''),
+            update.get('description', '')
+        )
 
     def _create_campaign_id(self, campaign: Dict[str, Any]) -> str:
         """Create a unique identifier for a campaign"""
-        hash_content = "_".join([
+        return create_unique_id(
             f"campaign_{campaign.get('id', '')}",
-            str(campaign.get('name', '')),
-            str(campaign.get('validFrom', '')),
-            str(campaign.get('validTo', ''))
-        ])
-        return hashlib.md5(hash_content.encode()).hexdigest()
+            campaign.get('name', ''),
+            campaign.get('validFrom', ''),
+            campaign.get('validTo', '')
+        )
 
     def _load_sent_updates(self) -> None:
         """Load set of already sent update IDs with verification and backup"""
-        self.sent_updates_file = os.path.join(DATA_DIR, 'sent_updates.json')
-        self.backup_sent_updates_file = os.path.join(DATA_DIR, 'sent_updates.json.bak')
         self.sent_updates: Set[str] = set()
 
         try:
@@ -316,39 +313,21 @@ class DataManager:
 
     def get_cache_age(self) -> float:
         """Get age of cache in seconds"""
-        try:
-            if os.path.exists(UPDATES_FILE):
-                age = time.time() - os.path.getmtime(UPDATES_FILE)
-                logger.debug(f"Cache age: {age:.2f} seconds")
-                return age
-            return float('inf')
-        except Exception as e:
-            logger.error(f"Error checking cache age: {e}", exc_info=True)
-            return float('inf')
+        return self.get_file_age()
 
     def load_previous_updates(self) -> List[Dict[str, Any]]:
         """Load previous updates from cache file"""
-        try:
-            if os.path.exists(UPDATES_FILE):
-                with open(UPDATES_FILE, 'r') as f:
-                    updates = json.load(f)
-                logger.info(f"Loaded {len(updates)} company updates from cache")
-                return updates
-            logger.info("No previous updates found")
-            return []
-        except Exception as e:
-            logger.error(f"Error loading previous updates: {e}", exc_info=True)
-            return []
+        updates = self.load_data([])
+        logger.info(f"Loaded {len(updates)} company updates from cache")
+        return updates
 
     def save_updates(self, updates: List[Dict[str, Any]]) -> None:
         """Save updates to cache file"""
-        try:
-            with open(UPDATES_FILE, 'w') as f:
-                json.dump(updates, f, indent=4)
+        if self.save_data(updates):
             logger.info(f"Successfully saved {len(updates)} updates")
-        except Exception as e:
-            logger.error(f"Error saving updates: {e}", exc_info=True)
-            raise
+        else:
+            logger.error("Failed to save updates")
+            raise Exception("Failed to save updates")
 
     def get_company_name(self, lender_id: Union[int, str]) -> str:
         """Get company name by lender ID, falling back to ID if name not found"""
