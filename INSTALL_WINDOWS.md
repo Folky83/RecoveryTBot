@@ -21,7 +21,7 @@
 ### Option C: Full Install with Git (Advanced Users)
 First install Git from [git-scm.com](https://git-scm.com), then run:
 ```bash
-pip install --upgrade git+https://github.com/yourusername/mintos-telegram-bot.git
+pip install --upgrade git+https://github.com/Folky83/RecoveryTBot.git
 ```
 
 ## Step 3: Get Your Telegram Bot Token

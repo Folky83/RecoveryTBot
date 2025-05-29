@@ -35,9 +35,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/mintos-telegram-bot"
-Repository = "https://github.com/yourusername/mintos-telegram-bot"
-Issues = "https://github.com/yourusername/mintos-telegram-bot/issues"
+Homepage = "https://github.com/Folky83/RecoveryTBot"
+Repository = "https://github.com/Folky83/RecoveryTBot"
+Issues = "https://github.com/Folky83/RecoveryTBot/issues"
 
 [project.scripts]
 mintos-bot = "mintos_bot.run:main"
