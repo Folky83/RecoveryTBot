@@ -1299,26 +1299,26 @@ class MintosBot:
                     logger.info(f"Found {len(unsent_updates)} unsent updates for today")
 
                     if unsent_updates:
-                        priority_user_id = 114691530
+                        admin_user_id = self.get_admin_user_id()
                         logger.info(f"Broadcasting {len(unsent_updates)} unsent updates with 2-hour delay system")
                         
                         for i, update in enumerate(unsent_updates):
                             message = self.format_update_message(update)
                             update_id = self.data_manager._create_update_id(update)
                             
-                            # Send to priority user immediately
-                            if priority_user_id in users:
+                            # Send to admin user immediately
+                            if admin_user_id in users:
                                 try:
-                                    await self.send_message(priority_user_id, message, disable_web_page_preview=True)
+                                    await self.send_message(admin_user_id, message, disable_web_page_preview=True)
                                     self.data_manager.save_priority_notification(update_id)
-                                    logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to priority user {priority_user_id}")
+                                    logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to admin user {admin_user_id}")
                                 except Exception as e:
-                                    logger.error(f"Failed to send update to priority user {priority_user_id}: {e}")
+                                    logger.error(f"Failed to send update to admin user {admin_user_id}: {e}")
                             
                             # Send to other users only if 2 hours have passed
                             for user_id in users:
-                                if user_id == priority_user_id:
-                                    continue  # Already sent to priority user
+                                if user_id == admin_user_id:
+                                    continue  # Already sent to admin user
                                     
                                 if self.data_manager.can_send_to_regular_users(update_id):
                                     try:
@@ -1417,26 +1417,26 @@ class MintosBot:
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
 
                 if unsent_campaigns:
-                    priority_user_id = 114691530
+                    admin_user_id = self.get_admin_user_id()
                     logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns with 2-hour delay system")
                     
                     for i, campaign in enumerate(unsent_campaigns):
                         message = self.format_campaign_message(campaign)
                         campaign_id = self.data_manager._create_campaign_id(campaign)
                         
-                        # Send to priority user immediately
-                        if priority_user_id in users:
+                        # Send to admin user immediately
+                        if admin_user_id in users:
                             try:
-                                await self.send_message(priority_user_id, message, disable_web_page_preview=True)
+                                await self.send_message(admin_user_id, message, disable_web_page_preview=True)
                                 self.data_manager.save_priority_notification(campaign_id)
-                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to priority user {priority_user_id}")
+                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to admin user {admin_user_id}")
                             except Exception as e:
-                                logger.error(f"Failed to send campaign to priority user {priority_user_id}: {e}")
+                                logger.error(f"Failed to send campaign to admin user {admin_user_id}: {e}")
                         
                         # Send to other users only if 2 hours have passed
                         for user_id in users:
-                            if user_id == priority_user_id:
-                                continue  # Already sent to priority user
+                            if user_id == admin_user_id:
+                                continue  # Already sent to admin user
                                 
                             if self.data_manager.can_send_to_regular_users(campaign_id):
                                 try:
@@ -2547,6 +2547,10 @@ class MintosBot:
     async def is_admin(self, user_id: int) -> bool:
         """Check if user is admin"""
         return str(user_id) == "114691530"  # This is the admin ID from your logs
+    
+    def get_admin_user_id(self) -> int:
+        """Get the admin user ID for priority notifications"""
+        return 114691530
         
     async def users_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Show list of registered users (admin use only)."""
