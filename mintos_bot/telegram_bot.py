@@ -226,35 +226,58 @@ class MintosBot:
         """Handle scheduled update checks with improved resilience"""
         consecutive_errors = 0
         max_consecutive_errors = 3
-        check_interval = 5 * 60  # Always check every 5 minutes
+        normal_sleep = 5 * 60  # Regular 5-minute check interval
         error_sleep = 3 * 60   # Shorter 3-minute retry after errors
+        long_sleep = 55 * 60   # 55-minute wait after successful update
 
         while True:
             try:
-                logger.info("Running scheduled update check")
-                try:
-                    await self._safe_update_check()
-                    # Reset error counter after successful update
-                    consecutive_errors = 0
-                    logger.info("Scheduled update completed successfully")
+                # Check the current time and stale cache situation
+                should_check = await self.should_check_updates()
 
-                    # Try to resend any failed messages
-                    await self.retry_failed_messages()
+                if should_check:
+                    logger.info("Running scheduled update")
+                    try:
+                        await self._safe_update_check()
+                        # Reset error counter after successful update
+                        consecutive_errors = 0
+                        logger.info("Scheduled update completed successfully")
 
-                except Exception as e:
-                    consecutive_errors += 1
-                    logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
+                        # Try to resend any failed messages
+                        await self.retry_failed_messages()
 
-                    # Implement exponential backoff for repeated errors
-                    if consecutive_errors >= max_consecutive_errors:
-                        logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
-                        await asyncio.sleep(error_sleep * consecutive_errors)
-                    else:
-                        await asyncio.sleep(error_sleep)
-                    continue  # Skip the normal sleep at the end
+                        # Use longer sleep interval after successful update
+                        await asyncio.sleep(long_sleep)
+                        continue  # Skip the normal sleep at the end
+                    except Exception as e:
+                        consecutive_errors += 1
+                        logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
 
-                # Always use 5-minute interval
-                await asyncio.sleep(check_interval)
+                        # Implement exponential backoff for repeated errors
+                        if consecutive_errors >= max_consecutive_errors:
+                            logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
+                            await asyncio.sleep(error_sleep * consecutive_errors)
+                        else:
+                            await asyncio.sleep(error_sleep)
+                        continue  # Skip the normal sleep at the end
+                else:
+                    # Check for stale cache during business hours
+                    try:
+                        cache_age_hours = self.data_manager.get_cache_age() / 3600
+                        now = datetime.now()
+                        # If more than 30 hours old on a weekday during business hours, force an update
+                        if (cache_age_hours > 30 and now.weekday() < 5 and 
+                            9 <= now.hour <= 18):  # Business hours (9 AM to 6 PM)
+                            logger.warning(f"Cache file is {cache_age_hours:.1f} hours old - forcing emergency update")
+                            await self._safe_update_check()
+                            consecutive_errors = 0
+                            await asyncio.sleep(long_sleep)
+                            continue
+                    except Exception as e:
+                        logger.error(f"Error checking cache age: {e}")
+
+                # Normal sleep interval between checks
+                await asyncio.sleep(normal_sleep)
 
             except asyncio.CancelledError:
                 logger.info("Scheduled updates cancelled")
@@ -1299,7 +1322,7 @@ class MintosBot:
                     logger.info(f"Found {len(unsent_updates)} unsent updates for today")
 
                     if unsent_updates:
-                        # Send each individual update to all users (no delay for regular updates)
+                        # Send each individual update to all users
                         logger.info(f"Broadcasting {len(unsent_updates)} unsent updates to {len(users)} users")
                         for i, update in enumerate(unsent_updates):
                             message = self.format_update_message(update)
@@ -1397,39 +1420,16 @@ class MintosBot:
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
 
                 if unsent_campaigns:
-                    admin_user_id = self.get_admin_user_id()
-                    logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns with 2-hour delay system")
-                    
+                    logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns to {len(users)} users")
                     for i, campaign in enumerate(unsent_campaigns):
                         message = self.format_campaign_message(campaign)
-                        campaign_id = self.data_manager._create_campaign_id(campaign)
-                        
-                        # Send to admin user immediately
-                        if admin_user_id in users:
-                            try:
-                                await self.send_message(admin_user_id, message, disable_web_page_preview=True)
-                                self.data_manager.save_priority_notification(campaign_id)
-                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to admin user {admin_user_id}")
-                            except Exception as e:
-                                logger.error(f"Failed to send campaign to admin user {admin_user_id}: {e}")
-                        
-                        # Send to other users only if 2 hours have passed
                         for user_id in users:
-                            if user_id == admin_user_id:
-                                continue  # Already sent to admin user
-                                
-                            if self.data_manager.can_send_to_regular_users(campaign_id):
-                                try:
-                                    await self.send_message(user_id, message, disable_web_page_preview=True)
-                                    logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
-                                except Exception as e:
-                                    logger.error(f"Failed to send campaign to user {user_id}: {e}")
-                            else:
-                                hours_remaining = self.data_manager.get_hours_until_regular_send(campaign_id)
-                                logger.info(f"Delaying campaign for user {user_id}, {hours_remaining:.1f} hours remaining")
-                        
-                        # Mark as sent after processing all users
-                        self.data_manager.save_sent_campaign(campaign)
+                            try:
+                                await self.send_message(user_id, message, disable_web_page_preview=True)
+                                self.data_manager.save_sent_campaign(campaign)
+                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
+                            except Exception as e:
+                                logger.error(f"Failed to send campaign to user {user_id}: {e}")
                 else:
                     logger.info("No new unsent campaigns to send")
 
@@ -2527,10 +2527,6 @@ class MintosBot:
     async def is_admin(self, user_id: int) -> bool:
         """Check if user is admin"""
         return str(user_id) == "114691530"  # This is the admin ID from your logs
-    
-    def get_admin_user_id(self) -> int:
-        """Get the admin user ID for priority notifications"""
-        return 114691530
         
     async def users_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Show list of registered users (admin use only)."""
