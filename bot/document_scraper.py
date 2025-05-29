@@ -10,6 +10,7 @@ import logging
 import asyncio
 import aiohttp
 import re
+import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union, Set
 from bs4 import BeautifulSoup
@@ -365,8 +366,9 @@ class DocumentScraper:
         
         for attempt in range(max_retries):
             try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url, headers=headers, timeout=10) as response:
+                timeout = aiohttp.ClientTimeout(total=10)
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    async with session.get(url, headers=headers) as response:
                         if response.status == 200:
                             return await response.text()
                         else:

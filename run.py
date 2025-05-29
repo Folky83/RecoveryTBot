@@ -13,13 +13,11 @@ from typing import Optional, Any
 from dataclasses import dataclass
 from psutil import Process
 
-# Configuration
-LOCK_FILE = 'bot.lock'
-STREAMLIT_PORT = 5000
-STARTUP_TIMEOUT = 60
-CLEANUP_WAIT = 5
-PROCESS_KILL_WAIT = 3
-BOT_STARTUP_TIMEOUT = 30  # Add timeout for bot initialization
+# Import configuration
+from bot.constants import (
+    LOCK_FILE, STREAMLIT_PORT, STARTUP_TIMEOUT, CLEANUP_WAIT,
+    PROCESS_KILL_WAIT, BOT_STARTUP_TIMEOUT, TELEGRAM_BOT_TOKEN_VAR
+)
 
 @dataclass
 class ProcessManager:
@@ -60,7 +58,7 @@ class ProcessManager:
             # Get all connections first
             for conn in psutil.net_connections(kind='inet'):
                 try:
-                    if (hasattr(conn, 'laddr') and 
+                    if (hasattr(conn, 'laddr') and conn.laddr and 
                         isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
                         isinstance(conn.laddr[1], int) and conn.laddr[1] == port):
                         pid = conn.pid
@@ -114,7 +112,7 @@ class ProcessManager:
                 for conn in psutil.net_connections(kind='inet'):
                     try:
                         # Check if this connection is our streamlit server
-                        if (hasattr(conn, 'laddr') and 
+                        if (hasattr(conn, 'laddr') and conn.laddr and 
                             isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
                             isinstance(conn.laddr[1], int) and conn.laddr[1] == STREAMLIT_PORT and 
                             hasattr(conn, 'status') and conn.status == 'LISTEN'):
@@ -162,8 +160,8 @@ async def managed_bot():
     logger = logging.getLogger(__name__)
     try:
         logger.info("Starting bot initialization...")
-        if not os.getenv('TELEGRAM_BOT_TOKEN'):
-            logger.error("TELEGRAM_BOT_TOKEN environment variable is not set")
+        if not os.getenv(TELEGRAM_BOT_TOKEN_VAR):
+            logger.error(f"{TELEGRAM_BOT_TOKEN_VAR} environment variable is not set")
             raise ValueError("Bot token is missing")
 
         bot = MintosBot()
@@ -247,22 +245,35 @@ async def main():
 def signal_handler(sig, frame):
     logging.info("Received shutdown signal")
     
-    # Create a new event loop for the cleanup instead of using the running one
-    cleanup_loop = asyncio.new_event_loop()
+    # Simple cleanup without creating new event loops
     try:
-        cleanup_loop.run_until_complete(ProcessManager().cleanup_processes())
+        # Kill processes using the port
+        for conn in psutil.net_connections(kind='inet'):
+            try:
+                if (hasattr(conn, 'laddr') and conn.laddr and 
+                    isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2 and 
+                    isinstance(conn.laddr[1], int) and conn.laddr[1] == STREAMLIT_PORT):
+                    pid = conn.pid
+                    if pid and psutil.pid_exists(pid):
+                        logging.info(f"Killing process {pid} using port {STREAMLIT_PORT}")
+                        try:
+                            proc = psutil.Process(pid)
+                            proc.kill()
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            pass
+            except (AttributeError, TypeError):
+                continue
         
         # Clean up lock file
         try:
             os.unlink(LOCK_FILE)
         except FileNotFoundError:
-            pass  # Ignore if the file does not exist
+            pass
         except Exception as e:
             logging.error(f"Error removing lock file: {e}")
+            
     except Exception as e:
         logging.error(f"Error during signal handler cleanup: {e}")
-    finally:
-        cleanup_loop.close()
         
     sys.exit(0)
 
