@@ -8,8 +8,11 @@ logger = setup_logger(__name__)
 class UserManager:
     def __init__(self):
         self.users = {}  # Changed from set to dict to store username with chat_id
+        self.rss_preferences_file = os.path.join(DATA_DIR, 'rss_user_preferences.json')
+        self.rss_preferences = {}  # Store RSS notification preferences
         self._ensure_data_directory()
         self.load_users()
+        self._load_rss_preferences()
 
     def _ensure_data_directory(self):
         """Ensure the data directory exists"""
@@ -86,3 +89,40 @@ class UserManager:
     def has_user(self, chat_id):
         """Check if a user exists in the saved users list"""
         return str(chat_id) in self.users
+
+    def _load_rss_preferences(self):
+        """Load RSS notification preferences"""
+        try:
+            if os.path.exists(self.rss_preferences_file):
+                with open(self.rss_preferences_file, 'r') as f:
+                    self.rss_preferences = json.load(f)
+                logger.info(f"Loaded RSS preferences for {len(self.rss_preferences)} users")
+            else:
+                self.rss_preferences = {}
+        except Exception as e:
+            logger.error(f"Error loading RSS preferences: {e}")
+            self.rss_preferences = {}
+
+    def _save_rss_preferences(self):
+        """Save RSS notification preferences"""
+        try:
+            with open(self.rss_preferences_file, 'w') as f:
+                json.dump(self.rss_preferences, f, indent=2)
+            logger.info(f"Saved RSS preferences for {len(self.rss_preferences)} users")
+        except Exception as e:
+            logger.error(f"Error saving RSS preferences: {e}")
+
+    def set_rss_preference(self, chat_id, enabled):
+        """Set RSS notifications preference for a user"""
+        chat_id = str(chat_id)
+        self.rss_preferences[chat_id] = enabled
+        self._save_rss_preferences()
+        logger.info(f"RSS notifications {'enabled' if enabled else 'disabled'} for user {chat_id}")
+
+    def get_rss_preference(self, chat_id):
+        """Get RSS notifications preference for a user (default: False)"""
+        return self.rss_preferences.get(str(chat_id), False)
+
+    def get_users_with_rss_enabled(self):
+        """Get list of users who have RSS notifications enabled"""
+        return [chat_id for chat_id, enabled in self.rss_preferences.items() if enabled]

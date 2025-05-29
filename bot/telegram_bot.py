@@ -23,6 +23,7 @@ from .data_manager import DataManager
 from .mintos_client import MintosClient
 from .document_scraper import DocumentScraper
 from .user_manager import UserManager
+from .rss_reader import RSSReader
 
 logger = setup_logger(__name__)
 
@@ -74,6 +75,7 @@ class MintosBot:
             self.mintos_client = MintosClient()
             self.user_manager = UserManager()
             self.document_scraper = DocumentScraper()
+            self.rss_reader = RSSReader()
             self._is_startup_check = True  # Flag to indicate first check after startup
             self._initialized = True
             logger.info("Bot instance created")
@@ -184,6 +186,9 @@ class MintosBot:
             CommandHandler("today", self.today_command),
             CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("documents", self.documents_command),
+            CommandHandler("rss", self.rss_command),
+            CommandHandler("rss_on", self.rss_on_command),
+            CommandHandler("rss_off", self.rss_off_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
@@ -402,9 +407,12 @@ class MintosBot:
             "• /today [YYYY-MM-DD] - View updates for today or a specific date\n"
             "• /campaigns - View current Mintos campaigns\n"
             "• /documents - View recent company documents\n"
+            "• /rss - Toggle NASDAQ Baltic news notifications\n"
+            "• /rss_on - Enable NASDAQ Baltic news notifications\n"
+            "• /rss_off - Disable NASDAQ Baltic news notifications\n"
             "• /start - Show this welcome message\n"
             f"{admin_commands}\n"
-            "You'll receive updates about lending companies and new documents automatically. Stay tuned!"
+            "You'll receive updates about lending companies, new documents, and NASDAQ Baltic news automatically. Stay tuned!"
         )
 
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
