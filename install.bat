@@ -48,7 +48,7 @@ goto end
 echo Installing dependencies only...
 pip install "aiohttp>=3.8.0" "beautifulsoup4>=4.11.0" "feedparser>=6.0.8"
 pip install "pandas>=1.5.0" "psutil>=5.9.0" "python-telegram-bot[job-queue]==20.7"
-pip install "streamlit>=1.25.0,<1.28.0" "trafilatura>=1.6.0" "twilio>=8.5.0" "watchdog>=2.1.0"
+pip install "streamlit>=0.84.0" "trafilatura>=1.6.0" "twilio>=8.5.0" "watchdog>=2.1.0"
 echo Dependencies installed. Run: python run.py
 
 :end
