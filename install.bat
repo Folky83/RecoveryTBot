@@ -28,8 +28,50 @@ pause
 exit /b 1
 
 :simple_install
-echo Running simple installation...
-python simple_install.py
+echo Downloading and installing bot...
+echo This may take a few minutes...
+echo.
+
+REM Install dependencies first
+echo Installing Python packages...
+python -m pip install --user aiohttp>=3.11.12
+if errorlevel 1 goto install_error
+python -m pip install --user beautifulsoup4>=4.13.3
+if errorlevel 1 goto install_error
+python -m pip install --user feedparser>=6.0.11
+if errorlevel 1 goto install_error
+python -m pip install --user pandas>=2.2.3
+if errorlevel 1 goto install_error
+python -m pip install --user psutil>=6.1.1
+if errorlevel 1 goto install_error
+python -m pip install --user "python-telegram-bot[job-queue]==20.7"
+if errorlevel 1 goto install_error
+python -m pip install --user streamlit>=1.41.1
+if errorlevel 1 goto install_error
+python -m pip install --user trafilatura>=2.0.0
+if errorlevel 1 goto install_error
+python -m pip install --user twilio>=9.4.4
+if errorlevel 1 goto install_error
+python -m pip install --user watchdog>=6.0.0
+if errorlevel 1 goto install_error
+
+echo.
+echo Dependencies installed successfully!
+echo.
+echo Next steps:
+echo 1. Download the bot files from: https://github.com/Folky83/RecoveryTBot
+echo 2. Click "Code" -> "Download ZIP" 
+echo 3. Extract to a folder
+echo 4. Get bot token from @BotFather on Telegram
+echo 5. Create config.txt with: TELEGRAM_BOT_TOKEN=your_token_here
+echo 6. Run: python run.py
+echo 7. Access dashboard at: http://localhost:5000
+goto end
+
+:install_error
+echo.
+echo Installation failed. Please check your internet connection.
+echo You may need to run this as administrator.
 goto end
 
 :git_install
