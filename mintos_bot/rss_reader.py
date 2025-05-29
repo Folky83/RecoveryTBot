@@ -210,15 +210,19 @@ class RSSReader(BaseManager):
     def _matches_keywords(self, item: RSSItem) -> bool:
         """Check if RSS item matches any keyword"""
         if not self.keywords:
+            logger.debug("No keywords set, including all RSS items")
             return True  # If no keywords set, include all items
         
         # Check in title and issuer
         text_to_check = f"{item.title} {item.issuer}".lower()
+        logger.debug(f"Checking RSS item: '{text_to_check}' against keywords: {self.keywords}")
         
         for keyword in self.keywords:
             if keyword in text_to_check:
+                logger.debug(f"RSS item matched keyword '{keyword}': {item.title}")
                 return True
         
+        logger.debug(f"RSS item did not match any keywords: {item.title}")
         return False
     
     async def fetch_rss_feed(self) -> List[RSSItem]:
@@ -238,7 +242,39 @@ class RSSReader(BaseManager):
                             try:
                                 # Extract CDATA content properly
                                 title = entry.title if hasattr(entry, 'title') else 'No title'
-                                issuer = entry.issuer if hasattr(entry, 'issuer') else 'Unknown issuer'
+                                
+                                # Try to extract issuer from different RSS fields
+                                issuer = 'Unknown issuer'
+                                if hasattr(entry, 'issuer'):
+                                    issuer = entry.issuer
+                                elif hasattr(entry, 'author'):
+                                    issuer = entry.author
+                                elif hasattr(entry, 'description'):
+                                    # Try to extract company name from description
+                                    description = entry.description
+                                    # Look for patterns like "Company Name -" or "Company Name:"
+                                    import re
+                                    match = re.search(r'^([^-:]+)[-:]', description)
+                                    if match:
+                                        issuer = match.group(1).strip()
+                                elif hasattr(entry, 'summary'):
+                                    # Try to extract from summary
+                                    summary = entry.summary
+                                    import re
+                                    match = re.search(r'^([^-:]+)[-:]', summary)
+                                    if match:
+                                        issuer = match.group(1).strip()
+                                
+                                # Also try to extract issuer from title if it contains company patterns
+                                if issuer == 'Unknown issuer':
+                                    title_lower = title.lower()
+                                    for keyword in self.keywords:
+                                        if keyword.lower() in title_lower:
+                                            issuer = keyword
+                                            break
+                                
+                                # Debug: log the actual issuer found
+                                logger.debug(f"RSS entry - Title: '{title}', Issuer: '{issuer}'")
                                 
                                 item = RSSItem(
                                     title=title,

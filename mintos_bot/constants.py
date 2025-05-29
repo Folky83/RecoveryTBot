@@ -23,7 +23,7 @@ SENT_CAMPAIGNS_BACKUP = os.path.join(DATA_DIR, 'sent_campaigns.json.bak')
 SENT_DOCUMENTS_FILE = os.path.join(DATA_DIR, 'sent_documents.json')
 SENT_DOCUMENTS_BACKUP = os.path.join(DATA_DIR, 'sent_documents.json.bak')
 
-# CSV Files
+# CSV Files - fallback paths if package data not found
 COMPANY_NAMES_CSV = os.path.join(ATTACHED_ASSETS_DIR, 'lo_names.csv')
 COMPANY_PAGES_CSV = os.path.join(ATTACHED_ASSETS_DIR, 'company_pages.csv')
 
