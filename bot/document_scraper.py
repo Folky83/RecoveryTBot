@@ -13,8 +13,15 @@ import re
 import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union, Set
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import pandas as pd
+
+from .constants import (
+    DATA_DIR, DOCUMENTS_CACHE_FILE, SENT_DOCUMENTS_FILE, SENT_DOCUMENTS_BACKUP,
+    COMPANY_PAGES_CSV, DOCUMENT_TYPES, MAX_HTTP_RETRIES, HTTP_RETRY_DELAY,
+    HTTP_CLIENT_TIMEOUT, DEFAULT_USER_AGENT, DOCUMENT_CACHE_TTL
+)
+from .utils import SafeElementHandler, FileBackupManager, create_unique_id
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -24,11 +31,11 @@ class DocumentScraper:
 
     def __init__(self):
         """Initialize the document scraper"""
-        self.data_dir = 'data'
-        self.documents_cache_file = os.path.join(self.data_dir, 'documents_cache.json')
-        self.sent_documents_file = os.path.join(self.data_dir, 'sent_documents.json')
-        self.sent_documents_backup_file = os.path.join(self.data_dir, 'sent_documents.json.bak')
-        self.document_types = ['presentation', 'financials', 'loan_agreement']
+        self.data_dir = DATA_DIR
+        self.documents_cache_file = DOCUMENTS_CACHE_FILE
+        self.sent_documents_file = SENT_DOCUMENTS_FILE
+        self.sent_documents_backup_file = SENT_DOCUMENTS_BACKUP
+        self.document_types = DOCUMENT_TYPES
         
         # Company pages mapping
         self.company_pages = []
@@ -52,7 +59,7 @@ class DocumentScraper:
     def _load_company_pages(self) -> None:
         """Load company pages from CSV file"""
         try:
-            df = pd.read_csv('attached_assets/company_pages.csv')
+            df = pd.read_csv(COMPANY_PAGES_CSV)
             self.company_pages = df.to_dict('records')
             logger.info(f"Loaded {len(self.company_pages)} company pages")
         except Exception as e:
@@ -357,17 +364,13 @@ class DocumentScraper:
 
     async def fetch_page(self, url: str) -> Optional[str]:
         """Fetch a web page with error handling and retries"""
-        max_retries = 3
-        retry_delay = 1  # seconds
-        
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': DEFAULT_USER_AGENT
         }
         
-        for attempt in range(max_retries):
+        for attempt in range(MAX_HTTP_RETRIES):
             try:
-                timeout = aiohttp.ClientTimeout(total=10)
-                async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with aiohttp.ClientSession(timeout=HTTP_CLIENT_TIMEOUT) as session:
                     async with session.get(url, headers=headers) as response:
                         if response.status == 200:
                             return await response.text()
@@ -375,14 +378,13 @@ class DocumentScraper:
                             logger.warning(f"Failed to fetch {url}: HTTP {response.status}")
                             
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                logger.warning(f"Error fetching {url} (attempt {attempt+1}/{max_retries}): {e}")
+                logger.warning(f"Error fetching {url} (attempt {attempt+1}/{MAX_HTTP_RETRIES}): {e}")
                 
             # Wait before retrying (except on last attempt)
-            if attempt < max_retries - 1:
-                await asyncio.sleep(retry_delay)
-                retry_delay *= 2  # Exponential backoff
+            if attempt < MAX_HTTP_RETRIES - 1:
+                await asyncio.sleep(HTTP_RETRY_DELAY)
                 
-        logger.error(f"Failed to fetch {url} after {max_retries} attempts")
+        logger.error(f"Failed to fetch {url} after {MAX_HTTP_RETRIES} attempts")
         return None
 
     async def scrape_documents(self) -> List[Dict[str, Any]]:
@@ -445,10 +447,10 @@ class DocumentScraper:
                 
                 # Find links with matching text
                 for link in soup.find_all('a', href=True):
-                    link_text = link.get_text().strip()
-                    href = link.get('href', '')
+                    link_text = SafeElementHandler.safe_get_text(link)
+                    href = SafeElementHandler.safe_get_attribute(link, 'href')
                     
-                    if link_text.lower() == doc_type_display.lower() and href.lower().endswith('.pdf'):
+                    if link_text.lower() == doc_type_display.lower() and SafeElementHandler.is_pdf_link(href):
                         logger.debug(f"Found exact match for {doc_type}: {href}")
                         
                         # Try to extract date from context
@@ -475,11 +477,7 @@ class DocumentScraper:
                                     break
                         
                         # Make sure we have an absolute URL
-                        if not href.startswith(('http://', 'https://')):
-                            if href.startswith('/'):
-                                href = f"https://www.mintos.com{href}"
-                            else:
-                                href = f"https://www.mintos.com/{href}"
+                        href = SafeElementHandler.normalize_url(href)
                         
                         # Create document entry
                         doc = {
