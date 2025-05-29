@@ -1,0 +1,36 @@
+D:\python\mintos\RecoveryTBot-main>python run.py
+2025-05-29 19:09:04,687 - INFO - Starting Streamlit process...
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:5000
+
+2025-05-29 19:09:14,751 - INFO - Streamlit should be running on port 5000
+2025-05-29 19:09:16,767 - INFO - Streamlit started successfully
+2025-05-29 19:09:18,083 - bot.data_manager - DEBUG - Logger 'bot.data_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,083 - DEBUG - Logger 'bot.data_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,183 - bot.mintos_client - DEBUG - Logger 'bot.mintos_client' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,183 - DEBUG - Logger 'bot.mintos_client' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,350 - bot.user_manager - DEBUG - Logger 'bot.user_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,350 - DEBUG - Logger 'bot.user_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,351 - bot.telegram_bot - DEBUG - Logger 'bot.telegram_bot' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,351 - DEBUG - Logger 'bot.telegram_bot' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 19:09:18,352 - INFO - Starting bot initialization...
+2025-05-29 19:09:18,353 - ERROR - TELEGRAM_BOT_TOKEN environment variable is not set
+2025-05-29 19:09:18,353 - ERROR - Failed to initialize bot: Bot token is missing
+2025-05-29 19:09:18,353 - ERROR - Application error: Bot token is missing
+2025-05-29 19:09:18,354 - INFO - Starting cleanup process...
+2025-05-29 19:09:18,354 - INFO - Terminating Streamlit...
+2025-05-29 19:09:18,366 - INFO - Cleanup completed
+Traceback (most recent call last):
+  File "D:\python\mintos\RecoveryTBot-main\run.py", line 132, in <module>
+    asyncio.run(main())
+  File "C:\Program Files\Python39\lib\asyncio\runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "C:\Program Files\Python39\lib\asyncio\base_events.py", line 642, in run_until_complete
+    return future.result()
+  File "D:\python\mintos\RecoveryTBot-main\run.py", line 111, in main
+    bot = await managed_bot()
+  File "D:\python\mintos\RecoveryTBot-main\run.py", line 68, in managed_bot
+    raise ValueError("Bot token is missing")
+ValueError: Bot token is missing
