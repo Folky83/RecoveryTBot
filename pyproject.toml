@@ -1,8 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "repl-nix-workspace"
-version = "0.1.0"
-description = "Add your description here"
+name = "mintos-telegram-bot"
+version = "1.0.0"
+description = "A sophisticated Telegram bot and dashboard for monitoring Mintos lending platform investments"
 requires-python = ">=3.11"
+authors = [
+    {name = "Mintos Bot Developer", email = "developer@example.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["telegram", "bot", "mintos", "investment", "monitoring"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "aiohttp>=3.11.12",
     "beautifulsoup4>=4.13.3",
@@ -15,3 +33,20 @@ dependencies = [
     "twilio>=9.4.4",
     "watchdog>=6.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/mintos-telegram-bot"
+Repository = "https://github.com/yourusername/mintos-telegram-bot"
+Issues = "https://github.com/yourusername/mintos-telegram-bot/issues"
+
+[project.scripts]
+mintos-bot = "mintos_bot.run:main"
+mintos-bot-dashboard = "mintos_bot.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mintos_bot*"]
+exclude = ["tests*", "data*", "logs*", "attached_assets*"]
+
+[tool.setuptools.package-data]
+mintos_bot = ["*.md", "*.txt", "*.json"]

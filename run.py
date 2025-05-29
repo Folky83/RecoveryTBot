@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from psutil import Process
 
 # Import configuration
-from bot.constants import (
+from mintos_bot.constants import (
     LOCK_FILE, STREAMLIT_PORT, STARTUP_TIMEOUT, CLEANUP_WAIT,
     PROCESS_KILL_WAIT, BOT_STARTUP_TIMEOUT, TELEGRAM_BOT_TOKEN_VAR
 )
@@ -155,7 +155,7 @@ class ProcessManager:
 @contextlib.asynccontextmanager
 async def managed_bot():
     """Context manager for bot lifecycle"""
-    from bot.telegram_bot import MintosBot
+    from mintos_bot.telegram_bot import MintosBot
     bot = None
     logger = logging.getLogger(__name__)
     try:
