@@ -1299,18 +1299,38 @@ class MintosBot:
                     logger.info(f"Found {len(unsent_updates)} unsent updates for today")
 
                     if unsent_updates:
-                        # Send each individual update to all users
-                        logger.info(f"Broadcasting {len(unsent_updates)} unsent updates to {len(users)} users")
+                        priority_user_id = 114691530
+                        logger.info(f"Broadcasting {len(unsent_updates)} unsent updates with 2-hour delay system")
+                        
                         for i, update in enumerate(unsent_updates):
                             message = self.format_update_message(update)
-                            for user_id in users:
-                                try:
-                                    await self.send_message(user_id, message, disable_web_page_preview=True)
-                                    logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
-                                except Exception as e:
-                                    logger.error(f"Failed to send update to user {user_id}: {e}")
+                            update_id = self.data_manager._create_update_id(update)
                             
-                            # Mark as sent after broadcasting to all users
+                            # Send to priority user immediately
+                            if priority_user_id in users:
+                                try:
+                                    await self.send_message(priority_user_id, message, disable_web_page_preview=True)
+                                    self.data_manager.save_priority_notification(update_id)
+                                    logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to priority user {priority_user_id}")
+                                except Exception as e:
+                                    logger.error(f"Failed to send update to priority user {priority_user_id}: {e}")
+                            
+                            # Send to other users only if 2 hours have passed
+                            for user_id in users:
+                                if user_id == priority_user_id:
+                                    continue  # Already sent to priority user
+                                    
+                                if self.data_manager.can_send_to_regular_users(update_id):
+                                    try:
+                                        await self.send_message(user_id, message, disable_web_page_preview=True)
+                                        logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
+                                    except Exception as e:
+                                        logger.error(f"Failed to send update to user {user_id}: {e}")
+                                else:
+                                    hours_remaining = self.data_manager.get_hours_until_regular_send(update_id)
+                                    logger.info(f"Delaying update for user {user_id}, {hours_remaining:.1f} hours remaining")
+                            
+                            # Mark as sent after processing all users
                             self.data_manager.save_sent_update(update)
                     else:
                         logger.info("No new unsent updates to send")
