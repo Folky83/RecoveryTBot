@@ -351,17 +351,17 @@ class DataManager:
             raise
 
     def get_company_name(self, lender_id: Union[int, str]) -> str:
-        """Get company name by lender ID"""
+        """Get company name by lender ID, falling back to ID if name not found"""
         try:
             lender_id = int(lender_id)
             name = self.company_names.get(lender_id)
             if name is None:
-                logger.warning(f"Company name not found for lender_id: {lender_id}")
-                name = f"Unknown Company {lender_id}"
+                logger.debug(f"Company name not found for lender_id: {lender_id}, using ID")
+                return str(lender_id)  # Just return the ID, not "Unknown Company"
             return name
         except (ValueError, TypeError):
-            logger.error(f"Invalid lender_id format: {lender_id}")
-            return f"Invalid Company ID {lender_id}"
+            logger.warning(f"Invalid lender_id format: {lender_id}")
+            return str(lender_id) if lender_id else "Invalid ID"
 
     def compare_updates(self, new_updates: List[Dict[str, Any]], previous_updates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Compare updates to find new ones"""
