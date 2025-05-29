@@ -23,16 +23,16 @@ def check_python():
 def install_dependencies():
     """Install required Python packages"""
     packages = [
-        "aiohttp>=3.11.12",
-        "beautifulsoup4>=4.13.3", 
-        "feedparser>=6.0.11",
-        "pandas>=2.2.3",
-        "psutil>=6.1.1",
+        "aiohttp>=3.8.0",
+        "beautifulsoup4>=4.11.0", 
+        "feedparser>=6.0.8",
+        "pandas>=1.5.0",
+        "psutil>=5.9.0",
         "python-telegram-bot[job-queue]==20.7",
-        "streamlit>=1.41.1",
-        "trafilatura>=2.0.0",
-        "twilio>=9.4.4",
-        "watchdog>=6.0.0"
+        "streamlit>=1.28.0,<1.30.0",
+        "trafilatura>=1.6.0",
+        "twilio>=8.5.0",
+        "watchdog>=2.1.0"
     ]
     
     print("Installing Python packages...")
