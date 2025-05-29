@@ -43,11 +43,6 @@ Issues = "https://github.com/Folky83/RecoveryTBot/issues"
 mintos-bot = "mintos_bot.run:main"
 mintos-bot-dashboard = "mintos_bot.main:main"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["mintos_bot*"]
-exclude = ["tests*", "data*", "logs*", "attached_assets*", "bot*"]
-
 [tool.setuptools]
 packages = ["mintos_bot"]
 
