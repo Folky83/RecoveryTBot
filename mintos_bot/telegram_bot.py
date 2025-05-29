@@ -77,6 +77,10 @@ class MintosBot:
             self.user_manager = UserManager()
             self.document_scraper = DocumentScraper()
             self.rss_reader = RSSReader()
+            self._polling_task: Optional[asyncio.Task] = None
+            self._update_task: Optional[asyncio.Task] = None
+            self._campaign_task: Optional[asyncio.Task] = None
+            self._rss_task: Optional[asyncio.Task] = None
             self._is_startup_check = True  # Flag to indicate first check after startup
             self._initialized = True
             logger.info("Bot instance created")

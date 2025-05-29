@@ -1,0 +1,111 @@
+C:\Users\Gebruiker>python -m mintos_bot.run
+2025-05-29 22:52:00,009 - mintos_bot.mintos_client - DEBUG - Logger 'mintos_bot.mintos_client' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 22:52:00,016 - mintos_bot.user_manager - DEBUG - Logger 'mintos_bot.user_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 22:52:00,069 - mintos_bot.rss_reader - DEBUG - Logger 'mintos_bot.rss_reader' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 22:52:00,070 - mintos_bot.telegram_bot - DEBUG - Logger 'mintos_bot.telegram_bot' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+Starting Mintos Telegram Bot...
+2025-05-29 22:52:00,073 - mintos_bot.config_loader - INFO - Telegram token loaded from environment variable
+Starting dashboard on http://localhost:5000...
+Warning: main.py not found, running bot without dashboard
+2025-05-29 22:52:03,078 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 22:52:03,078 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 22:52:03,102 - mintos_bot.data_manager - INFO - Loaded 56 company names from C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\data\lo_names.csv
+2025-05-29 22:52:03,103 - mintos_bot.data_manager - INFO - Loaded 5 sent campaign IDs
+2025-05-29 22:52:03,104 - mintos_bot.data_manager - INFO - No pending campaigns file found, starting fresh
+2025-05-29 22:52:03,105 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 22:52:03,105 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 22:52:03,107 - mintos_bot.user_manager - INFO - Loaded 1 users
+2025-05-29 22:52:03,107 - mintos_bot.user_manager - INFO - Loaded 1 users
+2025-05-29 22:52:03,109 - mintos_bot.user_manager - INFO - Loaded RSS preferences for 1 users
+2025-05-29 22:52:03,109 - mintos_bot.user_manager - INFO - Loaded RSS preferences for 1 users
+2025-05-29 22:52:03,119 - mintos_bot.document_scraper - INFO - Loaded 69 company pages from C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\data\company_pages.csv
+2025-05-29 22:52:03,120 - mintos_bot.document_scraper - INFO - Loaded 0 sent document IDs
+2025-05-29 22:52:03,140 - mintos_bot.rss_reader - INFO - Loaded 9 keywords for RSS filtering from C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\data\rss_keywords.txt
+2025-05-29 22:52:03,140 - mintos_bot.rss_reader - INFO - Loaded 9 keywords for RSS filtering from C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\data\rss_keywords.txt
+2025-05-29 22:52:03,142 - mintos_bot.rss_reader - INFO - Loaded RSS preferences for 1 users
+2025-05-29 22:52:03,142 - mintos_bot.rss_reader - INFO - Loaded RSS preferences for 1 users
+2025-05-29 22:52:03,143 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 22:52:03,143 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 22:52:03,144 - mintos_bot.telegram_bot - INFO - Starting Mintos Update Bot
+2025-05-29 22:52:03,144 - mintos_bot.telegram_bot - INFO - Starting Mintos Update Bot
+2025-05-29 22:52:03,145 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 22:52:03,145 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 22:52:03,146 - mintos_bot.telegram_bot - ERROR - Error during cleanup: 'MintosBot' object has no attribute '_campaign_task'
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 88, in cleanup
+    await self._cancel_tasks()
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 96, in _cancel_tasks
+    for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("campaign", self._campaign_task), ("rss", self._rss_task)]:
+                                                                                                         ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MintosBot' object has no attribute '_campaign_task'
+2025-05-29 22:52:03,146 - mintos_bot.telegram_bot - ERROR - Error during cleanup: 'MintosBot' object has no attribute '_campaign_task'
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 88, in cleanup
+    await self._cancel_tasks()
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 96, in _cancel_tasks
+    for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("campaign", self._campaign_task), ("rss", self._rss_task)]:
+                                                                                                         ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MintosBot' object has no attribute '_campaign_task'
+2025-05-29 22:52:05,160 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 22:52:05,160 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 22:52:05,161 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 22:52:05,161 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 22:52:05,162 - mintos_bot.telegram_bot - ERROR - Error during cleanup: 'MintosBot' object has no attribute '_campaign_task'
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 88, in cleanup
+    await self._cancel_tasks()
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 96, in _cancel_tasks
+    for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("campaign", self._campaign_task), ("rss", self._rss_task)]:
+                                                                                                         ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MintosBot' object has no attribute '_campaign_task'
+2025-05-29 22:52:05,162 - mintos_bot.telegram_bot - ERROR - Error during cleanup: 'MintosBot' object has no attribute '_campaign_task'
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 88, in cleanup
+    await self._cancel_tasks()
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 96, in _cancel_tasks
+    for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("campaign", self._campaign_task), ("rss", self._rss_task)]:
+                                                                                                         ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MintosBot' object has no attribute '_campaign_task'
+2025-05-29 22:52:07,172 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 22:52:07,172 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 22:52:08,029 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/getMe "HTTP/1.1 200 OK"
+2025-05-29 22:52:08,030 - mintos_bot.telegram_bot - INFO - Connected as bot: MRecoveryBot
+2025-05-29 22:52:08,030 - mintos_bot.telegram_bot - INFO - Connected as bot: MRecoveryBot
+2025-05-29 22:52:08,031 - mintos_bot.telegram_bot - INFO - Setting up webhook...
+2025-05-29 22:52:08,031 - mintos_bot.telegram_bot - INFO - Setting up webhook...
+2025-05-29 22:52:08,055 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/deleteWebhook "HTTP/1.1 200 OK"
+2025-05-29 22:52:08,118 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/getUpdates "HTTP/1.1 200 OK"
+2025-05-29 22:52:08,120 - mintos_bot.telegram_bot - INFO - Registering command handlers...
+2025-05-29 22:52:08,120 - mintos_bot.telegram_bot - INFO - Registering command handlers...
+2025-05-29 22:52:08,122 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,122 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,123 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,123 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,124 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,124 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,126 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,126 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,127 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,127 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,128 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,128 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,130 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,130 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,131 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,131 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,132 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,132 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,133 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,133 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,135 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,135 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,136 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,136 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,137 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,137 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,138 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,138 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,139 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,139 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 22:52:08,140 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 22:52:08,140 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
