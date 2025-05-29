@@ -1,0 +1,10 @@
+# Mintos Telegram Bot Configuration
+# Replace 'your_bot_token_here' with your actual Telegram bot token
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# To get a bot token:
+# 1. Open Telegram and search for @BotFather
+# 2. Send /newbot command
+# 3. Follow the instructions to create your bot
+# 4. Copy the token and replace 'your_bot_token_here' above
+# 5. Save this file as 'config.txt' (remove .example from filename)

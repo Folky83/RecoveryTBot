@@ -5,8 +5,8 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from bot.data_manager import DataManager
-from bot.logger import setup_logger
+from mintos_bot.data_manager import DataManager
+from mintos_bot.logger import setup_logger
 
 # Set up logging
 logger = setup_logger("streamlit_dashboard")
