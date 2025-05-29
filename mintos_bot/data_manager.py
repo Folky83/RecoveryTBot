@@ -35,9 +35,14 @@ class DataManager(BaseManager):
         self.backup_sent_updates_file = f"{SENT_UPDATES_FILE}.bak"
         self.backup_sent_campaigns_file = f"{SENT_CAMPAIGNS_FILE}.bak"
         
+        # Priority user tracking (2-hour delay system)
+        self.priority_notifications_file = 'data/priority_notifications.json'
+        self.priority_notifications: Dict[str, float] = {}  # {update_id: timestamp}
+        
         self._load_company_names()
         self._load_sent_updates()
         self._load_sent_campaigns()
+        self._load_priority_notifications()
 
     def _load_company_names(self) -> None:
         """Load company names from CSV file"""
@@ -323,6 +328,48 @@ class DataManager(BaseManager):
             logger.info(f"Saved sent campaign ID: {campaign_id}")
         except Exception as e:
             logger.error(f"Error saving sent campaign: {e}", exc_info=True)
+    
+    def _load_priority_notifications(self) -> None:
+        """Load priority notification timestamps"""
+        try:
+            if os.path.exists(self.priority_notifications_file):
+                with open(self.priority_notifications_file, 'r') as f:
+                    self.priority_notifications = json.load(f)
+                logger.info(f"Loaded {len(self.priority_notifications)} priority notification records")
+            else:
+                self.priority_notifications = {}
+                logger.info("No priority notifications file found, starting fresh")
+        except Exception as e:
+            logger.error(f"Error loading priority notifications: {e}", exc_info=True)
+            self.priority_notifications = {}
+    
+    def save_priority_notification(self, update_id: str) -> None:
+        """Record when an update was first sent to priority user"""
+        try:
+            self.priority_notifications[update_id] = time.time()
+            with open(self.priority_notifications_file, 'w') as f:
+                json.dump(self.priority_notifications, f)
+            logger.info(f"Recorded priority notification for update ID: {update_id}")
+        except Exception as e:
+            logger.error(f"Error saving priority notification: {e}", exc_info=True)
+    
+    def can_send_to_regular_users(self, update_id: str) -> bool:
+        """Check if 2 hours have passed since priority user notification"""
+        if update_id not in self.priority_notifications:
+            return False  # Must be sent to priority user first
+        
+        priority_time = self.priority_notifications[update_id]
+        hours_passed = (time.time() - priority_time) / 3600
+        return hours_passed >= 2.0  # 2 hour delay
+    
+    def get_hours_until_regular_send(self, update_id: str) -> float:
+        """Get how many hours until regular users can receive this update"""
+        if update_id not in self.priority_notifications:
+            return 0  # No priority notification recorded
+        
+        priority_time = self.priority_notifications[update_id]
+        hours_passed = (time.time() - priority_time) / 3600
+        return max(0, 2.0 - hours_passed)  # 2 hour delay
 
     def is_campaign_sent(self, campaign: Dict[str, Any]) -> bool:
         """Check if a campaign has already been sent"""

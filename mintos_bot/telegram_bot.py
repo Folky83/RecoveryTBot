@@ -226,58 +226,35 @@ class MintosBot:
         """Handle scheduled update checks with improved resilience"""
         consecutive_errors = 0
         max_consecutive_errors = 3
-        normal_sleep = 5 * 60  # Regular 5-minute check interval
+        check_interval = 5 * 60  # Always check every 5 minutes
         error_sleep = 3 * 60   # Shorter 3-minute retry after errors
-        long_sleep = 55 * 60   # 55-minute wait after successful update
 
         while True:
             try:
-                # Check the current time and stale cache situation
-                should_check = await self.should_check_updates()
+                logger.info("Running scheduled update check")
+                try:
+                    await self._safe_update_check()
+                    # Reset error counter after successful update
+                    consecutive_errors = 0
+                    logger.info("Scheduled update completed successfully")
 
-                if should_check:
-                    logger.info("Running scheduled update")
-                    try:
-                        await self._safe_update_check()
-                        # Reset error counter after successful update
-                        consecutive_errors = 0
-                        logger.info("Scheduled update completed successfully")
+                    # Try to resend any failed messages
+                    await self.retry_failed_messages()
 
-                        # Try to resend any failed messages
-                        await self.retry_failed_messages()
+                except Exception as e:
+                    consecutive_errors += 1
+                    logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
 
-                        # Use longer sleep interval after successful update
-                        await asyncio.sleep(long_sleep)
-                        continue  # Skip the normal sleep at the end
-                    except Exception as e:
-                        consecutive_errors += 1
-                        logger.error(f"Update check failed ({consecutive_errors}/{max_consecutive_errors}): {e}", exc_info=True)
+                    # Implement exponential backoff for repeated errors
+                    if consecutive_errors >= max_consecutive_errors:
+                        logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
+                        await asyncio.sleep(error_sleep * consecutive_errors)
+                    else:
+                        await asyncio.sleep(error_sleep)
+                    continue  # Skip the normal sleep at the end
 
-                        # Implement exponential backoff for repeated errors
-                        if consecutive_errors >= max_consecutive_errors:
-                            logger.critical(f"Too many consecutive errors ({consecutive_errors}). Backing off for longer period.")
-                            await asyncio.sleep(error_sleep * consecutive_errors)
-                        else:
-                            await asyncio.sleep(error_sleep)
-                        continue  # Skip the normal sleep at the end
-                else:
-                    # Check for stale cache during business hours
-                    try:
-                        cache_age_hours = self.data_manager.get_cache_age() / 3600
-                        now = datetime.now()
-                        # If more than 30 hours old on a weekday during business hours, force an update
-                        if (cache_age_hours > 30 and now.weekday() < 5 and 
-                            9 <= now.hour <= 18):  # Business hours (9 AM to 6 PM)
-                            logger.warning(f"Cache file is {cache_age_hours:.1f} hours old - forcing emergency update")
-                            await self._safe_update_check()
-                            consecutive_errors = 0
-                            await asyncio.sleep(long_sleep)
-                            continue
-                    except Exception as e:
-                        logger.error(f"Error checking cache age: {e}")
-
-                # Normal sleep interval between checks
-                await asyncio.sleep(normal_sleep)
+                # Always use 5-minute interval
+                await asyncio.sleep(check_interval)
 
             except asyncio.CancelledError:
                 logger.info("Scheduled updates cancelled")
@@ -1420,16 +1397,39 @@ class MintosBot:
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
 
                 if unsent_campaigns:
-                    logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns to {len(users)} users")
+                    priority_user_id = 114691530
+                    logger.info(f"Sending {len(unsent_campaigns)} unsent campaigns with 2-hour delay system")
+                    
                     for i, campaign in enumerate(unsent_campaigns):
                         message = self.format_campaign_message(campaign)
-                        for user_id in users:
+                        campaign_id = self.data_manager._create_campaign_id(campaign)
+                        
+                        # Send to priority user immediately
+                        if priority_user_id in users:
                             try:
-                                await self.send_message(user_id, message, disable_web_page_preview=True)
-                                self.data_manager.save_sent_campaign(campaign)
-                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
+                                await self.send_message(priority_user_id, message, disable_web_page_preview=True)
+                                self.data_manager.save_priority_notification(campaign_id)
+                                logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to priority user {priority_user_id}")
                             except Exception as e:
-                                logger.error(f"Failed to send campaign to user {user_id}: {e}")
+                                logger.error(f"Failed to send campaign to priority user {priority_user_id}: {e}")
+                        
+                        # Send to other users only if 2 hours have passed
+                        for user_id in users:
+                            if user_id == priority_user_id:
+                                continue  # Already sent to priority user
+                                
+                            if self.data_manager.can_send_to_regular_users(campaign_id):
+                                try:
+                                    await self.send_message(user_id, message, disable_web_page_preview=True)
+                                    logger.info(f"Successfully sent campaign {i+1}/{len(unsent_campaigns)} to user {user_id}")
+                                except Exception as e:
+                                    logger.error(f"Failed to send campaign to user {user_id}: {e}")
+                            else:
+                                hours_remaining = self.data_manager.get_hours_until_regular_send(campaign_id)
+                                logger.info(f"Delaying campaign for user {user_id}, {hours_remaining:.1f} hours remaining")
+                        
+                        # Mark as sent after processing all users
+                        self.data_manager.save_sent_campaign(campaign)
                 else:
                     logger.info("No new unsent campaigns to send")
 
