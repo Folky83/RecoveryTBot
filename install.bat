@@ -76,14 +76,22 @@ goto end
 
 :git_install
 echo Installing from Git repository...
-pip install --upgrade git+https://github.com/Folky83/RecoveryTBot.git
+python -m pip install --user --upgrade git+https://github.com/Folky83/RecoveryTBot.git
 if errorlevel 1 (
     echo Git installation failed. Try option 1 instead.
     pause
     exit /b 1
 )
+echo.
 echo Git installation successful!
-echo Run: mintos-bot
+echo.
+echo To run the bot:
+echo 1. Get bot token from @BotFather on Telegram
+echo 2. Create config.txt with: TELEGRAM_BOT_TOKEN=your_token_here
+echo 3. Run: python -m mintos_bot.run
+echo 4. Access dashboard at: http://localhost:5000
+echo.
+echo To update later, just run: python -m pip install --user --upgrade git+https://github.com/Folky83/RecoveryTBot.git
 goto end
 
 :deps_only
