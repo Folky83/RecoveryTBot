@@ -21,7 +21,7 @@ from .constants import (
     COMPANY_PAGES_CSV, DOCUMENT_TYPES, MAX_HTTP_RETRIES, HTTP_RETRY_DELAY,
     HTTP_CLIENT_TIMEOUT, DEFAULT_USER_AGENT, DOCUMENT_CACHE_TTL
 )
-from .utils import SafeElementHandler, FileBackupManager, create_unique_id
+from .utils import safe_get_text, safe_get_attribute, safe_find, safe_find_all, FileBackupManager, create_unique_id
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -447,10 +447,10 @@ class DocumentScraper:
                 
                 # Find links with matching text
                 for link in soup.find_all('a', href=True):
-                    link_text = SafeElementHandler.safe_get_text(link)
-                    href = SafeElementHandler.safe_get_attribute(link, 'href')
+                    link_text = safe_get_text(link)
+                    href = safe_get_attribute(link, 'href')
                     
-                    if link_text.lower() == doc_type_display.lower() and SafeElementHandler.is_pdf_link(href):
+                    if link_text.lower() == doc_type_display.lower() and href.endswith('.pdf'):
                         logger.debug(f"Found exact match for {doc_type}: {href}")
                         
                         # Try to extract date from context
@@ -477,7 +477,8 @@ class DocumentScraper:
                                     break
                         
                         # Make sure we have an absolute URL
-                        href = SafeElementHandler.normalize_url(href)
+                        if not href.startswith('http'):
+                            href = f"https://www.mintos.com{href}" if href.startswith('/') else f"https://www.mintos.com/{href}"
                         
                         # Create document entry
                         doc = {

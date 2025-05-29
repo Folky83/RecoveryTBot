@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>NASDAQ market news</title>
+<description>NASDAQ market news in en</description>
+<link>http://nasdaqbaltic.com/statistics/en/news?rss=1</link>
+<atom:link href="http://nasdaqbaltic.com/statistics/en/news?rss=1" rel="self" type="application/rss+xml" />
+<language>en</language> 
+<lastBuildDate>Thu, 29 May 2025 20:40:11 +0300</lastBuildDate> 
+
+	<item>
+	<title><![CDATA[Announcement Regarding the Publication Date of the Audited Annual Information for 2024]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b2752c6f1b0551b1bf3bddf1ca72433d0&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 18:18:15 +0300</pubDate>
+	<guid isPermaLink="false">1366414</guid>
+	<issuer><![CDATA[AUGA group]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Establishment of the Risk, Nomination and Remuneration Committees of Bigbank]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b4cfaf83b662053fbb0390c604bad9523&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 16:30:00 +0300</pubDate>
+	<guid isPermaLink="false">1366406</guid>
+	<issuer><![CDATA[Bigbank AS]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Completion of the intra-group restructuring of car trade in Lithuania]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bec6f002430e9b1f8a04a0708509726b1&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 16:30:00 +0300</pubDate>
+	<guid isPermaLink="false">1366405</guid>
+	<issuer><![CDATA[TKM Grupp]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Notifications on transactions concluded by managers of the companies]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b984475ca2f65759c94a99b7f88de923c&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 16:23:00 +0300</pubDate>
+	<guid isPermaLink="false">1366403</guid>
+	<issuer><![CDATA[Vilkyskiu Pienine]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Correction: New prices for natural gas transmission services have been approved]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bd01b3beca27607bf4a402b84352aff88&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 16:07:22 +0300</pubDate>
+	<guid isPermaLink="false">1366401</guid>
+	<issuer><![CDATA[Amber Grid]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[New prices for natural gas transmission services have been approved]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=ba0ee71a6b35dc80f3454bac37ab084a1&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 16:00:02 +0300</pubDate>
+	<guid isPermaLink="false">1366400</guid>
+	<issuer><![CDATA[Amber Grid]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Iute Group's public offer for new Senior Secured EUR 2025/2030 bonds ends this Friday]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bbf0325bbbf54d4ca485dde6989190973&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 14:30:29 +0300</pubDate>
+	<guid isPermaLink="false">1366397</guid>
+	<issuer><![CDATA[IuteCredit Finance S.a r.l]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Mainor Ülemiste AS Audited Consolidated Annual Report 2024]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b67a9a134803f04334e8bdbe7afb147e3&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 13:19:06 +0300</pubDate>
+	<guid isPermaLink="false">1366396</guid>
+	<issuer><![CDATA[Mainor Ülemiste]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[About Listing of Invego Latvia OÜ bonds on Baltic First North Bond List]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bc5e3c6b8aa01a9f286405490d46268f1&amp;lang=en&amp;src=notices</link>
+	<pubDate>Thu, 29 May 2025 12:39:16 +0300</pubDate>
+	<guid isPermaLink="false">1366394</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Schedule of Lithuanian Government debt securities auctions for June 2025 - August 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b85d6c0acb5b716b51c0f1aa3bd1d18f4&amp;lang=en&amp;src=notices</link>
+	<pubDate>Thu, 29 May 2025 10:56:39 +0300</pubDate>
+	<guid isPermaLink="false">1366386</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Unaudited financial report for the first quarter of 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b1b9b40d1e69577fa44acccdf02f80748&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 10:54:27 +0300</pubDate>
+	<guid isPermaLink="false">1366388</guid>
+	<issuer><![CDATA[Trigon Property Development]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[The Latest Information on the Restructuring Processes of AUGA group, AB under restructuring and its Controlled Companies]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b1b82cc31de1d0ce8c86bfea6315517b4&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 09:59:59 +0300</pubDate>
+	<guid isPermaLink="false">1366385</guid>
+	<issuer><![CDATA[AUGA group]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Results of the Offering of Bigbank AS AT1 Bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b176837400ab4d6ac0ab256f2b1f1db12&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 09:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366383</guid>
+	<issuer><![CDATA[Bigbank AS]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Procedure for the payout of dividends for the year 2024]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b7a604b4286078644da8112c2d7a67896&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 09:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366382</guid>
+	<issuer><![CDATA[INVL Baltic Real Estate]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Notification on the increase of share capital of IPAS INDEXO]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b150480c55a7b81651d03543c93e5d184&amp;lang=en&amp;src=listed</link>
+	<pubDate>Thu, 29 May 2025 07:55:27 +0300</pubDate>
+	<guid isPermaLink="false">1366379</guid>
+	<issuer><![CDATA[INDEXO]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[AS PN Project increases bond interest rate to 10%]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=be83c32f82a2412604c8180cadb975444&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 18:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366327</guid>
+	<issuer><![CDATA[Nasdaq Riga]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[AS PN Project increases bond interest rate to 10%]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bc75d57bf318e9f14ac3245ac8aa8a204&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 18:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366332</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[AS PN Project increases bond interest rate to 10%]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b871d7affb37aeb55ce8532af43287940&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 18:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366331</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Notice on Convening of the Extraordinary General Meeting of Shareholders of LITGRID AB  ]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b71f70d35db4475f15c669edceb9145ff&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 17:10:00 +0300</pubDate>
+	<guid isPermaLink="false">1366311</guid>
+	<issuer><![CDATA[LITGRID]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Listing of additional IPAS “INDEXO” shares on Baltic Main List]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=ba37e0b07112fd72c874b8238c1625fb8&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 17:07:37 +0300</pubDate>
+	<guid isPermaLink="false">1366310</guid>
+	<issuer><![CDATA[Nasdaq Riga]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Regarding Draft Resolutions for the General Meeting of Shareholders Convened on 30 June 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b4d0a39c9a146799b21cfef0121b26bed&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 16:50:26 +0300</pubDate>
+	<guid isPermaLink="false">1366301</guid>
+	<issuer><![CDATA[PST Group]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[JSC Development Finance Institution Altum unaudited interim condensed report for the three months period ending 31 March 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=ba9c95ea3a905d7b67b6987b23df7461b&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 16:26:09 +0300</pubDate>
+	<guid isPermaLink="false">1366195</guid>
+	<issuer><![CDATA[Attīstības finanšu institūcija Altum]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Trading in LifeFit Group MidCo GmbH bonds will be resumed]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b08250045eaad290ac73bb5d636940252&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 16:21:36 +0300</pubDate>
+	<guid isPermaLink="false">1366294</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[CORRECTION: iCotton financial calendar for 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b7d5c156b4cf39a1ee618dbb768e24448&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 15:16:02 +0300</pubDate>
+	<guid isPermaLink="false">1366258</guid>
+	<issuer><![CDATA[iCotton]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[On the extension of the term of operation of UAB „Atsinaujinančios energetikos investicijos“]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=be10e7b7ca2264b175efc2faf0a906f2b&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 14:15:11 +0300</pubDate>
+	<guid isPermaLink="false">1366253</guid>
+	<issuer><![CDATA[Atsinaujinancios energetikos investicijos]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Primary placement auction of additional offers of Lithuanian Government Eurobonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b998224da2fc405e65ebbe216bd58f4b6&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 13:50:25 +0300</pubDate>
+	<guid isPermaLink="false">1366197</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Everaus Kinnisvara AS First Bond Series Subscription Results]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bce44eb4cd804160f699b248ccd597022&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 13:27:09 +0300</pubDate>
+	<guid isPermaLink="false">1366233</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Unaudited financial report for the 3 months period of 2025 of AS “Rīgas kuģu būvētava”]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bbb75951d154853a6ad41b0bff4295032&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 10:09:45 +0300</pubDate>
+	<guid isPermaLink="false">1366029</guid>
+	<issuer><![CDATA[Rīgas kuģu būvētava]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Nasdaq Welcomes Nordspace to the First North Market]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b0fe6728570db2f5d11e31d1719688a0d&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 10:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366139</guid>
+	<issuer><![CDATA[Nasdaq Riga]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Nasdaq Welcomes Nordspace to the First North Market]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b178ad6fc88fbee9c83bbba4a4900ee36&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 10:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1365889</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Nasdaq Welcomes Nordspace to the First North Market]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bae4fbebe353b9bba56d77c793409ad6e&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 10:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1365869</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Public offering of UAB Atsinaujinančios Energetikos Investicijos bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bfede038fb9ca326e1d77343b2364ffb5&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 09:25:00 +0300</pubDate>
+	<guid isPermaLink="false">1366124</guid>
+	<issuer><![CDATA[Nasdaq Riga]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Public offering of UAB Atsinaujinančios Energetikos Investicijos bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b5f2a130127a0e6055b1463d69f252325&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 09:25:00 +0300</pubDate>
+	<guid isPermaLink="false">1366126</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Public offering of UAB Atsinaujinančios Energetikos Investicijos bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b21dc45c8de2331dbf95dc170fc7342b5&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 09:25:00 +0300</pubDate>
+	<guid isPermaLink="false">1366125</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[REMINDER: Public Offering of UAB Vli Timber bonds - via Bond Auction]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b7567cdeb0b9e44bedd24ff2d64996baa&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 09:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1365949</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[REMINDER: Public Offering of UAB Vli Timber bonds - via Bond Auction]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b27275c69968b472ba7f4c003ea118c3b&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 09:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1365996</guid>
+	<issuer><![CDATA[Nasdaq Riga]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[REMINDER: Public Offering of UAB Vli Timber bonds - via Bond Auction]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b2a206ce671c811532616787b12cef161&amp;lang=en&amp;src=notices</link>
+	<pubDate>Wed, 28 May 2025 09:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1365995</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Changes in the management of Hepsor AS]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=be74234fa828c8e0ea12d64c7645599b4&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 08:58:25 +0300</pubDate>
+	<guid isPermaLink="false">1366104</guid>
+	<issuer><![CDATA[Hepsor]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Lahekalda apartments development project next phase construction (Tallinn, Estonia)]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b220f468d984643a12c6fe16a61251ed2&amp;lang=en&amp;src=listed</link>
+	<pubDate>Wed, 28 May 2025 08:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366088</guid>
+	<issuer><![CDATA[Merko Ehitus]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[UAB “Atsinaujinančios energetikos investicijos” Starts Exchange And Cash Tender Offer For Notes ISIN LT0000405938]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b81230a5ac0463bce8cb64dc513120e09&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 22:52:21 +0300</pubDate>
+	<guid isPermaLink="false">1366073</guid>
+	<issuer><![CDATA[Atsinaujinancios energetikos investicijos]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Dividend payment ex-date of AS Merko Ehitus is 29 May 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b68c7e826f8947551619fcbc27a16618f&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 20:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1366057</guid>
+	<issuer><![CDATA[Merko Ehitus]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[First Tranche offering of UAB „Atsinaujinančios energetikos investicijos“ notes under the EUR 100 million Green Bonds Programme]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b0eb39e310efd15af274b9a18107db21d&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 19:23:56 +0300</pubDate>
+	<guid isPermaLink="false">1366033</guid>
+	<issuer><![CDATA[Atsinaujinancios energetikos investicijos]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Approved base prospectus of UAB “Atsinaujinančios energetikos investicijos”]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b836e1be231ef5c951d1edc71d35c46f1&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 17:32:08 +0300</pubDate>
+	<guid isPermaLink="false">1365999</guid>
+	<issuer><![CDATA[Atsinaujinancios energetikos investicijos]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Information on shares, voting rights and authorized capital ]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b4404747569e875869b4c67c0757f455d&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 16:00:58 +0300</pubDate>
+	<guid isPermaLink="false">1365970</guid>
+	<issuer><![CDATA[Artea Bankas]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[UAB “Kvartalas“ Publishes Debt to Total Project Cost Ratio Ended 31 March 2025]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bc71a7ee0eedcb24f2fcf8af278e671d3&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 16:00:39 +0300</pubDate>
+	<guid isPermaLink="false">1365969</guid>
+	<issuer><![CDATA[Kvartalas]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[REMINDER: Public offering of SIA Rīgas ūdens bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b11303200c90f70ad88ad0465a458cb1a&amp;lang=en&amp;src=notices</link>
+	<pubDate>Tue, 27 May 2025 10:45:00 +0300</pubDate>
+	<guid isPermaLink="false">1365867</guid>
+	<issuer><![CDATA[Nasdaq Vilnius]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[REMINDER: Public offering of SIA Rīgas ūdens bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b041284fc4b0fa9a95886bd47f8841a9e&amp;lang=en&amp;src=notices</link>
+	<pubDate>Tue, 27 May 2025 10:45:00 +0300</pubDate>
+	<guid isPermaLink="false">1365862</guid>
+	<issuer><![CDATA[Nasdaq Riga]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[REMINDER: Public offering of SIA Rīgas ūdens bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b9c1cdda41fbf6cbb1d75433559db1a51&amp;lang=en&amp;src=notices</link>
+	<pubDate>Tue, 27 May 2025 10:45:00 +0300</pubDate>
+	<guid isPermaLink="false">1365866</guid>
+	<issuer><![CDATA[Nasdaq Tallinn]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Iute Tightens Interest Rate For Public Offering Of New Senior Secured EUR 2025/2030 Bonds]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=bc43e9c9875122e99caa534b00e76ab11&amp;lang=en&amp;src=listed</link>
+	<pubDate>Tue, 27 May 2025 10:00:00 +0300</pubDate>
+	<guid isPermaLink="false">1365833</guid>
+	<issuer><![CDATA[IuteCredit Finance S.a r.l]]></issuer>
+	</item>
+
+
+	<item>
+	<title><![CDATA[Latvenergo AS plans to continue issuing bonds ]]></title>
+	<link>https://view.news.eu.nasdaq.com/view?id=b5e47a61034a77d2b1a5bdd322a060e50&amp;lang=en&amp;src=listed</link>
+	<pubDate>Mon, 26 May 2025 19:53:27 +0300</pubDate>
+	<guid isPermaLink="false">1365751</guid>
+	<issuer><![CDATA[Latvenergo]]></issuer>
+	</item>
+
+</channel>
+</rss>

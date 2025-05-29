@@ -18,7 +18,7 @@ async def test_imports():
         from bot.constants import LOCK_FILE, STREAMLIT_PORT
         print("✓ Constants import successful")
         
-        from bot.utils import SafeElementHandler, FileBackupManager
+        from bot.utils import safe_get_text, safe_get_attribute, FileBackupManager
         print("✓ Utils import successful")
         
         from bot.document_scraper import DocumentScraper
