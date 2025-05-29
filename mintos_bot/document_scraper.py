@@ -59,12 +59,34 @@ class DocumentScraper:
     def _load_company_pages(self) -> None:
         """Load company pages from CSV file"""
         try:
-            df = pd.read_csv(COMPANY_PAGES_CSV)
-            self.company_pages = df.to_dict('records')
-            logger.info(f"Loaded {len(self.company_pages)} company pages")
+            # Try package data first, then local file
+            csv_path = self._find_data_file('company_pages.csv', COMPANY_PAGES_CSV)
+            if csv_path and os.path.exists(csv_path):
+                df = pd.read_csv(csv_path)
+                self.company_pages = df.to_dict('records')
+                logger.info(f"Loaded {len(self.company_pages)} company pages from {csv_path}")
+            else:
+                logger.error(f"Company pages CSV file not found: {COMPANY_PAGES_CSV}")
+                self.company_pages = []
         except Exception as e:
             logger.error(f"Error loading company pages: {e}")
             self.company_pages = []
+
+    def _find_data_file(self, package_filename: str, fallback_path: str) -> str:
+        """Find data file in package or fallback to local path"""
+        try:
+            # Try to find in package data
+            import mintos_bot
+            package_dir = os.path.dirname(mintos_bot.__file__)
+            package_data_path = os.path.join(package_dir, 'data', package_filename)
+            
+            if os.path.exists(package_data_path):
+                return package_data_path
+        except Exception:
+            pass
+        
+        # Fallback to local path
+        return fallback_path
 
     def _load_sent_documents(self) -> None:
         """Load set of already sent document IDs with verification and backup"""

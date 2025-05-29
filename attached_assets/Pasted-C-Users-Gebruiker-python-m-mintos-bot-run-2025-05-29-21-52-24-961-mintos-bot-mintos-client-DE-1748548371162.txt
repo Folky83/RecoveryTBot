@@ -1,0 +1,134 @@
+C:\Users\Gebruiker>python -m mintos_bot.run
+2025-05-29 21:52:24,961 - mintos_bot.mintos_client - DEBUG - Logger 'mintos_bot.mintos_client' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:52:24,965 - mintos_bot.user_manager - DEBUG - Logger 'mintos_bot.user_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:52:25,026 - mintos_bot.rss_reader - DEBUG - Logger 'mintos_bot.rss_reader' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:52:25,027 - mintos_bot.telegram_bot - DEBUG - Logger 'mintos_bot.telegram_bot' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+Starting Mintos Telegram Bot...
+2025-05-29 21:52:25,032 - mintos_bot.config_loader - INFO - Telegram token loaded from environment variable
+Starting dashboard on http://localhost:5000...
+Warning: main.py not found, running bot without dashboard
+2025-05-29 21:52:28,041 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 21:52:28,041 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 21:52:28,077 - mintos_bot.data_manager - INFO - Loaded 56 company names from C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\data\lo_names.csv
+2025-05-29 21:52:28,078 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 21:52:28,078 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 21:52:28,080 - mintos_bot.user_manager - INFO - Loaded 1 users
+2025-05-29 21:52:28,080 - mintos_bot.user_manager - INFO - Loaded 1 users
+2025-05-29 21:52:28,081 - mintos_bot.document_scraper - ERROR - Error loading company pages: [Errno 2] No such file or directory: 'attached_assets\\company_pages.csv'
+2025-05-29 21:52:28,082 - mintos_bot.document_scraper - INFO - Loaded 0 sent document IDs
+2025-05-29 21:52:28,084 - mintos_bot.rss_reader - INFO - Loaded 10 keywords for RSS filtering
+2025-05-29 21:52:28,084 - mintos_bot.rss_reader - INFO - Loaded 10 keywords for RSS filtering
+2025-05-29 21:52:28,084 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 21:52:28,084 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 21:52:28,085 - mintos_bot.telegram_bot - INFO - Starting Mintos Update Bot
+2025-05-29 21:52:28,085 - mintos_bot.telegram_bot - INFO - Starting Mintos Update Bot
+2025-05-29 21:52:28,085 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:52:28,085 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:52:28,086 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:52:28,086 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:52:30,093 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:52:30,093 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:52:30,094 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:52:30,094 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:52:30,095 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:52:30,095 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:52:32,108 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:52:32,108 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:52:33,012 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/getMe "HTTP/1.1 200 OK"
+2025-05-29 21:52:33,013 - mintos_bot.telegram_bot - INFO - Connected as bot: MRecoveryBot
+2025-05-29 21:52:33,013 - mintos_bot.telegram_bot - INFO - Connected as bot: MRecoveryBot
+2025-05-29 21:52:33,014 - mintos_bot.telegram_bot - INFO - Setting up webhook...
+2025-05-29 21:52:33,014 - mintos_bot.telegram_bot - INFO - Setting up webhook...
+2025-05-29 21:52:33,036 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/deleteWebhook "HTTP/1.1 200 OK"
+2025-05-29 21:52:33,108 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/getUpdates "HTTP/1.1 200 OK"
+2025-05-29 21:52:33,109 - mintos_bot.telegram_bot - INFO - Registering command handlers...
+2025-05-29 21:52:33,109 - mintos_bot.telegram_bot - INFO - Registering command handlers...
+2025-05-29 21:52:33,111 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,111 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,112 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,112 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,112 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,112 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,113 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,113 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,114 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,114 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,115 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,115 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,116 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,116 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,116 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,116 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,117 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,117 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,118 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,118 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,118 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,118 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,119 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,119 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,120 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,120 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,121 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,121 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,121 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,121 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,122 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,122 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,123 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,123 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,123 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,123 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,124 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,124 - mintos_bot.telegram_bot - INFO - Registering handler: CommandHandler
+2025-05-29 21:52:33,125 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,125 - mintos_bot.telegram_bot - INFO - Successfully registered CommandHandler
+2025-05-29 21:52:33,126 - mintos_bot.telegram_bot - INFO - Registering handler: CallbackQueryHandler
+2025-05-29 21:52:33,126 - mintos_bot.telegram_bot - INFO - Registering handler: CallbackQueryHandler
+2025-05-29 21:52:33,126 - mintos_bot.telegram_bot - INFO - Successfully registered CallbackQueryHandler
+2025-05-29 21:52:33,126 - mintos_bot.telegram_bot - INFO - Successfully registered CallbackQueryHandler
+2025-05-29 21:52:33,127 - mintos_bot.telegram_bot - INFO - All handlers registered successfully
+2025-05-29 21:52:33,127 - mintos_bot.telegram_bot - INFO - All handlers registered successfully
+2025-05-29 21:52:33,128 - mintos_bot.telegram_bot - DEBUG - Registered handlers:
+2025-05-29 21:52:33,128 - mintos_bot.telegram_bot - DEBUG - Registered handlers:
+2025-05-29 21:52:33,129 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,129 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,130 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,130 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,131 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,131 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,131 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,131 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,132 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,132 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,133 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,133 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,133 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,133 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,134 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,134 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,134 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,134 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,135 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,135 - mintos_bot.telegram_bot - DEBUG - - CommandHandler
+2025-05-29 21:52:33,135 - mintos_bot.telegram_bot - DEBUG - - CallbackQueryHandler
+2025-05-29 21:52:33,135 - mintos_bot.telegram_bot - DEBUG - - CallbackQueryHandler
+2025-05-29 21:52:33,163 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/getMe "HTTP/1.1 200 OK"
+2025-05-29 21:52:33,165 - apscheduler.scheduler - INFO - Scheduler started
+2025-05-29 21:52:33,166 - telegram.ext.Application - INFO - Application started
+2025-05-29 21:52:33,166 - mintos_bot.telegram_bot - INFO - Application started successfully
+2025-05-29 21:52:33,166 - mintos_bot.telegram_bot - INFO - Application started successfully
+2025-05-29 21:52:33,167 - mintos_bot.telegram_bot - INFO - Bot initialization completed successfully
+2025-05-29 21:52:33,167 - mintos_bot.telegram_bot - INFO - Bot initialization completed successfully
+2025-05-29 21:52:33,170 - mintos_bot.telegram_bot - DEBUG - Current server time: 2025-05-29 21:52:33 (weekday: 3, hour: 21)
+2025-05-29 21:52:33,170 - mintos_bot.telegram_bot - DEBUG - Current server time: 2025-05-29 21:52:33 (weekday: 3, hour: 21)
+2025-05-29 21:52:33,171 - mintos_bot.telegram_bot - DEBUG - Skipping updatecheck - outside scheduled hours (weekday: 3, hour: 21)
+2025-05-29 21:52:33,171 - mintos_bot.telegram_bot - DEBUG - Skipping updatecheck - outside scheduled hours (weekday: 3, hour: 21)
+2025-05-29 21:52:33,172 - mintos_bot.telegram_bot - INFO - Running scheduled RSS check
+2025-05-29 21:52:33,172 - mintos_bot.telegram_bot - INFO - Running scheduled RSS check
+2025-05-29 21:52:33,173 - mintos_bot.telegram_bot - INFO - No users have RSS notifications enabled
+2025-05-29 21:52:33,173 - mintos_bot.telegram_bot - INFO - No users have RSS notifications enabled
+2025-05-29 21:52:33,173 - mintos_bot.telegram_bot - INFO - RSS check completed
+2025-05-29 21:52:33,173 - mintos_bot.telegram_bot - INFO - RSS check completed
+2025-05-29 21:52:33,195 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/deleteWebhook "HTTP/1.1 200 OK"
+2025-05-29 21:52:43,220 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot7368080976:AAE0vM2--epmISjYnrq5zvshFFBFiIvUS9M/getUpdates "HTTP/1.1 200 OK"
