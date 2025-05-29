@@ -49,16 +49,72 @@ def main():
     
     # Import and run the bot (after setting the token)
     try:
-        # Import the main run script
-        import run
-        asyncio.run(run.main())
-    except ImportError:
-        # Fallback to direct bot import
+        # Try to import the main run script from parent directory
+        import sys
+        import importlib.util
+        
+        # Look for run.py in the current working directory
+        run_path = os.path.join(os.getcwd(), 'run.py')
+        if os.path.exists(run_path):
+            spec = importlib.util.spec_from_file_location("run", run_path)
+            run_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(run_module)
+            asyncio.run(run_module.main())
+        else:
+            # Fallback to direct bot import with Streamlit
+            import subprocess
+            import time
+            
+            # Start Streamlit in background
+            print("Starting dashboard on http://localhost:5000...")
+            
+            # Find main.py in the current directory or package directory
+            main_path = None
+            if os.path.exists("main.py"):
+                main_path = "main.py"
+            else:
+                # Try to find main.py in the package installation
+                import mintos_bot
+                package_dir = os.path.dirname(mintos_bot.__file__)
+                parent_dir = os.path.dirname(package_dir)
+                potential_main = os.path.join(parent_dir, "main.py")
+                if os.path.exists(potential_main):
+                    main_path = potential_main
+            
+            if main_path:
+                streamlit_process = subprocess.Popen([
+                    sys.executable, "-m", "streamlit", "run",
+                    main_path, "--server.address", "0.0.0.0",
+                    "--server.port", "5000"
+                ])
+            else:
+                print("Warning: main.py not found, running bot without dashboard")
+                streamlit_process = None
+            
+            # Wait a moment for Streamlit to start
+            time.sleep(3)
+            
+            # Start the bot
+            from .telegram_bot import MintosBot
+            
+            async def run_bot():
+                bot = MintosBot()
+                await bot.run()
+            
+            try:
+                asyncio.run(run_bot())
+            finally:
+                if streamlit_process:
+                    streamlit_process.terminate()
+                
+    except ImportError as e:
+        print(f"Import error: {e}")
+        # Simple bot-only mode
         from .telegram_bot import MintosBot
         
         async def run_bot():
             bot = MintosBot()
-            await bot.start()
+            await bot.run()
         
         asyncio.run(run_bot())
     except KeyboardInterrupt:

@@ -1,0 +1,540 @@
+D:\python\mintos>python -m pip install --user --upgrade --force-reinstall git+https://github.com/Folky83/RecoveryTBot.git
+Collecting git+https://github.com/Folky83/RecoveryTBot.git
+  Cloning https://github.com/Folky83/RecoveryTBot.git to c:\users\gebruiker\appdata\local\temp\pip-req-build-b8flv7f4
+  Running command git clone --filter=blob:none --quiet https://github.com/Folky83/RecoveryTBot.git 'C:\Users\Gebruiker\AppData\Local\Temp\pip-req-build-b8flv7f4'
+  Resolved https://github.com/Folky83/RecoveryTBot.git to commit 3e63001a71b645b20fbee9fd684fa4289d5a94ce
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting aiohttp>=3.11.12 (from mintos-telegram-bot==1.0.0)
+  Using cached aiohttp-3.12.4-cp313-cp313-win_amd64.whl.metadata (7.9 kB)
+Collecting beautifulsoup4>=4.13.3 (from mintos-telegram-bot==1.0.0)
+  Using cached beautifulsoup4-4.13.4-py3-none-any.whl.metadata (3.8 kB)
+Collecting feedparser>=6.0.11 (from mintos-telegram-bot==1.0.0)
+  Using cached feedparser-6.0.11-py3-none-any.whl.metadata (2.4 kB)
+Collecting pandas>=2.2.3 (from mintos-telegram-bot==1.0.0)
+  Using cached pandas-2.2.3-cp313-cp313-win_amd64.whl.metadata (19 kB)
+Collecting psutil>=6.1.1 (from mintos-telegram-bot==1.0.0)
+  Using cached psutil-7.0.0-cp37-abi3-win_amd64.whl.metadata (23 kB)
+Collecting python-telegram-bot==20.7 (from python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached python_telegram_bot-20.7-py3-none-any.whl.metadata (15 kB)
+Collecting streamlit>=1.41.1 (from mintos-telegram-bot==1.0.0)
+  Using cached streamlit-1.45.1-py3-none-any.whl.metadata (8.9 kB)
+Collecting trafilatura>=2.0.0 (from mintos-telegram-bot==1.0.0)
+  Using cached trafilatura-2.0.0-py3-none-any.whl.metadata (12 kB)
+Collecting twilio>=9.4.4 (from mintos-telegram-bot==1.0.0)
+  Using cached twilio-9.6.2-py2.py3-none-any.whl.metadata (13 kB)
+Collecting watchdog>=6.0.0 (from mintos-telegram-bot==1.0.0)
+  Using cached watchdog-6.0.0-py3-none-win_amd64.whl.metadata (44 kB)
+Collecting httpx~=0.25.2 (from python-telegram-bot==20.7->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached httpx-0.25.2-py3-none-any.whl.metadata (6.9 kB)
+Collecting APScheduler~=3.10.4 (from python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached APScheduler-3.10.4-py3-none-any.whl.metadata (5.7 kB)
+Collecting pytz>=2018.6 (from python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.1.2 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached aiosignal-1.3.2-py2.py3-none-any.whl.metadata (3.8 kB)
+Collecting attrs>=17.3.0 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached attrs-25.3.0-py3-none-any.whl.metadata (10 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached frozenlist-1.6.0-cp313-cp313-win_amd64.whl.metadata (16 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached multidict-6.4.4-cp313-cp313-win_amd64.whl.metadata (5.5 kB)
+Collecting propcache>=0.2.0 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached propcache-0.3.1-cp313-cp313-win_amd64.whl.metadata (11 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.11.12->mintos-telegram-bot==1.0.0)
+  Using cached yarl-1.20.0-cp313-cp313-win_amd64.whl.metadata (74 kB)
+Collecting soupsieve>1.2 (from beautifulsoup4>=4.13.3->mintos-telegram-bot==1.0.0)
+  Using cached soupsieve-2.7-py3-none-any.whl.metadata (4.6 kB)
+Collecting typing-extensions>=4.0.0 (from beautifulsoup4>=4.13.3->mintos-telegram-bot==1.0.0)
+  Using cached typing_extensions-4.13.2-py3-none-any.whl.metadata (3.0 kB)
+Collecting sgmllib3k (from feedparser>=6.0.11->mintos-telegram-bot==1.0.0)
+  Using cached sgmllib3k-1.0.0-py3-none-any.whl
+Collecting numpy>=1.26.0 (from pandas>=2.2.3->mintos-telegram-bot==1.0.0)
+  Using cached numpy-2.2.6-cp313-cp313-win_amd64.whl.metadata (60 kB)
+Collecting python-dateutil>=2.8.2 (from pandas>=2.2.3->mintos-telegram-bot==1.0.0)
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting tzdata>=2022.7 (from pandas>=2.2.3->mintos-telegram-bot==1.0.0)
+  Using cached tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting altair<6,>=4.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached altair-5.5.0-py3-none-any.whl.metadata (11 kB)
+Collecting blinker<2,>=1.5.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting cachetools<6,>=4.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached cachetools-5.5.2-py3-none-any.whl.metadata (5.4 kB)
+Collecting click<9,>=7.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached click-8.2.1-py3-none-any.whl.metadata (2.5 kB)
+Collecting packaging<25,>=20 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached packaging-24.2-py3-none-any.whl.metadata (3.2 kB)
+Collecting pillow<12,>=7.1.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached pillow-11.2.1-cp313-cp313-win_amd64.whl.metadata (9.1 kB)
+Collecting protobuf<7,>=3.20 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached protobuf-6.31.1-cp310-abi3-win_amd64.whl.metadata (593 bytes)
+Collecting pyarrow>=7.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached pyarrow-20.0.0-cp313-cp313-win_amd64.whl.metadata (3.4 kB)
+Collecting requests<3,>=2.27 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached requests-2.32.3-py3-none-any.whl.metadata (4.6 kB)
+Collecting tenacity<10,>=8.1.0 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached tenacity-9.1.2-py3-none-any.whl.metadata (1.2 kB)
+Collecting toml<2,>=0.10.1 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached toml-0.10.2-py2.py3-none-any.whl.metadata (7.1 kB)
+Collecting gitpython!=3.1.19,<4,>=3.0.7 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached GitPython-3.1.44-py3-none-any.whl.metadata (13 kB)
+Collecting pydeck<1,>=0.8.0b4 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached pydeck-0.9.1-py2.py3-none-any.whl.metadata (4.1 kB)
+Collecting tornado<7,>=6.0.3 (from streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached tornado-6.5.1-cp39-abi3-win_amd64.whl.metadata (2.9 kB)
+Collecting certifi (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached certifi-2025.4.26-py3-none-any.whl.metadata (2.5 kB)
+Collecting charset_normalizer>=3.4.0 (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached charset_normalizer-3.4.2-cp313-cp313-win_amd64.whl.metadata (36 kB)
+Collecting courlan>=1.3.2 (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached courlan-1.3.2-py3-none-any.whl.metadata (17 kB)
+Collecting htmldate>=1.9.2 (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached htmldate-1.9.3-py3-none-any.whl.metadata (10 kB)
+Collecting justext>=3.0.1 (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached justext-3.0.2-py2.py3-none-any.whl.metadata (7.3 kB)
+Collecting lxml>=5.3.0 (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached lxml-5.4.0-cp313-cp313-win_amd64.whl.metadata (3.6 kB)
+Collecting urllib3<3,>=1.26 (from trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached urllib3-2.4.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting PyJWT<3.0.0,>=2.0.0 (from twilio>=9.4.4->mintos-telegram-bot==1.0.0)
+  Using cached PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
+Collecting aiohttp-retry>=2.8.3 (from twilio>=9.4.4->mintos-telegram-bot==1.0.0)
+  Using cached aiohttp_retry-2.9.1-py3-none-any.whl.metadata (8.8 kB)
+Collecting jinja2 (from altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting jsonschema>=3.0 (from altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached jsonschema-4.24.0-py3-none-any.whl.metadata (7.8 kB)
+Collecting narwhals>=1.14.2 (from altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached narwhals-1.41.0-py3-none-any.whl.metadata (11 kB)
+Collecting six>=1.4.0 (from APScheduler~=3.10.4->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting tzlocal!=3.*,>=2.0 (from APScheduler~=3.10.4->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached tzlocal-5.3.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting colorama (from click<9,>=7.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Collecting babel>=2.16.0 (from courlan>=1.3.2->trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached babel-2.17.0-py3-none-any.whl.metadata (2.0 kB)
+Collecting tld>=0.13 (from courlan>=1.3.2->trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached tld-0.13.1-py2.py3-none-any.whl.metadata (10 kB)
+Collecting gitdb<5,>=4.0.1 (from gitpython!=3.1.19,<4,>=3.0.7->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached gitdb-4.0.12-py3-none-any.whl.metadata (1.2 kB)
+Collecting dateparser>=1.1.2 (from htmldate>=1.9.2->trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached dateparser-1.2.1-py3-none-any.whl.metadata (29 kB)
+Collecting anyio (from httpx~=0.25.2->python-telegram-bot==20.7->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached anyio-4.9.0-py3-none-any.whl.metadata (4.7 kB)
+Collecting httpcore==1.* (from httpx~=0.25.2->python-telegram-bot==20.7->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting idna (from httpx~=0.25.2->python-telegram-bot==20.7->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached idna-3.10-py3-none-any.whl.metadata (10 kB)
+Collecting sniffio (from httpx~=0.25.2->python-telegram-bot==20.7->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx~=0.25.2->python-telegram-bot==20.7->python-telegram-bot[job-queue]==20.7->mintos-telegram-bot==1.0.0)
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting regex!=2019.02.19,!=2021.8.27,>=2015.06.24 (from dateparser>=1.1.2->htmldate>=1.9.2->trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached regex-2024.11.6-cp313-cp313-win_amd64.whl.metadata (41 kB)
+Collecting smmap<6,>=3.0.1 (from gitdb<5,>=4.0.1->gitpython!=3.1.19,<4,>=3.0.7->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached smmap-5.0.2-py3-none-any.whl.metadata (4.3 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached MarkupSafe-3.0.2-cp313-cp313-win_amd64.whl.metadata (4.1 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=3.0->altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached jsonschema_specifications-2025.4.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema>=3.0->altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached referencing-0.36.2-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.7.1 (from jsonschema>=3.0->altair<6,>=4.0->streamlit>=1.41.1->mintos-telegram-bot==1.0.0)
+  Using cached rpds_py-0.25.1-cp313-cp313-win_amd64.whl.metadata (4.2 kB)
+Collecting lxml_html_clean (from lxml[html_clean]>=4.4.2->justext>=3.0.1->trafilatura>=2.0.0->mintos-telegram-bot==1.0.0)
+  Using cached lxml_html_clean-0.4.2-py3-none-any.whl.metadata (2.4 kB)
+Using cached python_telegram_bot-20.7-py3-none-any.whl (552 kB)
+Using cached aiohttp-3.12.4-cp313-cp313-win_amd64.whl (439 kB)
+Using cached beautifulsoup4-4.13.4-py3-none-any.whl (187 kB)
+Using cached feedparser-6.0.11-py3-none-any.whl (81 kB)
+Using cached pandas-2.2.3-cp313-cp313-win_amd64.whl (11.5 MB)
+Using cached psutil-7.0.0-cp37-abi3-win_amd64.whl (244 kB)
+Using cached streamlit-1.45.1-py3-none-any.whl (9.9 MB)
+Using cached trafilatura-2.0.0-py3-none-any.whl (132 kB)
+Using cached twilio-9.6.2-py2.py3-none-any.whl (1.9 MB)
+Using cached watchdog-6.0.0-py3-none-win_amd64.whl (79 kB)
+Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Using cached aiohttp_retry-2.9.1-py3-none-any.whl (10.0 kB)
+Using cached aiosignal-1.3.2-py2.py3-none-any.whl (7.6 kB)
+Using cached altair-5.5.0-py3-none-any.whl (731 kB)
+Using cached APScheduler-3.10.4-py3-none-any.whl (59 kB)
+Using cached attrs-25.3.0-py3-none-any.whl (63 kB)
+Using cached blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Using cached cachetools-5.5.2-py3-none-any.whl (10 kB)
+Using cached charset_normalizer-3.4.2-cp313-cp313-win_amd64.whl (105 kB)
+Using cached click-8.2.1-py3-none-any.whl (102 kB)
+Using cached courlan-1.3.2-py3-none-any.whl (33 kB)
+Using cached frozenlist-1.6.0-cp313-cp313-win_amd64.whl (119 kB)
+Using cached GitPython-3.1.44-py3-none-any.whl (207 kB)
+Using cached htmldate-1.9.3-py3-none-any.whl (31 kB)
+Using cached httpx-0.25.2-py3-none-any.whl (74 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached justext-3.0.2-py2.py3-none-any.whl (837 kB)
+Using cached lxml-5.4.0-cp313-cp313-win_amd64.whl (3.8 MB)
+Using cached multidict-6.4.4-cp313-cp313-win_amd64.whl (38 kB)
+Using cached numpy-2.2.6-cp313-cp313-win_amd64.whl (12.6 MB)
+Using cached packaging-24.2-py3-none-any.whl (65 kB)
+Using cached pillow-11.2.1-cp313-cp313-win_amd64.whl (2.7 MB)
+Using cached propcache-0.3.1-cp313-cp313-win_amd64.whl (44 kB)
+Using cached protobuf-6.31.1-cp310-abi3-win_amd64.whl (435 kB)
+Using cached pyarrow-20.0.0-cp313-cp313-win_amd64.whl (25.7 MB)
+Using cached pydeck-0.9.1-py2.py3-none-any.whl (6.9 MB)
+Using cached PyJWT-2.10.1-py3-none-any.whl (22 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Using cached pytz-2025.2-py2.py3-none-any.whl (509 kB)
+Using cached requests-2.32.3-py3-none-any.whl (64 kB)
+Using cached certifi-2025.4.26-py3-none-any.whl (159 kB)
+Using cached soupsieve-2.7-py3-none-any.whl (36 kB)
+Using cached tenacity-9.1.2-py3-none-any.whl (28 kB)
+Using cached toml-0.10.2-py2.py3-none-any.whl (16 kB)
+Using cached tornado-6.5.1-cp39-abi3-win_amd64.whl (444 kB)
+Using cached typing_extensions-4.13.2-py3-none-any.whl (45 kB)
+Using cached tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+Using cached urllib3-2.4.0-py3-none-any.whl (128 kB)
+Using cached yarl-1.20.0-cp313-cp313-win_amd64.whl (92 kB)
+Using cached babel-2.17.0-py3-none-any.whl (10.2 MB)
+Using cached dateparser-1.2.1-py3-none-any.whl (295 kB)
+Using cached gitdb-4.0.12-py3-none-any.whl (62 kB)
+Using cached idna-3.10-py3-none-any.whl (70 kB)
+Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+Using cached jsonschema-4.24.0-py3-none-any.whl (88 kB)
+Using cached narwhals-1.41.0-py3-none-any.whl (357 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached tld-0.13.1-py2.py3-none-any.whl (274 kB)
+Using cached tzlocal-5.3.1-py3-none-any.whl (18 kB)
+Using cached anyio-4.9.0-py3-none-any.whl (100 kB)
+Using cached sniffio-1.3.1-py3-none-any.whl (10 kB)
+Using cached colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached jsonschema_specifications-2025.4.1-py3-none-any.whl (18 kB)
+Using cached MarkupSafe-3.0.2-cp313-cp313-win_amd64.whl (15 kB)
+Using cached referencing-0.36.2-py3-none-any.whl (26 kB)
+Using cached regex-2024.11.6-cp313-cp313-win_amd64.whl (273 kB)
+Using cached rpds_py-0.25.1-cp313-cp313-win_amd64.whl (234 kB)
+Using cached smmap-5.0.2-py3-none-any.whl (24 kB)
+Using cached lxml_html_clean-0.4.2-py3-none-any.whl (14 kB)
+Building wheels for collected packages: mintos-telegram-bot
+  Building wheel for mintos-telegram-bot (pyproject.toml) ... done
+  Created wheel for mintos-telegram-bot: filename=mintos_telegram_bot-1.0.0-py3-none-any.whl size=54444 sha256=ce900b9452dd80249df12ecdf412add8bdb7794b65fab92bf3e306789f7b2fb5
+  Stored in directory: C:\Users\Gebruiker\AppData\Local\Temp\pip-ephem-wheel-cache-9lh6bhwd\wheels\0e\1b\aa\6d1da4ace27731726bb5a453c97260cf1f90a8fe52c2240052
+Successfully built mintos-telegram-bot
+Installing collected packages: sgmllib3k, pytz, watchdog, urllib3, tzdata, typing-extensions, tornado, toml, tld, tenacity, soupsieve, sniffio, smmap, six, rpds-py, regex, PyJWT, pyarrow, psutil, protobuf, propcache, pillow, packaging, numpy, narwhals, multidict, MarkupSafe, lxml, idna, h11, frozenlist, feedparser, colorama, charset_normalizer, certifi, cachetools, blinker, babel, attrs, aiohappyeyeballs, yarl, tzlocal, requests, referencing, python-dateutil, lxml_html_clean, jinja2, httpcore, gitdb, courlan, click, beautifulsoup4, anyio, aiosignal, pydeck, pandas, jsonschema-specifications, httpx, gitpython, dateparser, APScheduler, aiohttp, python-telegram-bot, justext, jsonschema, htmldate, aiohttp-retry, twilio, trafilatura, altair, streamlit, mintos-telegram-bot
+  Attempting uninstall: sgmllib3k
+    Found existing installation: sgmllib3k 1.0.0
+    Uninstalling sgmllib3k-1.0.0:
+      Successfully uninstalled sgmllib3k-1.0.0
+  Attempting uninstall: pytz
+    Found existing installation: pytz 2025.2
+    Uninstalling pytz-2025.2:
+      Successfully uninstalled pytz-2025.2
+  Attempting uninstall: watchdog
+    Found existing installation: watchdog 6.0.0
+    Uninstalling watchdog-6.0.0:
+      Successfully uninstalled watchdog-6.0.0
+  WARNING: The script watchmedo.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: urllib3
+    Found existing installation: urllib3 2.4.0
+    Uninstalling urllib3-2.4.0:
+      Successfully uninstalled urllib3-2.4.0
+  Attempting uninstall: tzdata
+    Found existing installation: tzdata 2025.2
+    Uninstalling tzdata-2025.2:
+      Successfully uninstalled tzdata-2025.2
+  Attempting uninstall: typing-extensions
+    Found existing installation: typing_extensions 4.13.2
+    Uninstalling typing_extensions-4.13.2:
+      Successfully uninstalled typing_extensions-4.13.2
+  Attempting uninstall: tornado
+    Found existing installation: tornado 6.5.1
+    Uninstalling tornado-6.5.1:
+      Successfully uninstalled tornado-6.5.1
+  Attempting uninstall: toml
+    Found existing installation: toml 0.10.2
+    Uninstalling toml-0.10.2:
+      Successfully uninstalled toml-0.10.2
+  Attempting uninstall: tld
+    Found existing installation: tld 0.13.1
+    Uninstalling tld-0.13.1:
+      Successfully uninstalled tld-0.13.1
+  WARNING: The script update-tld-names.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: tenacity
+    Found existing installation: tenacity 9.1.2
+    Uninstalling tenacity-9.1.2:
+      Successfully uninstalled tenacity-9.1.2
+  Attempting uninstall: soupsieve
+    Found existing installation: soupsieve 2.7
+    Uninstalling soupsieve-2.7:
+      Successfully uninstalled soupsieve-2.7
+  Attempting uninstall: sniffio
+    Found existing installation: sniffio 1.3.1
+    Uninstalling sniffio-1.3.1:
+      Successfully uninstalled sniffio-1.3.1
+  Attempting uninstall: smmap
+    Found existing installation: smmap 5.0.2
+    Uninstalling smmap-5.0.2:
+      Successfully uninstalled smmap-5.0.2
+  Attempting uninstall: six
+    Found existing installation: six 1.17.0
+    Uninstalling six-1.17.0:
+      Successfully uninstalled six-1.17.0
+  Attempting uninstall: rpds-py
+    Found existing installation: rpds-py 0.25.1
+    Uninstalling rpds-py-0.25.1:
+      Successfully uninstalled rpds-py-0.25.1
+  Attempting uninstall: regex
+    Found existing installation: regex 2024.11.6
+    Uninstalling regex-2024.11.6:
+      Successfully uninstalled regex-2024.11.6
+  Attempting uninstall: PyJWT
+    Found existing installation: PyJWT 2.10.1
+    Uninstalling PyJWT-2.10.1:
+      Successfully uninstalled PyJWT-2.10.1
+  Attempting uninstall: pyarrow
+    Found existing installation: pyarrow 20.0.0
+    Uninstalling pyarrow-20.0.0:
+      Successfully uninstalled pyarrow-20.0.0
+  Attempting uninstall: psutil
+    Found existing installation: psutil 7.0.0
+    Uninstalling psutil-7.0.0:
+      Successfully uninstalled psutil-7.0.0
+  Attempting uninstall: protobuf
+    Found existing installation: protobuf 6.31.1
+    Uninstalling protobuf-6.31.1:
+      Successfully uninstalled protobuf-6.31.1
+  Attempting uninstall: propcache
+    Found existing installation: propcache 0.3.1
+    Uninstalling propcache-0.3.1:
+      Successfully uninstalled propcache-0.3.1
+  Attempting uninstall: pillow
+    Found existing installation: pillow 11.2.1
+    Uninstalling pillow-11.2.1:
+      Successfully uninstalled pillow-11.2.1
+  Attempting uninstall: packaging
+    Found existing installation: packaging 24.2
+    Uninstalling packaging-24.2:
+      Successfully uninstalled packaging-24.2
+  Attempting uninstall: numpy
+    Found existing installation: numpy 2.2.6
+    Uninstalling numpy-2.2.6:
+      Successfully uninstalled numpy-2.2.6
+  WARNING: The scripts f2py.exe and numpy-config.exe are installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: narwhals
+    Found existing installation: narwhals 1.41.0
+    Uninstalling narwhals-1.41.0:
+      Successfully uninstalled narwhals-1.41.0
+  Attempting uninstall: multidict
+    Found existing installation: multidict 6.4.4
+    Uninstalling multidict-6.4.4:
+      Successfully uninstalled multidict-6.4.4
+  Attempting uninstall: MarkupSafe
+    Found existing installation: MarkupSafe 3.0.2
+    Uninstalling MarkupSafe-3.0.2:
+      Successfully uninstalled MarkupSafe-3.0.2
+  Attempting uninstall: lxml
+    Found existing installation: lxml 5.4.0
+    Uninstalling lxml-5.4.0:
+      Successfully uninstalled lxml-5.4.0
+  Attempting uninstall: idna
+    Found existing installation: idna 3.10
+    Uninstalling idna-3.10:
+      Successfully uninstalled idna-3.10
+  Attempting uninstall: h11
+    Found existing installation: h11 0.16.0
+    Uninstalling h11-0.16.0:
+      Successfully uninstalled h11-0.16.0
+  Attempting uninstall: frozenlist
+    Found existing installation: frozenlist 1.6.0
+    Uninstalling frozenlist-1.6.0:
+      Successfully uninstalled frozenlist-1.6.0
+  Attempting uninstall: feedparser
+    Found existing installation: feedparser 6.0.11
+    Uninstalling feedparser-6.0.11:
+      Successfully uninstalled feedparser-6.0.11
+  Attempting uninstall: colorama
+    Found existing installation: colorama 0.4.6
+    Uninstalling colorama-0.4.6:
+      Successfully uninstalled colorama-0.4.6
+  Attempting uninstall: charset_normalizer
+    Found existing installation: charset-normalizer 3.4.2
+    Uninstalling charset-normalizer-3.4.2:
+      Successfully uninstalled charset-normalizer-3.4.2
+  WARNING: The script normalizer.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: certifi
+    Found existing installation: certifi 2025.4.26
+    Uninstalling certifi-2025.4.26:
+      Successfully uninstalled certifi-2025.4.26
+  Attempting uninstall: cachetools
+    Found existing installation: cachetools 5.5.2
+    Uninstalling cachetools-5.5.2:
+      Successfully uninstalled cachetools-5.5.2
+  Attempting uninstall: blinker
+    Found existing installation: blinker 1.9.0
+    Uninstalling blinker-1.9.0:
+      Successfully uninstalled blinker-1.9.0
+  Attempting uninstall: babel
+    Found existing installation: babel 2.17.0
+    Uninstalling babel-2.17.0:
+      Successfully uninstalled babel-2.17.0
+  WARNING: The script pybabel.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: attrs
+    Found existing installation: attrs 25.3.0
+    Uninstalling attrs-25.3.0:
+      Successfully uninstalled attrs-25.3.0
+  Attempting uninstall: aiohappyeyeballs
+    Found existing installation: aiohappyeyeballs 2.6.1
+    Uninstalling aiohappyeyeballs-2.6.1:
+      Successfully uninstalled aiohappyeyeballs-2.6.1
+  Attempting uninstall: yarl
+    Found existing installation: yarl 1.20.0
+    Uninstalling yarl-1.20.0:
+      Successfully uninstalled yarl-1.20.0
+  Attempting uninstall: tzlocal
+    Found existing installation: tzlocal 5.3.1
+    Uninstalling tzlocal-5.3.1:
+      Successfully uninstalled tzlocal-5.3.1
+  Attempting uninstall: requests
+    Found existing installation: requests 2.32.3
+    Uninstalling requests-2.32.3:
+      Successfully uninstalled requests-2.32.3
+  Attempting uninstall: referencing
+    Found existing installation: referencing 0.36.2
+    Uninstalling referencing-0.36.2:
+      Successfully uninstalled referencing-0.36.2
+  Attempting uninstall: python-dateutil
+    Found existing installation: python-dateutil 2.9.0.post0
+    Uninstalling python-dateutil-2.9.0.post0:
+      Successfully uninstalled python-dateutil-2.9.0.post0
+  Attempting uninstall: lxml_html_clean
+    Found existing installation: lxml_html_clean 0.4.2
+    Uninstalling lxml_html_clean-0.4.2:
+      Successfully uninstalled lxml_html_clean-0.4.2
+  Attempting uninstall: jinja2
+    Found existing installation: Jinja2 3.1.6
+    Uninstalling Jinja2-3.1.6:
+      Successfully uninstalled Jinja2-3.1.6
+  Attempting uninstall: httpcore
+    Found existing installation: httpcore 1.0.9
+    Uninstalling httpcore-1.0.9:
+      Successfully uninstalled httpcore-1.0.9
+  Attempting uninstall: gitdb
+    Found existing installation: gitdb 4.0.12
+    Uninstalling gitdb-4.0.12:
+      Successfully uninstalled gitdb-4.0.12
+  Attempting uninstall: courlan
+    Found existing installation: courlan 1.3.2
+    Uninstalling courlan-1.3.2:
+      Successfully uninstalled courlan-1.3.2
+  WARNING: The script courlan.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: click
+    Found existing installation: click 8.2.1
+    Uninstalling click-8.2.1:
+      Successfully uninstalled click-8.2.1
+  Attempting uninstall: beautifulsoup4
+    Found existing installation: beautifulsoup4 4.13.4
+    Uninstalling beautifulsoup4-4.13.4:
+      Successfully uninstalled beautifulsoup4-4.13.4
+  Attempting uninstall: anyio
+    Found existing installation: anyio 4.9.0
+    Uninstalling anyio-4.9.0:
+      Successfully uninstalled anyio-4.9.0
+  Attempting uninstall: aiosignal
+    Found existing installation: aiosignal 1.3.2
+    Uninstalling aiosignal-1.3.2:
+      Successfully uninstalled aiosignal-1.3.2
+  Attempting uninstall: pydeck
+    Found existing installation: pydeck 0.9.1
+    Uninstalling pydeck-0.9.1:
+      Successfully uninstalled pydeck-0.9.1
+  Attempting uninstall: pandas
+    Found existing installation: pandas 2.2.3
+    Uninstalling pandas-2.2.3:
+      Successfully uninstalled pandas-2.2.3
+  Attempting uninstall: jsonschema-specifications
+    Found existing installation: jsonschema-specifications 2025.4.1
+    Uninstalling jsonschema-specifications-2025.4.1:
+      Successfully uninstalled jsonschema-specifications-2025.4.1
+  Attempting uninstall: httpx
+    Found existing installation: httpx 0.25.2
+    Uninstalling httpx-0.25.2:
+      Successfully uninstalled httpx-0.25.2
+  WARNING: The script httpx.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: gitpython
+    Found existing installation: GitPython 3.1.44
+    Uninstalling GitPython-3.1.44:
+      Successfully uninstalled GitPython-3.1.44
+  Attempting uninstall: dateparser
+    Found existing installation: dateparser 1.2.1
+    Uninstalling dateparser-1.2.1:
+      Successfully uninstalled dateparser-1.2.1
+  WARNING: The script dateparser-download.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: APScheduler
+    Found existing installation: APScheduler 3.10.4
+    Uninstalling APScheduler-3.10.4:
+      Successfully uninstalled APScheduler-3.10.4
+  Attempting uninstall: aiohttp
+    Found existing installation: aiohttp 3.12.4
+    Uninstalling aiohttp-3.12.4:
+      Successfully uninstalled aiohttp-3.12.4
+  Attempting uninstall: python-telegram-bot
+    Found existing installation: python-telegram-bot 20.7
+    Uninstalling python-telegram-bot-20.7:
+      Successfully uninstalled python-telegram-bot-20.7
+  Attempting uninstall: justext
+    Found existing installation: jusText 3.0.2
+    Uninstalling jusText-3.0.2:
+      Successfully uninstalled jusText-3.0.2
+  Attempting uninstall: jsonschema
+    Found existing installation: jsonschema 4.24.0
+    Uninstalling jsonschema-4.24.0:
+      Successfully uninstalled jsonschema-4.24.0
+  WARNING: The script jsonschema.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: htmldate
+    Found existing installation: htmldate 1.9.3
+    Uninstalling htmldate-1.9.3:
+      Successfully uninstalled htmldate-1.9.3
+  WARNING: The script htmldate.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: aiohttp-retry
+    Found existing installation: aiohttp-retry 2.9.1
+    Uninstalling aiohttp-retry-2.9.1:
+      Successfully uninstalled aiohttp-retry-2.9.1
+  Attempting uninstall: twilio
+    Found existing installation: twilio 9.6.2
+    Uninstalling twilio-9.6.2:
+      Successfully uninstalled twilio-9.6.2
+  Attempting uninstall: trafilatura
+    Found existing installation: trafilatura 2.0.0
+    Uninstalling trafilatura-2.0.0:
+      Successfully uninstalled trafilatura-2.0.0
+  WARNING: The script trafilatura.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  Attempting uninstall: altair
+    Found existing installation: altair 5.5.0
+    Uninstalling altair-5.5.0:
+      Successfully uninstalled altair-5.5.0
+  Attempting uninstall: streamlit
+    Found existing installation: streamlit 1.45.1
+    Uninstalling streamlit-1.45.1:
+      Successfully uninstalled streamlit-1.45.1
+  WARNING: The script streamlit.exe is installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+  WARNING: The scripts mintos-bot-dashboard.exe and mintos-bot.exe are installed in 'C:\Users\Gebruiker\AppData\Roaming\Python\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+Successfully installed APScheduler-3.10.4 MarkupSafe-3.0.2 PyJWT-2.10.1 aiohappyeyeballs-2.6.1 aiohttp-3.12.4 aiohttp-retry-2.9.1 aiosignal-1.3.2 altair-5.5.0 anyio-4.9.0 attrs-25.3.0 babel-2.17.0 beautifulsoup4-4.13.4 blinker-1.9.0 cachetools-5.5.2 certifi-2025.4.26 charset_normalizer-3.4.2 click-8.2.1 colorama-0.4.6 courlan-1.3.2 dateparser-1.2.1 feedparser-6.0.11 frozenlist-1.6.0 gitdb-4.0.12 gitpython-3.1.44 h11-0.16.0 htmldate-1.9.3 httpcore-1.0.9 httpx-0.25.2 idna-3.10 jinja2-3.1.6 jsonschema-4.24.0 jsonschema-specifications-2025.4.1 justext-3.0.2 lxml-5.4.0 lxml_html_clean-0.4.2 mintos-telegram-bot-1.0.0 multidict-6.4.4 narwhals-1.41.0 numpy-2.2.6 packaging-24.2 pandas-2.2.3 pillow-11.2.1 propcache-0.3.1 protobuf-6.31.1 psutil-7.0.0 pyarrow-20.0.0 pydeck-0.9.1 python-dateutil-2.9.0.post0 python-telegram-bot-20.7 pytz-2025.2 referencing-0.36.2 regex-2024.11.6 requests-2.32.3 rpds-py-0.25.1 sgmllib3k-1.0.0 six-1.17.0 smmap-5.0.2 sniffio-1.3.1 soupsieve-2.7 streamlit-1.45.1 tenacity-9.1.2 tld-0.13.1 toml-0.10.2 tornado-6.5.1 trafilatura-2.0.0 twilio-9.6.2 typing-extensions-4.13.2 tzdata-2025.2 tzlocal-5.3.1 urllib3-2.4.0 watchdog-6.0.0 yarl-1.20.0
+
+[notice] A new release of pip is available: 25.0.1 -> 25.1.1
+[notice] To update, run: python.exe -m pip install --upgrade pip

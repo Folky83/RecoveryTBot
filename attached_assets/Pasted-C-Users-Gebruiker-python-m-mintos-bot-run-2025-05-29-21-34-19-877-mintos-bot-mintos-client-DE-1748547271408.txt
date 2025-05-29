@@ -1,0 +1,54 @@
+C:\Users\Gebruiker>python -m mintos_bot.run
+2025-05-29 21:34:19,877 - mintos_bot.mintos_client - DEBUG - Logger 'mintos_bot.mintos_client' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:34:19,884 - mintos_bot.user_manager - DEBUG - Logger 'mintos_bot.user_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:34:19,952 - mintos_bot.rss_reader - DEBUG - Logger 'mintos_bot.rss_reader' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:34:19,953 - mintos_bot.telegram_bot - DEBUG - Logger 'mintos_bot.telegram_bot' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+Starting Mintos Telegram Bot...
+2025-05-29 21:34:19,958 - mintos_bot.config_loader - INFO - Telegram token loaded from environment variable
+2025-05-29 21:34:19,962 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 21:34:19,962 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 21:34:19,963 - mintos_bot.data_manager - INFO - Created attached_assets directory
+2025-05-29 21:34:19,963 - mintos_bot.data_manager - WARNING - CSV file attached_assets\lo_names.csv not found
+2025-05-29 21:34:19,964 - mintos_bot.user_manager - INFO - Users saved successfully: {}
+2025-05-29 21:34:19,964 - mintos_bot.user_manager - INFO - Users saved successfully: {}
+2025-05-29 21:34:19,965 - mintos_bot.user_manager - INFO - Verification - users.json contains: {}
+2025-05-29 21:34:19,965 - mintos_bot.user_manager - INFO - Verification - users.json contains: {}
+2025-05-29 21:34:19,965 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 21:34:19,965 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 21:34:19,966 - mintos_bot.user_manager - INFO - Loaded 0 users
+2025-05-29 21:34:19,966 - mintos_bot.user_manager - INFO - Loaded 0 users
+2025-05-29 21:34:19,970 - mintos_bot.document_scraper - ERROR - Error loading company pages: [Errno 2] No such file or directory: 'attached_assets\\company_pages.csv'
+2025-05-29 21:34:19,970 - mintos_bot.document_scraper - WARNING - Starting with empty sent documents set
+2025-05-29 21:34:19,972 - mintos_bot.rss_reader - INFO - Saved 10 keywords
+2025-05-29 21:34:19,972 - mintos_bot.rss_reader - INFO - Saved 10 keywords
+2025-05-29 21:34:19,972 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 21:34:19,972 - mintos_bot.telegram_bot - INFO - Bot instance created
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\run.py", line 53, in main
+    import run
+ModuleNotFoundError: No module named 'run'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\run.py", line 74, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\run.py", line 63, in main
+    asyncio.run(run_bot())
+    ~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Gebruiker\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Gebruiker\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Gebruiker\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 719, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\run.py", line 61, in run_bot
+    await bot.start()
+          ^^^^^^^^^
+AttributeError: 'MintosBot' object has no attribute 'start'
