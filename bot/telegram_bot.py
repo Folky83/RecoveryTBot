@@ -50,6 +50,7 @@ class MintosBot:
     _initialized = False
     _polling_task: Optional[asyncio.Task] = None
     _update_task: Optional[asyncio.Task] = None
+    _rss_task: Optional[asyncio.Task] = None
 
     def __new__(cls) -> 'MintosBot':
         if cls._instance is None:
@@ -92,7 +93,7 @@ class MintosBot:
 
     async def _cancel_tasks(self) -> None:
         """Cancel running background tasks"""
-        for task_name, task in [("polling", self._polling_task), ("update", self._update_task)]:
+        for task_name, task in [("polling", self._polling_task), ("update", self._update_task), ("rss", self._rss_task)]:
             if task and not task.done():
                 task.cancel()
                 try:
@@ -299,9 +300,7 @@ class MintosBot:
             await self.check_documents()
             logger.info("Document check completed")
             
-            # Check for RSS updates
-            await self.check_rss_updates()
-            logger.info("RSS check completed")
+
             
         except Exception as e:
             logger.error(f"Update check error: {e}", exc_info=True)
@@ -333,9 +332,12 @@ class MintosBot:
 
                 # Start scheduled updates
                 self._update_task = asyncio.create_task(self.scheduled_updates())
+                
+                # Start RSS updates
+                self._rss_task = asyncio.create_task(self.scheduled_rss_updates())
 
-                # Wait for both tasks
-                await asyncio.gather(self._polling_task, self._update_task)
+                # Wait for all tasks
+                await asyncio.gather(self._polling_task, self._update_task, self._rss_task)
                 return
 
             except Exception as e:
@@ -2597,6 +2599,39 @@ class MintosBot:
 
         except Exception as e:
             logger.error(f"Error checking RSS updates: {e}", exc_info=True)
+
+    async def should_check_rss(self) -> bool:
+        """Check if RSS updates should be checked based on current time"""
+        now = datetime.now()
+        
+        # Only check on weekdays (Monday=0, Sunday=6)
+        if now.weekday() >= 5:  # Saturday=5, Sunday=6
+            return False
+        
+        # Only check between 6 AM and 10 PM
+        if not (6 <= now.hour <= 22):
+            return False
+        
+        return True
+
+    async def scheduled_rss_updates(self) -> None:
+        """Handle RSS checks every 15 minutes during specified hours"""
+        while True:
+            try:
+                if await self.should_check_rss():
+                    logger.info("Running scheduled RSS check")
+                    await self.check_rss_updates()
+                    logger.info("RSS check completed")
+                else:
+                    logger.debug(f"Skipping RSS check - outside scheduled hours (weekday: {datetime.now().weekday()}, hour: {datetime.now().hour})")
+                
+                # Wait 15 minutes before next check
+                await asyncio.sleep(15 * 60)
+                
+            except Exception as e:
+                logger.error(f"RSS check failed: {e}", exc_info=True)
+                # Wait 5 minutes on error before retrying
+                await asyncio.sleep(5 * 60)
 
     async def rss_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Toggle RSS notifications for the user"""
