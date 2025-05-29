@@ -28,16 +28,19 @@ class DataManager(BaseManager):
         self.company_names: Dict[int, str] = {}
         self.sent_updates: Set[str] = set()
         self.sent_campaigns: Set[str] = set()
+        self.pending_campaigns: List[Dict[str, Any]] = []
         
         # File paths for tracking sent items
         self.sent_updates_file = SENT_UPDATES_FILE
         self.sent_campaigns_file = SENT_CAMPAIGNS_FILE
+        self.pending_campaigns_file = 'data/pending_campaigns.json'
         self.backup_sent_updates_file = f"{SENT_UPDATES_FILE}.bak"
         self.backup_sent_campaigns_file = f"{SENT_CAMPAIGNS_FILE}.bak"
         
         self._load_company_names()
         self._load_sent_updates()
         self._load_sent_campaigns()
+        self._load_pending_campaigns()
 
     def _load_company_names(self) -> None:
         """Load company names from CSV file"""
@@ -442,6 +445,67 @@ class DataManager(BaseManager):
 
         return all(new_campaign.get(field) == prev_campaign.get(field) 
                   for field in significant_fields)
+
+    def _load_pending_campaigns(self) -> None:
+        """Load pending campaigns from file"""
+        try:
+            if os.path.exists(self.pending_campaigns_file):
+                with open(self.pending_campaigns_file, 'r') as f:
+                    self.pending_campaigns = json.load(f)
+                logger.info(f"Loaded {len(self.pending_campaigns)} pending campaigns")
+            else:
+                self.pending_campaigns = []
+                logger.info("No pending campaigns file found, starting fresh")
+        except Exception as e:
+            logger.error(f"Error loading pending campaigns: {e}")
+            self.pending_campaigns = []
+
+    def save_pending_campaigns(self) -> None:
+        """Save pending campaigns to file"""
+        try:
+            self.ensure_data_directory()
+            with open(self.pending_campaigns_file, 'w') as f:
+                json.dump(self.pending_campaigns, f, indent=2)
+            logger.debug(f"Saved {len(self.pending_campaigns)} pending campaigns")
+        except Exception as e:
+            logger.error(f"Error saving pending campaigns: {e}")
+
+    def add_pending_campaign(self, campaign: Dict[str, Any], admin_notified: bool = False) -> None:
+        """Add a campaign to pending notifications with timestamp"""
+        import time
+        
+        pending_item = {
+            'campaign': campaign,
+            'timestamp': time.time(),
+            'admin_notified': admin_notified
+        }
+        
+        self.pending_campaigns.append(pending_item)
+        self.save_pending_campaigns()
+        logger.info(f"Added campaign {campaign.get('id')} to pending notifications")
+
+    def get_ready_pending_campaigns(self, delay_hours: int = 4) -> List[Dict[str, Any]]:
+        """Get campaigns that are ready to be sent (older than delay_hours)"""
+        import time
+        
+        current_time = time.time()
+        delay_seconds = delay_hours * 3600
+        ready_campaigns = []
+        
+        for item in self.pending_campaigns:
+            if current_time - item['timestamp'] >= delay_seconds:
+                ready_campaigns.append(item)
+        
+        return ready_campaigns
+
+    def remove_pending_campaign(self, campaign_id: int) -> None:
+        """Remove a campaign from pending notifications"""
+        self.pending_campaigns = [
+            item for item in self.pending_campaigns 
+            if item['campaign'].get('id') != campaign_id
+        ]
+        self.save_pending_campaigns()
+        logger.info(f"Removed campaign {campaign_id} from pending notifications")
 
     def get_campaigns_cache_age(self):
         """Get age of campaigns cache in seconds"""

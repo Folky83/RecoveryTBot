@@ -333,11 +333,14 @@ class MintosBot:
                 # Start scheduled updates
                 self._update_task = asyncio.create_task(self.scheduled_updates())
                 
+                # Start campaign updates (every 5 minutes)
+                self._campaign_task = asyncio.create_task(self.scheduled_campaign_updates())
+                
                 # Start RSS updates
                 self._rss_task = asyncio.create_task(self.scheduled_rss_updates())
 
                 # Wait for all tasks
-                await asyncio.gather(self._polling_task, self._update_task, self._rss_task)
+                await asyncio.gather(self._polling_task, self._update_task, self._campaign_task, self._rss_task)
                 return
 
             except Exception as e:
