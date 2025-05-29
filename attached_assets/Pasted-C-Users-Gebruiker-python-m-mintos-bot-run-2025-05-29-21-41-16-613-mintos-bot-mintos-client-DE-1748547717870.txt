@@ -1,0 +1,181 @@
+C:\Users\Gebruiker>python -m mintos_bot.run
+2025-05-29 21:41:16,613 - mintos_bot.mintos_client - DEBUG - Logger 'mintos_bot.mintos_client' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:41:16,627 - mintos_bot.user_manager - DEBUG - Logger 'mintos_bot.user_manager' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:41:16,670 - mintos_bot.rss_reader - DEBUG - Logger 'mintos_bot.rss_reader' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+2025-05-29 21:41:16,670 - mintos_bot.telegram_bot - DEBUG - Logger 'mintos_bot.telegram_bot' initialized with level DEBUG, format '%(asctime)s - %(name)s - %(levelname)s - %(message)s', rotation size 10.0MB
+Starting Mintos Telegram Bot...
+2025-05-29 21:41:16,673 - mintos_bot.config_loader - INFO - Telegram token loaded from environment variable
+Starting dashboard on http://localhost:5000...
+Warning: main.py not found, running bot without dashboard
+2025-05-29 21:41:19,678 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 21:41:19,678 - mintos_bot.telegram_bot - INFO - Initializing Mintos Bot...
+2025-05-29 21:41:19,680 - mintos_bot.data_manager - WARNING - CSV file attached_assets\lo_names.csv not found
+2025-05-29 21:41:19,682 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 21:41:19,682 - mintos_bot.user_manager - INFO - Data directory checked: data
+2025-05-29 21:41:19,683 - mintos_bot.user_manager - INFO - Loaded 0 users
+2025-05-29 21:41:19,683 - mintos_bot.user_manager - INFO - Loaded 0 users
+2025-05-29 21:41:19,686 - mintos_bot.document_scraper - ERROR - Error loading company pages: [Errno 2] No such file or directory: 'attached_assets\\company_pages.csv'
+2025-05-29 21:41:19,687 - mintos_bot.document_scraper - INFO - Loaded 0 sent document IDs
+2025-05-29 21:41:19,705 - mintos_bot.rss_reader - INFO - Loaded 10 keywords for RSS filtering
+2025-05-29 21:41:19,705 - mintos_bot.rss_reader - INFO - Loaded 10 keywords for RSS filtering
+2025-05-29 21:41:19,706 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 21:41:19,706 - mintos_bot.telegram_bot - INFO - Bot instance created
+2025-05-29 21:41:19,706 - mintos_bot.telegram_bot - INFO - Starting Mintos Update Bot
+2025-05-29 21:41:19,706 - mintos_bot.telegram_bot - INFO - Starting Mintos Update Bot
+2025-05-29 21:41:19,707 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:19,707 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:19,707 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:19,707 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:21,717 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:41:21,717 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:41:21,718 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:21,718 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:21,719 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:21,719 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:23,729 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:41:23,729 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:41:24,338 - mintos_bot.telegram_bot - ERROR - Initialization error: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 137, in initialize
+    self.application = Application.builder().token(TELEGRAM_TOKEN).build()
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_applicationbuilder.py", line 312, in build
+    updater = Updater(bot=bot, update_queue=update_queue)
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_updater.py", line 128, in __init__
+    self.__polling_cleanup_cb: Optional[Callable[[], Coroutine[Any, Any, None]]] = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+2025-05-29 21:41:24,338 - mintos_bot.telegram_bot - ERROR - Initialization error: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 137, in initialize
+    self.application = Application.builder().token(TELEGRAM_TOKEN).build()
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_applicationbuilder.py", line 312, in build
+    updater = Updater(bot=bot, update_queue=update_queue)
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_updater.py", line 128, in __init__
+    self.__polling_cleanup_cb: Optional[Callable[[], Coroutine[Any, Any, None]]] = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+2025-05-29 21:41:24,347 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-05-29 21:41:24,347 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-05-29 21:41:24,348 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 323, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-05-29 21:41:24,348 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 323, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-05-29 21:41:24,349 - mintos_bot.telegram_bot - INFO - Retrying (attempt 2/3)...
+2025-05-29 21:41:24,349 - mintos_bot.telegram_bot - INFO - Retrying (attempt 2/3)...
+2025-05-29 21:41:29,362 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:29,362 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:29,363 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:29,363 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:29,363 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:29,363 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:29,364 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:29,364 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:31,378 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:41:31,378 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:41:31,378 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:31,378 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:31,379 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:31,379 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:33,394 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:41:33,394 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:41:34,001 - mintos_bot.telegram_bot - ERROR - Initialization error: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 137, in initialize
+    self.application = Application.builder().token(TELEGRAM_TOKEN).build()
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_applicationbuilder.py", line 312, in build
+    updater = Updater(bot=bot, update_queue=update_queue)
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_updater.py", line 128, in __init__
+    self.__polling_cleanup_cb: Optional[Callable[[], Coroutine[Any, Any, None]]] = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+2025-05-29 21:41:34,001 - mintos_bot.telegram_bot - ERROR - Initialization error: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 137, in initialize
+    self.application = Application.builder().token(TELEGRAM_TOKEN).build()
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_applicationbuilder.py", line 312, in build
+    updater = Updater(bot=bot, update_queue=update_queue)
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_updater.py", line 128, in __init__
+    self.__polling_cleanup_cb: Optional[Callable[[], Coroutine[Any, Any, None]]] = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+2025-05-29 21:41:34,005 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-05-29 21:41:34,005 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-05-29 21:41:34,006 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 323, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-05-29 21:41:34,006 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 323, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-05-29 21:41:34,007 - mintos_bot.telegram_bot - INFO - Retrying (attempt 3/3)...
+2025-05-29 21:41:34,007 - mintos_bot.telegram_bot - INFO - Retrying (attempt 3/3)...
+2025-05-29 21:41:39,021 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:39,021 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:39,021 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:39,021 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:39,022 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:39,022 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:39,023 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:39,023 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:41,038 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:41:41,038 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-05-29 21:41:41,038 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:41,038 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:41,039 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:41,039 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:43,055 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:41:43,055 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-05-29 21:41:43,771 - mintos_bot.telegram_bot - ERROR - Initialization error: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 137, in initialize
+    self.application = Application.builder().token(TELEGRAM_TOKEN).build()
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_applicationbuilder.py", line 312, in build
+    updater = Updater(bot=bot, update_queue=update_queue)
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_updater.py", line 128, in __init__
+    self.__polling_cleanup_cb: Optional[Callable[[], Coroutine[Any, Any, None]]] = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+2025-05-29 21:41:43,771 - mintos_bot.telegram_bot - ERROR - Initialization error: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 137, in initialize
+    self.application = Application.builder().token(TELEGRAM_TOKEN).build()
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_applicationbuilder.py", line 312, in build
+    updater = Updater(bot=bot, update_queue=update_queue)
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\telegram\ext\_updater.py", line 128, in __init__
+    self.__polling_cleanup_cb: Optional[Callable[[], Coroutine[Any, Any, None]]] = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Updater' object has no attribute '_Updater__polling_cleanup_cb' and no __dict__ for setting new attributes
+2025-05-29 21:41:43,775 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-05-29 21:41:43,775 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-05-29 21:41:43,775 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 323, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-05-29 21:41:43,775 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 323, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-05-29 21:41:43,776 - mintos_bot.telegram_bot - ERROR - Max retries reached
+2025-05-29 21:41:43,776 - mintos_bot.telegram_bot - ERROR - Max retries reached
+2025-05-29 21:41:43,777 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:43,777 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-05-29 21:41:43,777 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-05-29 21:41:43,777 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+Error starting bot: Bot initialization failed

@@ -27,7 +27,7 @@ dependencies = [
     "feedparser>=6.0.11",
     "pandas>=2.2.3",
     "psutil>=6.1.1",
-    "python-telegram-bot[job-queue]==20.7",
+    "python-telegram-bot[job-queue]>=21.0",
     "streamlit>=1.41.1",
     "trafilatura>=2.0.0",
     "twilio>=9.4.4",
