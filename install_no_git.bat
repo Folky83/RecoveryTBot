@@ -15,16 +15,16 @@ if errorlevel 1 (
 echo Python found. Installing dependencies...
 
 REM Install dependencies directly
-pip install "aiohttp>=3.8.0"
-pip install "beautifulsoup4>=4.11.0"
-pip install "feedparser>=6.0.8"
-pip install "pandas>=1.5.0"
-pip install "psutil>=5.9.0"
+pip install aiohttp>=3.11.12
+pip install beautifulsoup4>=4.13.3
+pip install feedparser>=6.0.11
+pip install pandas>=2.2.3
+pip install psutil>=6.1.1
 pip install "python-telegram-bot[job-queue]==20.7"
-pip install "streamlit>=0.84.0"
-pip install "trafilatura>=1.6.0"
-pip install "twilio>=8.5.0"
-pip install "watchdog>=2.1.0"
+pip install streamlit>=1.41.1
+pip install trafilatura>=2.0.0
+pip install twilio>=9.4.4
+pip install watchdog>=6.0.0
 
 if errorlevel 1 (
     echo Installation failed. Please check your internet connection and try again.
