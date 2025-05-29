@@ -19,7 +19,7 @@ A sophisticated Telegram bot and dashboard for monitoring Mintos lending platfor
 
 2. **Install the bot** using pip:
    ```bash
-   pip install --upgrade git+https://github.com/yourusername/mintos-telegram-bot.git
+   python -m pip install --user --upgrade --force-reinstall git+https://github.com/Folky83/RecoveryTBot.git
    ```
 
 3. **Set your Telegram bot token**:
@@ -29,10 +29,17 @@ A sophisticated Telegram bot and dashboard for monitoring Mintos lending platfor
 
 4. **Run the bot**:
    ```bash
-   mintos-bot
+   python -m mintos_bot.run
    ```
 
 5. **Access the dashboard** at: http://localhost:5000
+
+### Updating to Latest Version
+
+To update the bot to the latest version:
+```bash
+python -m pip install --user --upgrade --force-reinstall git+https://github.com/Folky83/RecoveryTBot.git
+```
 
 ### Option 2: Clone and Run
 
@@ -101,16 +108,45 @@ Access the dashboard at `http://localhost:5000` to:
 - See active campaigns
 - Monitor bot status
 
+## Important Commands to Remember
+
+### Installation & Updates
+```bash
+# Install the bot (first time)
+python -m pip install --user --upgrade --force-reinstall git+https://github.com/Folky83/RecoveryTBot.git
+
+# Update to latest version
+python -m pip install --user --upgrade --force-reinstall git+https://github.com/Folky83/RecoveryTBot.git
+```
+
+### Running the Bot
+```bash
+# Run the bot (from any directory)
+python -m mintos_bot.run
+```
+
+### Package Location
+The installed package is located at:
+```
+C:\Users\[YourUsername]\AppData\Roaming\Python\Python313\site-packages\mintos_bot\
+```
+
+But you don't need to remember this location - just use `python -m mintos_bot.run` from anywhere.
+
 ## Troubleshooting
 
 **Bot doesn't start:**
-- Check that your token is correct
+- Check that your token is correct in config.txt
 - Ensure Python 3.11+ is installed
-- Verify internet connection
+- Try reinstalling: `python -m pip install --user --upgrade --force-reinstall git+https://github.com/Folky83/RecoveryTBot.git`
+
+**"python-telegram-bot" compatibility errors:**
+- This usually means you need to update to the latest version
+- Run the reinstall command above to get compatible library versions
 
 **Dashboard not loading:**
 - Check that port 5000 is not in use
-- Try restarting the bot
+- The bot will show "Warning: main.py not found, running bot without dashboard" but will still work for Telegram
 
 **No updates appearing:**
 - The bot checks for updates automatically
