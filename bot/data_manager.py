@@ -15,7 +15,7 @@ from .constants import (
     DATA_DIR, UPDATES_FILE, CAMPAIGNS_FILE, COMPANY_NAMES_CSV,
     SENT_UPDATES_FILE, SENT_CAMPAIGNS_FILE
 )
-from .utils import create_unique_id
+from .utils import create_unique_id, FileBackupManager
 
 logger = logging.getLogger(__name__)
 
@@ -329,7 +329,7 @@ class DataManager(BaseManager):
             logger.error("Failed to save updates")
             raise Exception("Failed to save updates")
 
-    def get_company_name(self, lender_id: Union[int, str]) -> str:
+    def get_company_name(self, lender_id: Any) -> str:
         """Get company name by lender ID, falling back to ID if name not found"""
         try:
             lender_id = int(lender_id)
