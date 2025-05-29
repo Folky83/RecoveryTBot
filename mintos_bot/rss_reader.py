@@ -133,8 +133,10 @@ class RSSReader(BaseManager):
         """Load sent item GUIDs"""
         try:
             if os.path.exists(self.sent_items_file):
-                data = self.load_data([])
-                self.sent_items = set(data)
+                with open(self.sent_items_file, 'r') as f:
+                    import json
+                    data = json.load(f)
+                    self.sent_items = set(data)
                 logger.info(f"Loaded {len(self.sent_items)} sent RSS items")
             else:
                 self.sent_items = set()
@@ -145,7 +147,10 @@ class RSSReader(BaseManager):
     def _save_sent_items(self) -> None:
         """Save sent item GUIDs"""
         try:
-            self.save_data(list(self.sent_items))
+            os.makedirs(os.path.dirname(self.sent_items_file), exist_ok=True)
+            with open(self.sent_items_file, 'w') as f:
+                import json
+                json.dump(list(self.sent_items), f, indent=2)
             logger.info(f"Saved {len(self.sent_items)} sent RSS items")
         except Exception as e:
             logger.error(f"Error saving sent items: {e}")
