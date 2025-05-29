@@ -78,6 +78,9 @@ def setup_logger(name: str) -> logging.Logger:
 
         # Remove existing handlers to prevent duplicate logging
         logger.handlers.clear()
+        
+        # Prevent propagation to parent loggers to avoid duplicates
+        logger.propagate = False
 
         # Add both handlers
         logger.addHandler(file_handler)
