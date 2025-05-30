@@ -1152,9 +1152,26 @@ class MintosBot:
                             disable_web_page_preview=True
                         )
 
+        except BadRequest as e:
+            if "Message is not modified" in str(e):
+                # This happens when trying to edit a message with identical content
+                # Just acknowledge the callback without showing an error
+                logger.debug(f"Message not modified in callback: {e}")
+                return
+            else:
+                logger.error(f"BadRequest in handle_callback: {e}", exc_info=True)
+                try:
+                    await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
+                except:
+                    # If we can't edit the message, just log it
+                    logger.error("Could not edit message to show error")
         except Exception as e:
             logger.error(f"Error in handle_callback: {e}", exc_info=True)
-            await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
+            try:
+                await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
+            except:
+                # If we can't edit the message, just log it
+                logger.error("Could not edit message to show error")
 
     _failed_messages: List[Dict[str, Any]] = []
     _admin_rss_items: List[Any] = []  # Store filtered RSS items for admin operations
