@@ -21,6 +21,7 @@ from .constants import (
     COMPANY_PAGES_CSV, DOCUMENT_TYPES, MAX_HTTP_RETRIES, HTTP_RETRY_DELAY,
     HTTP_CLIENT_TIMEOUT, DEFAULT_USER_AGENT, DOCUMENT_CACHE_TTL
 )
+from .config import PROXY_HOST, PROXY_AUTH, USE_PROXY
 from .utils import safe_get_text, safe_get_attribute, safe_find, safe_find_all, FileBackupManager, create_unique_id
 
 # Configure logging
@@ -390,10 +391,23 @@ class DocumentScraper:
             'User-Agent': DEFAULT_USER_AGENT
         }
         
+        # Configure proxy if enabled
+        connector_kwargs = {}
+        if USE_PROXY and PROXY_HOST and PROXY_AUTH:
+            proxy_url = f'http://{PROXY_AUTH}@{PROXY_HOST}'
+            connector_kwargs['trust_env'] = True
+            logger.debug(f"Using proxy for document scraping: {PROXY_HOST}")
+        
         for attempt in range(MAX_HTTP_RETRIES):
             try:
-                async with aiohttp.ClientSession(timeout=HTTP_CLIENT_TIMEOUT) as session:
-                    async with session.get(url, headers=headers) as response:
+                connector = aiohttp.TCPConnector(**connector_kwargs)
+                async with aiohttp.ClientSession(timeout=HTTP_CLIENT_TIMEOUT, connector=connector) as session:
+                    # Configure proxy if enabled
+                    proxy = None
+                    if USE_PROXY and PROXY_HOST and PROXY_AUTH:
+                        proxy = f'http://{PROXY_AUTH}@{PROXY_HOST}'
+                    
+                    async with session.get(url, headers=headers, proxy=proxy) as response:
                         if response.status == 200:
                             return await response.text()
                         else:

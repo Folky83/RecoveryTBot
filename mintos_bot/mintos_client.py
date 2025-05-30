@@ -12,7 +12,10 @@ from .config import (
     REQUEST_DELAY,
     MAX_RETRIES,
     RETRY_DELAY,
-    REQUEST_TIMEOUT
+    REQUEST_TIMEOUT,
+    PROXY_HOST,
+    PROXY_AUTH,
+    USE_PROXY
 )
 
 logger = setup_logger(__name__)
@@ -27,9 +30,24 @@ class MintosClient:
             'User-Agent': 'Mozilla/5.0 (compatible; Mintos Monitor Bot/1.0)',
             'Accept': 'application/json'
         })
+        
+        # Configure proxy if enabled
+        if USE_PROXY and PROXY_HOST and PROXY_AUTH:
+            self.proxies = {
+                'http': f'http://{PROXY_AUTH}@{PROXY_HOST}',
+                'https': f'http://{PROXY_AUTH}@{PROXY_HOST}'
+            }
+            logger.info(f"Proxy configured: {PROXY_HOST}")
+        else:
+            self.proxies = None
+            logger.info("No proxy configured")
 
     def _make_request(self, url: str, method: str = 'GET', **kwargs) -> Optional[Dict[str, Any]]:
         """Make an HTTP request with retries and error handling"""
+        # Add proxy configuration to kwargs if available
+        if self.proxies:
+            kwargs['proxies'] = self.proxies
+            
         for attempt in range(MAX_RETRIES):
             try:
                 response = self.session.request(
@@ -103,8 +121,23 @@ class MintosClient:
         response = self._make_request(MINTOS_CAMPAIGNS_URL)
 
         if response:
-            logger.info(f"Successfully retrieved {len(response)} campaigns")
-            return response
+            # Handle different response formats - sometimes it's a dict with campaigns list
+            if isinstance(response, list):
+                campaigns = response
+            elif isinstance(response, dict) and 'campaigns' in response:
+                campaigns = response['campaigns']
+                if not isinstance(campaigns, list):
+                    logger.error(f"Expected campaigns to be a list, got: {type(campaigns)}")
+                    return None
+            elif isinstance(response, dict):
+                # If it's a dict but not containing 'campaigns', treat it as single campaign
+                campaigns = [response]
+            else:
+                logger.error(f"Unexpected response format: {type(response)}")
+                return None
+                
+            logger.info(f"Successfully retrieved {len(campaigns)} campaigns")
+            return campaigns
 
         logger.error(f"Failed to get campaigns after {MAX_RETRIES} attempts")
         return None

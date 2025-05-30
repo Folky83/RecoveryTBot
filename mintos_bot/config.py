@@ -28,6 +28,11 @@ MINTOS_API_BASE = "https://www.mintos.com/webapp/api/marketplace-api/v1"
 MINTOS_CAMPAIGNS_URL = "https://www.mintos.com/webapp/api/en/webapp-api/user/campaigns"
 REQUEST_DELAY = 0.1  # seconds between requests
 
+# Proxy Configuration
+PROXY_HOST = os.getenv('PROXY_HOST', 'geo.iproyal.com:12321')
+PROXY_AUTH = os.getenv('PROXY_AUTH', '9E6VfuiSZHtXLtt7:CUDTgmiajB4wOCrv_streaming-1')
+USE_PROXY = os.getenv('USE_PROXY', 'true').lower() == 'true'
+
 # Document Scraper Configuration
 DOCUMENT_SCRAPE_INTERVAL_HOURS = 24  # Scrape documents once a day
 DOCUMENT_TYPES = {
