@@ -110,11 +110,11 @@ class MintosBot:
         """Clean up the Telegram application instance"""
         if self.application:
             try:
-                if hasattr(self.application, 'updater') and self.application.updater.running:
+                if hasattr(self.application, 'updater') and self.application.updater and self.application.updater.running:
                     await self.application.updater.stop()
                     await asyncio.sleep(1)
 
-                if hasattr(self.application, 'bot'):
+                if hasattr(self.application, 'bot') and self.application.bot:
                     await self.application.bot.delete_webhook(drop_pending_updates=True)
                     await self.application.bot.get_updates(offset=-1)
 
@@ -328,12 +328,13 @@ class MintosBot:
                     raise RuntimeError("Bot initialization failed")
 
                 # Start polling in background
-                self._polling_task = asyncio.create_task(
-                    self.application.updater.start_polling(
-                        drop_pending_updates=True,
-                        allowed_updates=["message", "callback_query"]
+                if self.application and self.application.updater:
+                    self._polling_task = asyncio.create_task(
+                        self.application.updater.start_polling(
+                            drop_pending_updates=True,
+                            allowed_updates=["message", "callback_query"]
+                        )
                     )
-                )
 
                 # Start scheduled updates
                 self._update_task = asyncio.create_task(self.scheduled_updates())
@@ -467,8 +468,14 @@ class MintosBot:
         """Handle callback queries from inline keyboard buttons"""
         try:
             query = update.callback_query
+            if not query:
+                return
+            
             await query.answer()
 
+            if not query.data:
+                return
+                
             if query.data.startswith("company_"):
                 company_id = int(query.data.split("_")[1])
                 company_name = self.data_manager.get_company_name(company_id)
@@ -478,10 +485,11 @@ class MintosBot:
                     [InlineKeyboardButton("All Updates", callback_data=f"all_{company_id}_0")]
                 ]
                 reply_markup = InlineKeyboardMarkup(buttons)
-                await query.edit_message_text(
-                    f"Select update type for {company_name}:",
-                    reply_markup=reply_markup,
-                    disable_web_page_preview=True
+                if query.message:
+                    await query.edit_message_text(
+                        f"Select update type for {company_name}:",
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True
                 )
 
             elif query.data == "refresh_cache":
