@@ -3050,8 +3050,8 @@ class MintosBot:
     async def _show_rss_items_selection(self, query) -> None:
         """Show available RSS items for selection"""
         try:
-            # Fetch current RSS items
-            rss_items = await self.rss_reader.fetch_rss_feed()
+            # Force fetch all RSS items for admin (bypass timing restrictions)
+            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if not rss_items:
                 await query.edit_message_text(
@@ -3105,8 +3105,8 @@ class MintosBot:
         try:
             item_index = int(query.data.split("_")[-1])
             
-            # Fetch RSS items again to get the selected item
-            rss_items = await self.rss_reader.fetch_rss_feed()
+            # Force fetch RSS items again to get the selected item
+            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if item_index >= len(rss_items):
                 await query.edit_message_text(
@@ -3197,8 +3197,8 @@ class MintosBot:
     async def _send_rss_to_all_users(self, query, item_index: int) -> None:
         """Send RSS item to all users"""
         try:
-            # Fetch RSS items
-            rss_items = await self.rss_reader.fetch_rss_feed()
+            # Force fetch RSS items for admin
+            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if item_index >= len(rss_items):
                 await query.edit_message_text(
@@ -3257,8 +3257,8 @@ class MintosBot:
     async def _send_rss_to_user(self, query, user_id: str, item_index: int) -> None:
         """Send RSS item to specific user"""
         try:
-            # Fetch RSS items
-            rss_items = await self.rss_reader.fetch_rss_feed()
+            # Force fetch RSS items for admin
+            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if item_index >= len(rss_items):
                 await query.edit_message_text(
@@ -3314,8 +3314,8 @@ class MintosBot:
     async def _send_rss_to_predefined_channel(self, query, channel_id: str, item_index: int) -> None:
         """Send RSS item to predefined channel"""
         try:
-            # Fetch RSS items
-            rss_items = await self.rss_reader.fetch_rss_feed()
+            # Force fetch RSS items for admin
+            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if item_index >= len(rss_items):
                 await query.edit_message_text(
@@ -3371,8 +3371,8 @@ class MintosBot:
     async def _send_rss_to_custom_channel(self, query, item_index: int) -> None:
         """Send RSS item to custom channel"""
         try:
-            # Fetch RSS items
-            rss_items = await self.rss_reader.fetch_rss_feed()
+            # Force fetch RSS items for admin
+            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if item_index >= len(rss_items):
                 await query.edit_message_text(

@@ -448,6 +448,19 @@ class RSSReader(BaseManager):
             logger.debug("No feeds were due for checking")
         
         return all_items
+
+    async def fetch_all_rss_feeds_force(self) -> List[RSSItem]:
+        """Force fetch all RSS feeds regardless of timing (for admin use)"""
+        all_items = []
+        
+        # Force check all feeds
+        for feed_source, url in self.feed_urls.items():
+            logger.info(f"Force checking {feed_source} feed for admin")
+            items = await self.fetch_single_feed(feed_source, url)
+            all_items.extend(items)
+        
+        logger.info(f"Force fetched total of {len(all_items)} RSS items from {len(self.feed_urls)} feeds")
+        return all_items
     
     def get_new_items(self, items: List[RSSItem]) -> List[RSSItem]:
         """Filter out already sent items and apply keyword filtering"""
