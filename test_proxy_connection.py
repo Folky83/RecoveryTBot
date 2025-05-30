@@ -20,8 +20,9 @@ async def test_proxy_aiohttp():
     test_url = 'https://ipv4.icanhazip.com'
     
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(test_url, proxy=proxy_url, timeout=10) as response:
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(test_url, proxy=proxy_url) as response:
                 if response.status == 200:
                     ip = await response.text()
                     print(f"✓ aiohttp proxy test successful - IP: {ip.strip()}")
