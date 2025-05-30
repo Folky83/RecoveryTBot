@@ -233,6 +233,16 @@ class DashboardManager:
                 border-radius: 5px;
                 margin: 5px 0;
             }
+            /* Prevent JavaScript errors from image loading */
+            img {
+                max-width: 100%;
+                height: auto;
+                object-fit: contain;
+            }
+            /* Hide Streamlit menu and footer to reduce JS errors */
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
             </style>
         """, unsafe_allow_html=True)
 
@@ -422,7 +432,11 @@ class DashboardManager:
                 
                 with cols[1]:
                     if campaign.image_url:
-                        st.image(campaign.image_url, use_column_width=True)
+                        try:
+                            st.image(campaign.image_url, use_container_width=True)
+                        except Exception as e:
+                            logger.debug(f"Failed to load campaign image: {e}")
+                            st.caption("🖼️ Campaign image unavailable")
 
 def main():
     """Main application entry point"""
