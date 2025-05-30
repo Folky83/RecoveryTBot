@@ -580,7 +580,7 @@ class MintosBot:
                 # Check if there's a date parameter
                 parts = query.data.split("_")
                 target_date = None
-                if len(parts) >= 3:
+                if len(parts) >= 4:
                     # Format should be admin_trigger_today_YYYY-MM-DD
                     target_date = parts[3]
                 
