@@ -2460,40 +2460,25 @@ class MintosBot:
                 if not is_today:
                     header_text = f"📊 Updates for {date_to_check}:"
                     
-                await self.application.bot.send_message(
+                await self.send_message(
                     chat_id=resolved_channel,
                     text=header_text,
-                    parse_mode='HTML',
                     disable_web_page_preview=True
                 )
 
-                # Send updates
+                # Send updates using proper delay mechanism
                 for update_item in date_updates:
                     try:
                         message = self.format_update_message(update_item)
-                        await self.application.bot.send_message(
+                        await self.send_message(
                             chat_id=resolved_channel,
                             text=message,
-                            parse_mode='HTML',
                             disable_web_page_preview=True
                         )
                         successful_sends += 1
-                        await asyncio.sleep(1.0)  # Increased delay for better rate limiting
-                    except RetryAfter as e:
-                        # Handle rate limiting from Telegram by waiting the specified amount
-                        logger.warning(f"Rate limited by Telegram. Waiting {e.retry_after} seconds")
-                        await asyncio.sleep(e.retry_after)
-                        # Try again after waiting
-                        await self.application.bot.send_message(
-                            chat_id=resolved_channel,
-                            text=message,
-                            parse_mode='HTML',
-                            disable_web_page_preview=True
-                        )
-                        successful_sends += 1
-                        await asyncio.sleep(1.0)  # Additional wait after retry
                     except Exception as e:
                         logger.error(f"Error sending update: {e}")
+                        # Continue with next message even if one fails
 
             # Get channel name for the status message
             channel_name = target_channel
