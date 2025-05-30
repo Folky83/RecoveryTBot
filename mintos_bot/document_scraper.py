@@ -391,11 +391,9 @@ class DocumentScraper:
             'User-Agent': DEFAULT_USER_AGENT
         }
         
-        # Configure proxy if enabled
+        # Configure connector
         connector_kwargs = {}
         if USE_PROXY and PROXY_HOST and PROXY_AUTH:
-            proxy_url = f'http://{PROXY_AUTH}@{PROXY_HOST}'
-            connector_kwargs['trust_env'] = True
             logger.debug(f"Using proxy for document scraping: {PROXY_HOST}")
         
         for attempt in range(MAX_HTTP_RETRIES):
