@@ -1083,6 +1083,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-05-30",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>All three payments were received by our bank, which then requested additional information from Avafin bank for the payments to be released. We are communicating with all parties to speed up the process. Next week, Avafin will pay the remaining exposure and repurchase the remaining notes on the platform.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-05-23",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -5267,6 +5283,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-05-30",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We expect Dinerito Xtra to make the next payment by 12 June 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-05-23",
                         "recoveredAmount": null,
@@ -9537,6 +9569,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-05-30",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We received &euro;50K from Finclusion this week. The next payment of &euro;45K is expected to be processed by the end of this week. The funds will be distributed to investors as soon as they arrive in our account.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-05-23",
                         "recoveredAmount": null,
@@ -14958,6 +15006,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-05-30",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>We have received PoP for all the payments today, and the payments will be released as soon as they arrive in our account. The delays were due to banking issues, which hopefully have been resolved.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-05-23",
                         "recoveredAmount": null,
