@@ -1548,11 +1548,15 @@ class MintosBot:
                         for i, update in enumerate(unsent_updates):
                             message = self.format_update_message(update)
                             for user_id in users:
-                                try:
-                                    await self.send_message(user_id, message, disable_web_page_preview=True)
-                                    logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
-                                except Exception as e:
-                                    logger.error(f"Failed to send update to user {user_id}: {e}")
+                                # Check if user has recovery updates notifications enabled
+                                if self.user_manager.get_notification_preference(user_id, 'recovery_updates'):
+                                    try:
+                                        await self.send_message(user_id, message, disable_web_page_preview=True)
+                                        logger.info(f"Successfully sent update {i+1}/{len(unsent_updates)} to user {user_id}")
+                                    except Exception as e:
+                                        logger.error(f"Failed to send update to user {user_id}: {e}")
+                                else:
+                                    logger.debug(f"Skipping recovery update for user {user_id} - notifications disabled")
                             
                             # Mark as sent after broadcasting to all users
                             self.data_manager.save_sent_update(update)
@@ -1738,19 +1742,23 @@ class MintosBot:
                 
                 # Send to all users
                 for chat_id in users:
-                    try:
-                        await self.send_message(chat_id, message, disable_web_page_preview=True)
-                        sent_to_users += 1
-                        logger.info(f"Sent document notification for {document.get('company_name')} to {chat_id}")
-                    except Exception as e:
-                        logger.error(f"Error sending document update to {chat_id}: {e}")
-                        # Add to failed messages for retry
-                        self._failed_messages.append({
-                            'chat_id': chat_id,
-                            'text': message,
-                            'parse_mode': 'HTML',
-                            'disable_web_page_preview': True
-                        })
+                    # Check if user has document notifications enabled
+                    if self.user_manager.get_notification_preference(chat_id, 'documents'):
+                        try:
+                            await self.send_message(chat_id, message, disable_web_page_preview=True)
+                            sent_to_users += 1
+                            logger.info(f"Sent document notification for {document.get('company_name')} to {chat_id}")
+                        except Exception as e:
+                            logger.error(f"Error sending document update to {chat_id}: {e}")
+                            # Add to failed messages for retry
+                            self._failed_messages.append({
+                                'chat_id': chat_id,
+                                'text': message,
+                                'parse_mode': 'HTML',
+                                'disable_web_page_preview': True
+                            })
+                    else:
+                        logger.debug(f"Skipping document for user {chat_id} - notifications disabled")
                 
                 # Mark as sent after trying to send to all users
                 self.document_scraper.save_sent_document(document)
@@ -2913,11 +2921,15 @@ class MintosBot:
                 message = self.format_campaign_message(campaign)
                 
                 for user_id in non_admin_users:
-                    try:
-                        await self.send_message(user_id, message, disable_web_page_preview=True)
-                        logger.info(f"Sent delayed campaign {campaign_id} to user {user_id}")
-                    except Exception as e:
-                        logger.error(f"Failed to send delayed campaign to user {user_id}: {e}")
+                    # Check if user has campaign notifications enabled
+                    if self.user_manager.get_notification_preference(user_id, 'campaigns'):
+                        try:
+                            await self.send_message(user_id, message, disable_web_page_preview=True)
+                            logger.info(f"Sent delayed campaign {campaign_id} to user {user_id}")
+                        except Exception as e:
+                            logger.error(f"Failed to send delayed campaign to user {user_id}: {e}")
+                    else:
+                        logger.debug(f"Skipping campaign for user {user_id} - notifications disabled")
                 
                 # Remove from pending list and mark as sent
                 self.data_manager.remove_pending_campaign(campaign_id)
