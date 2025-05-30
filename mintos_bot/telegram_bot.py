@@ -3102,8 +3102,9 @@ class MintosBot:
                 'ffnews': '📰 FF News'
             }
             
-            for feed_source, count in feed_counts.items():
-                feed_name = feed_names.get(feed_source, feed_source.title())
+            # Show all feeds, even those with 0 items
+            for feed_source, feed_name in feed_names.items():
+                count = feed_counts.get(feed_source, 0)
                 button_text = f"{feed_name} ({count} items)"
                 keyboard.append([InlineKeyboardButton(button_text, callback_data=f"rss_feed_select_{feed_source}")])
             
