@@ -9,10 +9,13 @@ class UserManager:
     def __init__(self):
         self.users = {}  # Changed from set to dict to store username with chat_id
         self.rss_preferences_file = os.path.join(DATA_DIR, 'rss_user_preferences.json')
+        self.notification_preferences_file = os.path.join(DATA_DIR, 'notification_preferences.json')
         self.rss_preferences = {}  # Store RSS notification preferences
+        self.notification_preferences = {}  # Store other notification preferences
         self._ensure_data_directory()
         self.load_users()
         self._load_rss_preferences()
+        self._load_notification_preferences()
 
     def _ensure_data_directory(self):
         """Ensure the data directory exists"""
@@ -200,3 +203,65 @@ class UserManager:
             elif isinstance(prefs, dict) and prefs.get(feed_source, False):
                 enabled_users.append(chat_id)
         return enabled_users
+
+    def _load_notification_preferences(self):
+        """Load notification preferences from file"""
+        try:
+            if os.path.exists(self.notification_preferences_file):
+                with open(self.notification_preferences_file, 'r') as f:
+                    self.notification_preferences = json.load(f)
+                logger.info(f"Loaded notification preferences for {len(self.notification_preferences)} users")
+            else:
+                self.notification_preferences = {}
+        except Exception as e:
+            logger.error(f"Error loading notification preferences: {e}")
+            self.notification_preferences = {}
+
+    def _save_notification_preferences(self):
+        """Save notification preferences to file"""
+        try:
+            os.makedirs(os.path.dirname(self.notification_preferences_file), exist_ok=True)
+            with open(self.notification_preferences_file, 'w') as f:
+                json.dump(self.notification_preferences, f, indent=2)
+            logger.info(f"Saved notification preferences for {len(self.notification_preferences)} users")
+        except Exception as e:
+            logger.error(f"Error saving notification preferences: {e}")
+
+    def set_notification_preference(self, chat_id, notification_type, enabled):
+        """Set notification preference for a specific type (campaigns, recovery_updates, documents)"""
+        chat_id = str(chat_id)
+        if chat_id not in self.notification_preferences:
+            self.notification_preferences[chat_id] = {
+                'campaigns': True,  # Default enabled
+                'recovery_updates': True,  # Default enabled 
+                'documents': True   # Default enabled
+            }
+        
+        self.notification_preferences[chat_id][notification_type] = enabled
+        self._save_notification_preferences()
+        logger.info(f"{notification_type} notifications {'enabled' if enabled else 'disabled'} for user {chat_id}")
+
+    def get_notification_preference(self, chat_id, notification_type):
+        """Get notification preference for a specific type"""
+        chat_id = str(chat_id)
+        return self.notification_preferences.get(chat_id, {}).get(notification_type, True)  # Default enabled
+
+    def get_user_notification_preferences(self, chat_id):
+        """Get all notification preferences for a user"""
+        chat_id = str(chat_id)
+        default_prefs = {'campaigns': True, 'recovery_updates': True, 'documents': True}
+        return self.notification_preferences.get(chat_id, default_prefs)
+
+    def get_users_with_notification_enabled(self, notification_type):
+        """Get list of users who have a specific notification type enabled"""
+        enabled_users = []
+        for chat_id, prefs in self.notification_preferences.items():
+            if prefs.get(notification_type, True):  # Default enabled
+                enabled_users.append(chat_id)
+        
+        # Also include users not in the file (they get defaults)
+        for chat_id in self.users.keys():
+            if str(chat_id) not in self.notification_preferences:
+                enabled_users.append(str(chat_id))
+        
+        return list(set(enabled_users))  # Remove duplicates

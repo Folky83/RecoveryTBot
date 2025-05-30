@@ -191,6 +191,7 @@ class MintosBot:
             CommandHandler("today", self.today_command),
             CommandHandler("campaigns", self.campaigns_command),
             CommandHandler("documents", self.documents_command),
+            CommandHandler("notifications", self.notifications_command),
             CommandHandler("rss", self.rss_command),
             CommandHandler("trigger_today", self.trigger_today_command),
             CommandHandler("users", self.users_command), #Added
@@ -413,15 +414,18 @@ class MintosBot:
             "📅 Update Schedule:\n"
             "• Automatic updates on weekdays at 3 PM, 4 PM, and 5 PM (UTC)\n"
             "• Document scraping happens daily\n\n"
-            "Available Commands:\n"
+            "📊 Data Commands:\n"
             "• /company - Check updates for a specific company\n"
             "• /today [YYYY-MM-DD] - View updates for today or a specific date\n"
             "• /campaigns - View current Mintos campaigns\n"
-            "• /documents - View recent company documents\n"
-            "• /rss - Toggle NASDAQ Baltic news notifications\n"
+            "• /documents - View recent company documents\n\n"
+            "🔔 Notification Settings:\n"
+            "• /notifications - Manage notification preferences\n"
+            "• /rss - RSS news feed subscriptions\n\n"
+            "ℹ️ Other:\n"
             "• /start - Show this welcome message\n"
             f"{admin_commands}\n"
-            "You'll receive updates about lending companies, new documents, and NASDAQ Baltic news automatically. Stay tuned!"
+            "Customize your notifications to receive updates about lending companies, documents, campaigns, and news feeds."
         )
 
     async def company_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -901,6 +905,68 @@ class MintosBot:
                     disable_web_page_preview=True
                 )
                 return
+            
+            elif query.data.startswith("notify_"):
+                # Handle notification preference toggles
+                parts = query.data.split("_", 2)  # notify_type_value
+                notification_type = parts[1]
+                new_value = parts[2] == "True"
+                
+                chat_id = query.message.chat_id
+                self.user_manager.set_notification_preference(chat_id, notification_type, new_value)
+                
+                # Get updated preferences to refresh the interface
+                preferences = self.user_manager.get_user_notification_preferences(chat_id)
+                
+                # Create status indicators
+                campaigns_status = "✅" if preferences.get('campaigns', True) else "❌"
+                recovery_status = "✅" if preferences.get('recovery_updates', True) else "❌"
+                documents_status = "✅" if preferences.get('documents', True) else "❌"
+                
+                # Create updated keyboard
+                keyboard = [
+                    [InlineKeyboardButton(
+                        f"{campaigns_status} Campaigns",
+                        callback_data=f"notify_campaigns_{not preferences.get('campaigns', True)}"
+                    )],
+                    [InlineKeyboardButton(
+                        f"{recovery_status} Recovery Updates", 
+                        callback_data=f"notify_recovery_updates_{not preferences.get('recovery_updates', True)}"
+                    )],
+                    [InlineKeyboardButton(
+                        f"{documents_status} Documents",
+                        callback_data=f"notify_documents_{not preferences.get('documents', True)}"
+                    )]
+                ]
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                # Map notification types to friendly names
+                type_names = {
+                    'campaigns': 'Campaigns',
+                    'recovery_updates': 'Recovery Updates',
+                    'documents': 'Documents'
+                }
+                
+                type_name = type_names.get(notification_type, notification_type)
+                status = "enabled" if new_value else "disabled"
+                
+                message = (
+                    "🔔 <b>Notification Settings</b>\n\n"
+                    "Manage which types of notifications you receive:\n\n"
+                    f"{campaigns_status} <b>Campaigns:</b> New Mintos campaigns and bonuses\n"
+                    f"{recovery_status} <b>Recovery Updates:</b> Company recovery status changes\n"
+                    f"{documents_status} <b>Documents:</b> New company documents\n\n"
+                    "Click the buttons below to toggle notifications on/off:"
+                )
+                
+                await query.edit_message_text(
+                    message,
+                    reply_markup=reply_markup,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
                 
             elif query.data.startswith("feed_toggle_"):
                 # Handle individual feed toggle
@@ -1234,7 +1300,65 @@ class MintosBot:
 
         return message.strip()
 
+    async def notifications_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle the /notifications command - manage notification preferences"""
+        try:
+            if not update.message:
+                return
 
+            # Try to delete the command message
+            try:
+                await update.message.delete()
+            except Exception as e:
+                logger.warning(f"Could not delete command message: {e}")
+
+            chat_id = update.effective_chat.id
+            
+            # Get current notification preferences
+            preferences = self.user_manager.get_user_notification_preferences(chat_id)
+            
+            # Create status indicators
+            campaigns_status = "✅" if preferences.get('campaigns', True) else "❌"
+            recovery_status = "✅" if preferences.get('recovery_updates', True) else "❌"
+            documents_status = "✅" if preferences.get('documents', True) else "❌"
+            
+            # Create keyboard with toggle buttons
+            keyboard = [
+                [InlineKeyboardButton(
+                    f"{campaigns_status} Campaigns",
+                    callback_data=f"notify_campaigns_{not preferences.get('campaigns', True)}"
+                )],
+                [InlineKeyboardButton(
+                    f"{recovery_status} Recovery Updates", 
+                    callback_data=f"notify_recovery_updates_{not preferences.get('recovery_updates', True)}"
+                )],
+                [InlineKeyboardButton(
+                    f"{documents_status} Documents",
+                    callback_data=f"notify_documents_{not preferences.get('documents', True)}"
+                )]
+            ]
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            message = (
+                "🔔 <b>Notification Settings</b>\n\n"
+                "Manage which types of notifications you receive:\n\n"
+                f"{campaigns_status} <b>Campaigns:</b> New Mintos campaigns and bonuses\n"
+                f"{recovery_status} <b>Recovery Updates:</b> Company recovery status changes\n"
+                f"{documents_status} <b>Documents:</b> New company documents\n\n"
+                "Click the buttons below to toggle notifications on/off:"
+            )
+            
+            await self.send_message(
+                chat_id,
+                message,
+                reply_markup,
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Notifications command error: {e}", exc_info=True)
+            await self.send_message(chat_id, "⚠️ Error processing command", disable_web_page_preview=True)
         
     def format_campaign_message(self, campaign: Dict[str, Any]) -> str:
         """Format campaign message with rich information from Mintos API"""
