@@ -480,6 +480,20 @@ class RSSReader(BaseManager):
         logger.info(f"Found {len(new_items)} new filtered RSS items")
         return new_items
     
+    def get_filtered_items_for_admin(self, items: List[RSSItem]) -> List[RSSItem]:
+        """Apply only keyword filtering (no 'already sent' check) for admin operations"""
+        filtered_items = []
+        
+        for item in items:
+            # Apply keyword filtering only
+            if not self._matches_keywords(item):
+                continue
+            
+            filtered_items.append(item)
+        
+        logger.info(f"Found {len(filtered_items)} keyword-filtered RSS items for admin")
+        return filtered_items
+    
     def mark_item_as_sent(self, item: RSSItem) -> None:
         """Mark an RSS item as sent"""
         self.sent_items.add(item.guid)

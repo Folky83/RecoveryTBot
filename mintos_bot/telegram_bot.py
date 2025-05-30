@@ -3069,8 +3069,8 @@ class MintosBot:
                 )
                 return
             
-            # Apply keyword filtering (same as subscriptions)
-            filtered_items = self.rss_reader.get_new_items(all_rss_items)
+            # Apply keyword filtering (admin version - bypasses "already sent" check)
+            filtered_items = self.rss_reader.get_filtered_items_for_admin(all_rss_items)
             
             if not filtered_items:
                 await query.edit_message_text(
