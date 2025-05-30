@@ -887,6 +887,7 @@ class MintosBot:
                 return
 
             elif query.data.startswith("rss_toggle_"):
+                # Legacy support - enable/disable all feeds
                 chat_id = query.data.split("_")[2]
                 current_preference = self.user_manager.get_rss_preference(chat_id)
                 new_preference = not current_preference
@@ -895,9 +896,69 @@ class MintosBot:
                 status = "enabled" if new_preference else "disabled"
                 await query.edit_message_text(
                     f"✅ <b>RSS Notifications {status.title()}</b>\n\n"
-                    f"NASDAQ Baltic news notifications are now <b>{status}</b>.",
+                    f"All RSS feed notifications are now <b>{status}</b>.",
                     parse_mode='HTML',
                     disable_web_page_preview=True
+                )
+                return
+                
+            elif query.data.startswith("feed_toggle_"):
+                # Handle individual feed toggle
+                parts = query.data.split("_")
+                feed_source = parts[2]  # nasdaq, mintos, or ffnews
+                chat_id = parts[3]
+                
+                current_preference = self.user_manager.get_feed_preference(chat_id, feed_source)
+                new_preference = not current_preference
+                self.user_manager.set_feed_preference(chat_id, feed_source, new_preference)
+                
+                # Get feed display names
+                feed_names = {
+                    'nasdaq': 'NASDAQ Baltic',
+                    'mintos': 'Mintos News',
+                    'ffnews': 'FFNews'
+                }
+                
+                feed_name = feed_names.get(feed_source, feed_source)
+                status = "enabled" if new_preference else "disabled"
+                
+                # Show updated subscription menu
+                user_prefs = self.user_manager.get_user_feed_preferences(chat_id)
+                nasdaq_enabled = user_prefs.get('nasdaq', False)
+                mintos_enabled = user_prefs.get('mintos', False)
+                ffnews_enabled = user_prefs.get('ffnews', False)
+                
+                # Build updated keyboard
+                keyboard = [
+                    [InlineKeyboardButton(
+                        f"{'✅' if nasdaq_enabled else '⭕'} NASDAQ Baltic (filtered)",
+                        callback_data=f"feed_toggle_nasdaq_{chat_id}"
+                    )],
+                    [InlineKeyboardButton(
+                        f"{'✅' if mintos_enabled else '⭕'} Mintos News (all articles)",
+                        callback_data=f"feed_toggle_mintos_{chat_id}"
+                    )],
+                    [InlineKeyboardButton(
+                        f"{'✅' if ffnews_enabled else '⭕'} FFNews (filtered)",
+                        callback_data=f"feed_toggle_ffnews_{chat_id}"
+                    )],
+                    [InlineKeyboardButton("❌ Cancel", callback_data="cancel")]
+                ]
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                enabled_count = sum([nasdaq_enabled, mintos_enabled, ffnews_enabled])
+                
+                await query.edit_message_text(
+                    f"📰 <b>RSS Feed Subscriptions</b>\n\n"
+                    f"✅ <b>{feed_name}</b> notifications {status}\n"
+                    f"You have <b>{enabled_count}</b> feed(s) enabled\n\n"
+                    f"<b>Available feeds:</b>\n"
+                    f"• <b>NASDAQ Baltic</b> - Filtered news about Mintos, DelfinGroup, Grenardi, etc.\n"
+                    f"• <b>Mintos News</b> - All articles from Mintos blog\n"
+                    f"• <b>FFNews</b> - Financial news filtered by keywords\n\n"
+                    f"Click on any feed to toggle notifications:",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML'
                 )
                 return
                 
@@ -2588,42 +2649,55 @@ class MintosBot:
         await update.message.delete()
 
     async def check_rss_updates(self) -> None:
-        """Check for new RSS items and send notifications to users who opted in"""
+        """Check for new RSS items and send notifications to users based on their feed preferences"""
         try:
-            # Get users who have RSS notifications enabled
-            rss_users = self.user_manager.get_users_with_rss_enabled()
-            if not rss_users:
-                logger.info("No users have RSS notifications enabled")
-                return
-
-            # Get new RSS items
+            # Get new RSS items from all feeds
             new_items = await self.rss_reader.check_and_get_new_items()
             if not new_items:
                 logger.info("No new RSS items found")
                 return
 
-            logger.info(f"Found {len(new_items)} new RSS items, sending to {len(rss_users)} users")
+            logger.info(f"Found {len(new_items)} new RSS items")
 
-            # Send notifications to users
+            # Group items by feed source and send to appropriate users
+            items_by_feed = {}
             for item in new_items:
-                message = self.rss_reader.format_rss_message(item)
-                
-                for chat_id in rss_users:
-                    try:
-                        await self.send_message(
-                            chat_id,
-                            message,
-                            parse_mode='HTML',
-                            disable_web_page_preview=True
-                        )
-                        await asyncio.sleep(0.1)  # Rate limiting
-                    except Exception as e:
-                        logger.error(f"Error sending RSS notification to {chat_id}: {e}")
-                        if "bot was blocked" in str(e).lower():
-                            self.user_manager.remove_user(chat_id)
+                feed_source = item.source
+                if feed_source not in items_by_feed:
+                    items_by_feed[feed_source] = []
+                items_by_feed[feed_source].append(item)
 
-                # Mark item as sent after sending to all users
-                self.rss_reader.mark_item_as_sent(item)
+            # Send notifications for each feed
+            for feed_source, items in items_by_feed.items():
+                # Get users subscribed to this specific feed
+                feed_users = self.user_manager.get_users_with_feed_enabled(feed_source)
+                
+                if not feed_users:
+                    logger.info(f"No users subscribed to {feed_source} feed")
+                    continue
+                
+                logger.info(f"Sending {len(items)} {feed_source} items to {len(feed_users)} users")
+                
+                # Send each item to subscribed users
+                for item in items:
+                    message = self.rss_reader.format_rss_message(item)
+                    
+                    for chat_id in feed_users:
+                        try:
+                            await self.send_message(
+                                chat_id,
+                                message,
+                                parse_mode='HTML',
+                                disable_web_page_preview=True
+                            )
+                            await asyncio.sleep(0.1)  # Rate limiting
+                        except Exception as e:
+                            logger.error(f"Error sending {feed_source} RSS notification to {chat_id}: {e}")
+                            if "bot was blocked" in str(e).lower():
+                                self.user_manager.remove_user(chat_id)
+
+                    # Mark item as sent after sending to all subscribed users
+                    self.rss_reader.mark_item_as_sent(item)
 
         except Exception as e:
             logger.error(f"Error checking RSS updates: {e}", exc_info=True)
@@ -2729,35 +2803,54 @@ class MintosBot:
             logger.error(f"Error processing pending campaigns: {e}", exc_info=True)
 
     async def rss_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Toggle RSS notifications for the user"""
+        """Show RSS feed subscription options"""
         if not update.effective_user or not update.effective_chat or not update.message:
             return
             
         chat_id = str(update.effective_chat.id)
-        current_preference = self.user_manager.get_rss_preference(chat_id)
+        user_prefs = self.user_manager.get_user_feed_preferences(chat_id)
         
         try:
             await update.message.delete()
         except Exception as e:
             logger.warning(f"Could not delete command message: {e}")
         
+        # Get current feed statuses
+        nasdaq_enabled = user_prefs.get('nasdaq', False)
+        mintos_enabled = user_prefs.get('mintos', False)
+        ffnews_enabled = user_prefs.get('ffnews', False)
+        
+        # Build keyboard with individual feed toggles
         keyboard = [
-            [InlineKeyboardButton("✅ Enable RSS News" if not current_preference else "🔕 Disable RSS News", 
-                                callback_data=f"rss_toggle_{chat_id}")],
+            [InlineKeyboardButton(
+                f"{'✅' if nasdaq_enabled else '⭕'} NASDAQ Baltic (filtered)",
+                callback_data=f"feed_toggle_nasdaq_{chat_id}"
+            )],
+            [InlineKeyboardButton(
+                f"{'✅' if mintos_enabled else '⭕'} Mintos News (all articles)",
+                callback_data=f"feed_toggle_mintos_{chat_id}"
+            )],
+            [InlineKeyboardButton(
+                f"{'✅' if ffnews_enabled else '⭕'} FFNews (filtered)",
+                callback_data=f"feed_toggle_ffnews_{chat_id}"
+            )],
             [InlineKeyboardButton("❌ Cancel", callback_data="cancel")]
         ]
         
         reply_markup = InlineKeyboardMarkup(keyboard)
-        status = "enabled" if current_preference else "disabled"
+        
+        # Count enabled feeds
+        enabled_count = sum([nasdaq_enabled, mintos_enabled, ffnews_enabled])
         
         await self.send_message(
             chat_id,
-            f"📰 <b>NASDAQ Baltic News Notifications</b>\n\n"
-            f"Current status: <b>{status}</b>\n\n"
-            f"RSS notifications include filtered news from NASDAQ Baltic about:\n"
-            f"• Mintos, DelfinGroup, Grenardi, Iute, Eleving\n"
-            f"• Creditstar, BB Finance, Sun Finance, and more\n\n"
-            f"Would you like to change your notification preference?",
+            f"📰 <b>RSS Feed Subscriptions</b>\n\n"
+            f"You have <b>{enabled_count}</b> feed(s) enabled\n\n"
+            f"<b>Available feeds:</b>\n"
+            f"• <b>NASDAQ Baltic</b> - Filtered news about Mintos, DelfinGroup, Grenardi, etc.\n"
+            f"• <b>Mintos News</b> - All articles from Mintos blog\n"
+            f"• <b>FFNews</b> - Financial news filtered by keywords\n\n"
+            f"Click on any feed to toggle notifications:",
             reply_markup=reply_markup,
             parse_mode='HTML'
         )

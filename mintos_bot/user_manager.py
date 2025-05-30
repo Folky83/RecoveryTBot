@@ -113,16 +113,79 @@ class UserManager:
             logger.error(f"Error saving RSS preferences: {e}")
 
     def set_rss_preference(self, chat_id, enabled):
-        """Set RSS notifications preference for a user"""
+        """Set RSS notifications preference for a user (legacy method for backward compatibility)"""
         chat_id = str(chat_id)
-        self.rss_preferences[chat_id] = enabled
+        # Convert legacy boolean to new format with all feeds enabled/disabled
+        if chat_id not in self.rss_preferences:
+            self.rss_preferences[chat_id] = {}
+        
+        feeds = ['nasdaq', 'mintos', 'ffnews']
+        for feed in feeds:
+            self.rss_preferences[chat_id][feed] = enabled
+        
         self._save_rss_preferences()
-        logger.info(f"RSS notifications {'enabled' if enabled else 'disabled'} for user {chat_id}")
+        logger.info(f"RSS notifications {'enabled' if enabled else 'disabled'} for all feeds for user {chat_id}")
+
+    def set_feed_preference(self, chat_id, feed_source, enabled):
+        """Set RSS notifications preference for a specific feed"""
+        chat_id = str(chat_id)
+        if chat_id not in self.rss_preferences:
+            self.rss_preferences[chat_id] = {}
+        
+        self.rss_preferences[chat_id][feed_source] = enabled
+        self._save_rss_preferences()
+        logger.info(f"{feed_source} RSS notifications {'enabled' if enabled else 'disabled'} for user {chat_id}")
 
     def get_rss_preference(self, chat_id):
-        """Get RSS notifications preference for a user (default: False)"""
-        return self.rss_preferences.get(str(chat_id), False)
+        """Get RSS notifications preference for a user (legacy method - returns True if any feed is enabled)"""
+        chat_id = str(chat_id)
+        user_prefs = self.rss_preferences.get(chat_id, {})
+        # Handle legacy format (boolean) and new format (dict)
+        if isinstance(user_prefs, bool):
+            return user_prefs
+        elif isinstance(user_prefs, dict):
+            return any(user_prefs.values()) if user_prefs else False
+        return False
+
+    def get_feed_preference(self, chat_id, feed_source):
+        """Get RSS notifications preference for a specific feed"""
+        chat_id = str(chat_id)
+        user_prefs = self.rss_preferences.get(chat_id, {})
+        # Handle legacy format
+        if isinstance(user_prefs, bool):
+            return user_prefs  # Legacy users get all feeds if they enabled RSS
+        elif isinstance(user_prefs, dict):
+            return user_prefs.get(feed_source, False)
+        return False
+
+    def get_user_feed_preferences(self, chat_id):
+        """Get all feed preferences for a user"""
+        chat_id = str(chat_id)
+        user_prefs = self.rss_preferences.get(chat_id, {})
+        # Handle legacy format
+        if isinstance(user_prefs, bool):
+            feeds = ['nasdaq', 'mintos', 'ffnews']
+            return {feed: user_prefs for feed in feeds}
+        elif isinstance(user_prefs, dict):
+            return user_prefs
+        return {}
 
     def get_users_with_rss_enabled(self):
-        """Get list of users who have RSS notifications enabled"""
-        return [chat_id for chat_id, enabled in self.rss_preferences.items() if enabled]
+        """Get list of users who have RSS notifications enabled for any feed"""
+        enabled_users = []
+        for chat_id, prefs in self.rss_preferences.items():
+            if isinstance(prefs, bool) and prefs:
+                enabled_users.append(chat_id)
+            elif isinstance(prefs, dict) and any(prefs.values()):
+                enabled_users.append(chat_id)
+        return enabled_users
+
+    def get_users_with_feed_enabled(self, feed_source):
+        """Get list of users who have notifications enabled for a specific feed"""
+        enabled_users = []
+        for chat_id, prefs in self.rss_preferences.items():
+            if isinstance(prefs, bool) and prefs:
+                enabled_users.append(chat_id)  # Legacy users get all feeds
+            elif isinstance(prefs, dict) and prefs.get(feed_source, False):
+                enabled_users.append(chat_id)
+        return enabled_users
