@@ -79,9 +79,24 @@ class RSSReader(BaseManager):
             'ffnews': "https://ffnews.com/category/newsarticle/feed/"
         }
         
+        # Feed configurations with different update intervals and proxy settings
+        self.feed_configs = {
+            'nasdaq': {'interval_minutes': 15, 'use_proxy': True},
+            'mintos': {'interval_minutes': 60, 'use_proxy': False},
+            'ffnews': {'interval_minutes': 60, 'use_proxy': False}
+        }
+        
+        # Last check timestamps for each feed
+        self.last_check_times = {
+            'nasdaq': None,
+            'mintos': None, 
+            'ffnews': None
+        }
+        
         self.keywords_file = 'data/rss_keywords.txt'
         self.sent_items_file = 'data/rss_sent_items.json'
         self.user_preferences_file = 'data/rss_user_preferences.json'
+        self.last_check_file = 'data/rss_last_check.json'
         
         # Initialize data structures
         self.keywords: Set[str] = set()
@@ -92,6 +107,7 @@ class RSSReader(BaseManager):
         self._load_keywords()
         self._load_sent_items()
         self._load_user_preferences()
+        self._load_last_check_times()
     
     def _load_keywords(self) -> None:
         """Load keywords from file"""
@@ -114,6 +130,52 @@ class RSSReader(BaseManager):
         except Exception as e:
             logger.error(f"Error loading keywords: {e}")
             self.keywords = set()
+
+    def _load_last_check_times(self) -> None:
+        """Load last check timestamps for each feed"""
+        try:
+            if os.path.exists(self.last_check_file):
+                import json
+                with open(self.last_check_file, 'r') as f:
+                    data = json.load(f)
+                    for feed, timestamp in data.items():
+                        if feed in self.last_check_times:
+                            self.last_check_times[feed] = datetime.fromisoformat(timestamp) if timestamp else None
+                logger.info(f"Loaded last check times for {len(data)} feeds")
+        except Exception as e:
+            logger.error(f"Error loading last check times: {e}")
+
+    def _save_last_check_times(self) -> None:
+        """Save last check timestamps for each feed"""
+        try:
+            import json
+            os.makedirs(os.path.dirname(self.last_check_file), exist_ok=True)
+            data = {}
+            for feed, timestamp in self.last_check_times.items():
+                data[feed] = timestamp.isoformat() if timestamp else None
+            with open(self.last_check_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            logger.debug("Saved last check times")
+        except Exception as e:
+            logger.error(f"Error saving last check times: {e}")
+    
+    def _should_check_feed(self, feed_source: str) -> bool:
+        """Check if enough time has passed to check a specific feed"""
+        config = self.feed_configs.get(feed_source)
+        if not config:
+            return False
+            
+        last_check = self.last_check_times.get(feed_source)
+        if not last_check:
+            return True  # Never checked before
+            
+        now = datetime.now(timezone.utc)
+        time_diff = now - last_check
+        required_interval = config['interval_minutes'] * 60  # Convert to seconds
+        
+        should_check = time_diff.total_seconds() >= required_interval
+        logger.debug(f"Feed {feed_source}: last check {time_diff.total_seconds():.0f}s ago, required {required_interval}s, should_check={should_check}")
+        return should_check
 
     def _find_data_file(self, package_filename: str, fallback_path: str) -> str:
         """Find data file in package or fallback to local path"""
@@ -258,9 +320,39 @@ class RSSReader(BaseManager):
         try:
             logger.info(f"Fetching {feed_source} RSS feed from {url}")
             
+            # Get feed configuration
+            config = self.feed_configs.get(feed_source, {})
+            use_proxy = config.get('use_proxy', True)
+            
             timeout = aiohttp.ClientTimeout(total=30)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(url) as response:
+            
+            # Configure session with or without proxy
+            connector_kwargs = {}
+            session_kwargs = {'timeout': timeout}
+            
+            if use_proxy:
+                # Use proxy for NASDAQ Baltic feed
+                try:
+                    proxy_url = os.getenv('PROXY_URL')
+                    if proxy_url:
+                        session_kwargs['connector'] = aiohttp.TCPConnector()
+                        logger.debug(f"Using proxy for {feed_source} feed")
+                    else:
+                        logger.debug(f"No proxy configured for {feed_source} feed")
+                except Exception as e:
+                    logger.warning(f"Proxy setup failed for {feed_source}: {e}")
+            else:
+                logger.debug(f"Bypassing proxy for {feed_source} feed")
+            
+            async with aiohttp.ClientSession(**session_kwargs) as session:
+                # Add proxy to request if configured
+                request_kwargs = {}
+                if use_proxy:
+                    proxy_url = os.getenv('PROXY_URL')
+                    if proxy_url:
+                        request_kwargs['proxy'] = proxy_url
+                
+                async with session.get(url, **request_kwargs) as response:
                     if response.status == 200:
                         content = await response.text()
                         feed = feedparser.parse(content)
@@ -331,15 +423,30 @@ class RSSReader(BaseManager):
             return []
 
     async def fetch_rss_feed(self) -> List[RSSItem]:
-        """Fetch and parse all RSS feeds"""
+        """Fetch and parse RSS feeds based on their individual update frequencies"""
         all_items = []
+        feeds_checked = []
         
-        # Fetch from all configured feeds
+        # Check each feed individually based on its update frequency
         for feed_source, url in self.feed_urls.items():
-            items = await self.fetch_single_feed(feed_source, url)
-            all_items.extend(items)
+            if self._should_check_feed(feed_source):
+                logger.info(f"Checking {feed_source} feed (due for update)")
+                items = await self.fetch_single_feed(feed_source, url)
+                all_items.extend(items)
+                feeds_checked.append(feed_source)
+                
+                # Update last check time for this feed
+                self.last_check_times[feed_source] = datetime.now(timezone.utc)
+            else:
+                logger.debug(f"Skipping {feed_source} feed (not due for update yet)")
         
-        logger.info(f"Fetched total of {len(all_items)} RSS items from all feeds")
+        # Save updated check times if any feeds were checked
+        if feeds_checked:
+            self._save_last_check_times()
+            logger.info(f"Fetched total of {len(all_items)} RSS items from {len(feeds_checked)} feeds: {', '.join(feeds_checked)}")
+        else:
+            logger.debug("No feeds were due for checking")
+        
         return all_items
     
     def get_new_items(self, items: List[RSSItem]) -> List[RSSItem]:
