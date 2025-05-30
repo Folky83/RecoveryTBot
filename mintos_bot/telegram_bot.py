@@ -1157,6 +1157,7 @@ class MintosBot:
             await query.edit_message_text("⚠️ Error processing your request. Please try again.", disable_web_page_preview=True)
 
     _failed_messages: List[Dict[str, Any]] = []
+    _admin_rss_items: List[Any] = []  # Store filtered RSS items for admin operations
 
     async def retry_failed_messages(self) -> None:
         """Attempt to resend failed messages"""
@@ -3056,10 +3057,10 @@ class MintosBot:
     async def _show_rss_feed_selection(self, query) -> None:
         """Show RSS feed selection for admin"""
         try:
-            # Force fetch all RSS items to get feed counts
-            rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
+            # Force fetch all RSS items and apply filtering
+            all_rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
-            if not rss_items:
+            if not all_rss_items:
                 await query.edit_message_text(
                     "📰 <b>No RSS Items Available</b>\n\n"
                     "No RSS items found in any feed.",
@@ -3068,9 +3069,24 @@ class MintosBot:
                 )
                 return
             
-            # Count items by feed source
+            # Apply keyword filtering (same as subscriptions)
+            filtered_items = self.rss_reader.get_new_items(all_rss_items)
+            
+            if not filtered_items:
+                await query.edit_message_text(
+                    "📰 <b>No Filtered RSS Items Available</b>\n\n"
+                    "No RSS items match the current keyword filters.",
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Store filtered items for later use in admin operations
+            self._admin_rss_items = filtered_items
+            
+            # Count filtered items by feed source
             feed_counts = {}
-            for item in rss_items:
+            for item in filtered_items:
                 feed_source = item.feed_source
                 feed_counts[feed_source] = feed_counts.get(feed_source, 0) + 1
             
@@ -3111,16 +3127,23 @@ class MintosBot:
     async def _show_rss_items_for_feed(self, query, feed_source: str) -> None:
         """Show RSS items for a specific feed"""
         try:
-            # Force fetch all RSS items for admin (bypass timing restrictions)
-            all_rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
+            # Use the already filtered items from admin RSS cache
+            if not self._admin_rss_items:
+                await query.edit_message_text(
+                    "📰 <b>RSS Cache Empty</b>\n\n"
+                    "Please return to feed selection to refresh the RSS items.",
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
             
-            # Filter items by feed source
-            rss_items = [item for item in all_rss_items if item.feed_source == feed_source]
+            # Filter items by feed source from cached filtered items
+            rss_items = [item for item in self._admin_rss_items if item.feed_source == feed_source]
             
             if not rss_items:
                 await query.edit_message_text(
-                    f"📰 <b>No Items in {feed_source.title()} Feed</b>\n\n"
-                    f"No RSS items found in the {feed_source} feed.",
+                    f"📰 <b>No Filtered Items in {feed_source.title()} Feed</b>\n\n"
+                    f"No RSS items from {feed_source} feed match the current keyword filters.",
                     parse_mode='HTML',
                     disable_web_page_preview=True
                 )
