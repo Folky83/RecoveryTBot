@@ -936,7 +936,8 @@ class MintosBot:
                     [InlineKeyboardButton(
                         f"{documents_status} Documents",
                         callback_data=f"notify_documents_{not preferences.get('documents', True)}"
-                    )]
+                    )],
+                    [InlineKeyboardButton("❌ Close", callback_data="cancel")]
                 ]
                 
                 reply_markup = InlineKeyboardMarkup(keyboard)
@@ -1335,7 +1336,8 @@ class MintosBot:
                 [InlineKeyboardButton(
                     f"{documents_status} Documents",
                     callback_data=f"notify_documents_{not preferences.get('documents', True)}"
-                )]
+                )],
+                [InlineKeyboardButton("❌ Close", callback_data="cancel")]
             ]
             
             reply_markup = InlineKeyboardMarkup(keyboard)
