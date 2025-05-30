@@ -1,6 +1,9 @@
 """
-RSS Reader for NASDAQ Baltic News
-Handles fetching, filtering, and processing of NASDAQ Baltic RSS feeds
+RSS Reader for Multiple News Sources
+Handles fetching, filtering, and processing of RSS feeds from:
+- NASDAQ Baltic News (with keyword filtering)
+- Mintos News (no filtering)
+- FFNews (with keyword filtering on titles)
 """
 import asyncio
 import aiohttp
@@ -16,12 +19,13 @@ logger = setup_logger(__name__)
 
 class RSSItem:
     """Represents a single RSS news item"""
-    def __init__(self, title: str, link: str, pub_date: str, guid: str, issuer: str):
+    def __init__(self, title: str, link: str, pub_date: str, guid: str, issuer: str, feed_source: str = "nasdaq"):
         self.title = title
         self.link = link
         self.pub_date = pub_date
         self.guid = guid
         self.issuer = issuer
+        self.feed_source = feed_source  # "nasdaq", "mintos", or "ffnews"
         self.published_dt = self._parse_date(pub_date)
     
     def _parse_date(self, date_str: str) -> datetime:
@@ -46,6 +50,7 @@ class RSSItem:
             'pub_date': self.pub_date,
             'guid': self.guid,
             'issuer': self.issuer,
+            'feed_source': self.feed_source,
             'timestamp': self.published_dt.isoformat()
         }
     
@@ -57,15 +62,23 @@ class RSSItem:
             link=data['link'],
             pub_date=data['pub_date'],
             guid=data['guid'],
-            issuer=data['issuer']
+            issuer=data['issuer'],
+            feed_source=data.get('feed_source', 'nasdaq')
         )
 
 class RSSReader(BaseManager):
-    """RSS Reader for NASDAQ Baltic news with keyword filtering"""
+    """RSS Reader for multiple news sources with keyword filtering"""
     
     def __init__(self):
         super().__init__('data/rss_cache.json')
-        self.rss_url = "https://nasdaqbaltic.com/statistics/en/news?rss=1&num=50&issuer="
+        
+        # Feed URLs
+        self.feed_urls = {
+            'nasdaq': "https://nasdaqbaltic.com/statistics/en/news?rss=1&num=50&issuer=",
+            'mintos': "https://www.mintos.com/blog/category/news/feed/",
+            'ffnews': "https://ffnews.com/category/newsarticle/feed/"
+        }
+        
         self.keywords_file = 'data/rss_keywords.txt'
         self.sent_items_file = 'data/rss_sent_items.json'
         self.user_preferences_file = 'data/rss_user_preferences.json'
@@ -213,14 +226,24 @@ class RSSReader(BaseManager):
         return sorted(list(self.keywords))
     
     def _matches_keywords(self, item: RSSItem) -> bool:
-        """Check if RSS item matches any keyword"""
+        """Check if RSS item matches any keyword based on feed source"""
+        # For Mintos feed, no filtering required
+        if item.feed_source == "mintos":
+            return True
+        
+        # For other feeds, apply keyword filtering
         if not self.keywords:
             logger.debug("No keywords set, including all RSS items")
             return True  # If no keywords set, include all items
         
-        # Check in title and issuer
-        text_to_check = f"{item.title} {item.issuer}".lower()
-        logger.debug(f"Checking RSS item: '{text_to_check}' against keywords: {self.keywords}")
+        # For FFNews, only check title
+        if item.feed_source == "ffnews":
+            text_to_check = item.title.lower()
+        else:
+            # For NASDAQ and other feeds, check title and issuer
+            text_to_check = f"{item.title} {item.issuer}".lower()
+        
+        logger.debug(f"Checking {item.feed_source} RSS item: '{text_to_check}' against keywords: {self.keywords}")
         
         for keyword in self.keywords:
             if keyword in text_to_check:
@@ -230,14 +253,14 @@ class RSSReader(BaseManager):
         logger.debug(f"RSS item did not match any keywords: {item.title}")
         return False
     
-    async def fetch_rss_feed(self) -> List[RSSItem]:
-        """Fetch and parse RSS feed"""
+    async def fetch_single_feed(self, feed_source: str, url: str) -> List[RSSItem]:
+        """Fetch and parse a single RSS feed"""
         try:
-            logger.info(f"Fetching RSS feed from {self.rss_url}")
+            logger.info(f"Fetching {feed_source} RSS feed from {url}")
             
             timeout = aiohttp.ClientTimeout(total=30)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(self.rss_url) as response:
+                async with session.get(url) as response:
                     if response.status == 200:
                         content = await response.text()
                         feed = feedparser.parse(content)
@@ -245,63 +268,79 @@ class RSSReader(BaseManager):
                         items = []
                         for entry in feed.entries:
                             try:
-                                # Extract CDATA content properly
                                 title = entry.title if hasattr(entry, 'title') else 'No title'
                                 
-                                # Try to extract issuer from different RSS fields
-                                issuer = 'Unknown issuer'
-                                if hasattr(entry, 'issuer'):
-                                    issuer = entry.issuer
-                                elif hasattr(entry, 'author'):
-                                    issuer = entry.author
-                                elif hasattr(entry, 'description'):
-                                    # Try to extract company name from description
-                                    description = entry.description
-                                    # Look for patterns like "Company Name -" or "Company Name:"
-                                    import re
-                                    match = re.search(r'^([^-:]+)[-:]', description)
-                                    if match:
-                                        issuer = match.group(1).strip()
-                                elif hasattr(entry, 'summary'):
-                                    # Try to extract from summary
-                                    summary = entry.summary
-                                    import re
-                                    match = re.search(r'^([^-:]+)[-:]', summary)
-                                    if match:
-                                        issuer = match.group(1).strip()
+                                # Handle different feed structures
+                                if feed_source == "mintos":
+                                    issuer = "Mintos"
+                                elif feed_source == "ffnews":
+                                    issuer = entry.author if hasattr(entry, 'author') else "FF News"
+                                else:  # nasdaq
+                                    # Try to extract issuer from different RSS fields
+                                    issuer = 'Unknown issuer'
+                                    if hasattr(entry, 'issuer'):
+                                        issuer = entry.issuer
+                                    elif hasattr(entry, 'author'):
+                                        issuer = entry.author
+                                    elif hasattr(entry, 'description'):
+                                        # Try to extract company name from description
+                                        description = entry.description
+                                        import re
+                                        match = re.search(r'^([^-:]+)[-:]', description)
+                                        if match:
+                                            issuer = match.group(1).strip()
+                                    elif hasattr(entry, 'summary'):
+                                        # Try to extract from summary
+                                        summary = entry.summary
+                                        import re
+                                        match = re.search(r'^([^-:]+)[-:]', summary)
+                                        if match:
+                                            issuer = match.group(1).strip()
+                                    
+                                    # Also try to extract issuer from title if it contains company patterns
+                                    if issuer == 'Unknown issuer':
+                                        title_lower = title.lower()
+                                        for keyword in self.keywords:
+                                            if keyword.lower() in title_lower:
+                                                issuer = keyword
+                                                break
                                 
-                                # Also try to extract issuer from title if it contains company patterns
-                                if issuer == 'Unknown issuer':
-                                    title_lower = title.lower()
-                                    for keyword in self.keywords:
-                                        if keyword.lower() in title_lower:
-                                            issuer = keyword
-                                            break
-                                
-                                # Debug: log the actual issuer found
-                                logger.debug(f"RSS entry - Title: '{title}', Issuer: '{issuer}'")
+                                logger.debug(f"{feed_source} RSS entry - Title: '{title}', Issuer: '{issuer}'")
                                 
                                 item = RSSItem(
                                     title=title,
                                     link=entry.link,
                                     pub_date=entry.published,
                                     guid=entry.guid,
-                                    issuer=issuer
+                                    issuer=issuer,
+                                    feed_source=feed_source
                                 )
                                 items.append(item)
                             except Exception as e:
-                                logger.warning(f"Error parsing RSS entry: {e}")
+                                logger.warning(f"Error parsing {feed_source} RSS entry: {e}")
                                 continue
                         
-                        logger.info(f"Fetched {len(items)} RSS items")
+                        logger.info(f"Fetched {len(items)} items from {feed_source}")
                         return items
                     else:
-                        logger.error(f"RSS feed fetch failed with status: {response.status}")
+                        logger.error(f"{feed_source} RSS feed fetch failed with status: {response.status}")
                         return []
                         
         except Exception as e:
-            logger.error(f"Error fetching RSS feed: {e}")
+            logger.error(f"Error fetching {feed_source} RSS feed: {e}")
             return []
+
+    async def fetch_rss_feed(self) -> List[RSSItem]:
+        """Fetch and parse all RSS feeds"""
+        all_items = []
+        
+        # Fetch from all configured feeds
+        for feed_source, url in self.feed_urls.items():
+            items = await self.fetch_single_feed(feed_source, url)
+            all_items.extend(items)
+        
+        logger.info(f"Fetched total of {len(all_items)} RSS items from all feeds")
+        return all_items
     
     def get_new_items(self, items: List[RSSItem]) -> List[RSSItem]:
         """Filter out already sent items and apply keyword filtering"""
@@ -333,20 +372,36 @@ class RSSReader(BaseManager):
         self._save_sent_items()
     
     def format_rss_message(self, item: RSSItem) -> str:
-        """Format RSS item for Telegram message"""
+        """Format RSS item for Telegram message based on feed source"""
         # Format date for display
         try:
             display_date = item.published_dt.strftime("%Y-%m-%d %H:%M")
         except:
             display_date = "Unknown date"
         
-        message = (
-            f"📰 <b>NASDAQ Baltic News</b>\n\n"
-            f"<b>{item.issuer}</b>\n"
-            f"{item.title}\n\n"
-            f"📅 {display_date}\n"
-            f"🔗 <a href=\"{item.link}\">Read more</a>"
-        )
+        if item.feed_source == "mintos":
+            message = (
+                f"📈 <b>Mintos News</b>\n\n"
+                f"<b>{item.title}</b>\n\n"
+                f"📅 {display_date}\n"
+                f"🔗 <a href=\"{item.link}\">Read more</a>"
+            )
+        elif item.feed_source == "ffnews":
+            message = (
+                f"💼 <b>Fintech Finance News</b>\n\n"
+                f"<b>{item.title}</b>\n\n"
+                f"✍️ {item.issuer}\n"
+                f"📅 {display_date}\n"
+                f"🔗 <a href=\"{item.link}\">Read more</a>"
+            )
+        else:  # nasdaq
+            message = (
+                f"📰 <b>NASDAQ Baltic News</b>\n\n"
+                f"<b>{item.issuer}</b>\n"
+                f"{item.title}\n\n"
+                f"📅 {display_date}\n"
+                f"🔗 <a href=\"{item.link}\">Read more</a>"
+            )
         
         return message
 
