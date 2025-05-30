@@ -838,6 +838,16 @@ class MintosBot:
                 await self._send_today_updates_to_channel(chat_id, target_channel, target_date)
                 return
                 
+            elif query.data == "admin_send_rss":
+                # Check if user is admin
+                if not await self.is_admin(update.effective_user.id):
+                    await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
+                    return
+                
+                # Show RSS items selection
+                await self._show_rss_items_selection(query)
+                return
+                
             elif query.data == "admin_exit":
                 # Close the admin panel
                 await query.edit_message_text("✅ Admin panel closed.", disable_web_page_preview=True)
@@ -855,6 +865,7 @@ class MintosBot:
                     [InlineKeyboardButton("🔄 Refresh Updates", callback_data="admin_refresh_updates")],
                     [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
                     [InlineKeyboardButton("📤 Send Updates", callback_data="admin_trigger_today")],
+                    [InlineKeyboardButton("📰 Send RSS Items", callback_data="admin_send_rss")],
                     [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
                 ]
                 
@@ -880,6 +891,16 @@ class MintosBot:
                     parse_mode='HTML',
                     disable_web_page_preview=True
                 )
+                return
+                
+            elif query.data.startswith("rss_item_select_"):
+                # Handle RSS item selection for sending
+                await self._handle_rss_item_selection(query)
+                return
+                
+            elif query.data.startswith("send_rss_to_"):
+                # Handle sending selected RSS items to a user/channel
+                await self._handle_send_rss_items(query)
                 return
                 
             elif query.data == "cancel":
@@ -2764,6 +2785,7 @@ class MintosBot:
             [InlineKeyboardButton("🔄 Refresh Updates", callback_data="admin_refresh_updates")],
             [InlineKeyboardButton("📄 Refresh Documents", callback_data="admin_refresh_documents")],
             [InlineKeyboardButton("📤 Send Updates", callback_data="admin_trigger_today")],
+            [InlineKeyboardButton("📰 Send RSS Items", callback_data="admin_send_rss")],
             [InlineKeyboardButton("❌ Exit", callback_data="admin_exit")]
         ]
         
@@ -2777,6 +2799,306 @@ class MintosBot:
             disable_web_page_preview=True,
             parse_mode='HTML'
         )
+
+    async def _show_rss_items_selection(self, query) -> None:
+        """Show available RSS items for selection"""
+        try:
+            # Fetch current RSS items
+            rss_items = await self.rss_reader.fetch_rss_feed()
+            
+            if not rss_items:
+                await query.edit_message_text(
+                    "📰 <b>No RSS Items Available</b>\n\n"
+                    "No RSS items found in the current feed.",
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Show first few items with selection buttons
+            items_per_page = 5
+            total_items = len(rss_items)
+            
+            message_text = f"📰 <b>Select RSS Items to Send</b>\n\n"
+            message_text += f"Found {total_items} RSS items. Select items to send:\n\n"
+            
+            keyboard = []
+            
+            # Show first 5 items
+            for i, item in enumerate(rss_items[:items_per_page]):
+                # Truncate title for button display
+                truncated_title = item.title[:40] + "..." if len(item.title) > 40 else item.title
+                button_text = f"📄 {truncated_title}"
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"rss_item_select_{i}")])
+            
+            # Add navigation and control buttons
+            nav_buttons = []
+            if total_items > items_per_page:
+                nav_buttons.append(InlineKeyboardButton("Show More", callback_data="rss_show_more_0"))
+            
+            keyboard.append([InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")])
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(
+                message_text,
+                reply_markup=reply_markup,
+                parse_mode='HTML',
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Error showing RSS items selection: {e}")
+            await query.edit_message_text(
+                "⚠️ Error loading RSS items. Please try again.",
+                disable_web_page_preview=True
+            )
+
+    async def _handle_rss_item_selection(self, query) -> None:
+        """Handle RSS item selection and show send options"""
+        try:
+            item_index = int(query.data.split("_")[-1])
+            
+            # Fetch RSS items again to get the selected item
+            rss_items = await self.rss_reader.fetch_rss_feed()
+            
+            if item_index >= len(rss_items):
+                await query.edit_message_text(
+                    "⚠️ Invalid item selection. Please try again.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            selected_item = rss_items[item_index]
+            
+            # Show the selected item and ask where to send it
+            message_text = f"📰 <b>Selected RSS Item</b>\n\n"
+            message_text += f"<b>Title:</b> {html.escape(selected_item.title)}\n"
+            message_text += f"<b>Issuer:</b> {html.escape(selected_item.issuer)}\n"
+            message_text += f"<b>Date:</b> {selected_item.pub_date}\n\n"
+            message_text += "Where would you like to send this item?\n"
+            
+            # Get list of users for sending options
+            users = self.user_manager.get_all_users()
+            
+            keyboard = []
+            
+            # Add option to send to all users
+            keyboard.append([InlineKeyboardButton("📢 Send to All Users", callback_data=f"send_rss_to_all_{item_index}")])
+            
+            # Add individual user options (show first few)
+            user_count = 0
+            for user_id in users:
+                if user_count >= 3:  # Limit to first 3 users to avoid too many buttons
+                    break
+                username = self.user_manager.get_user_info(user_id)
+                display_name = f"@{username}" if username else f"User {user_id}"
+                keyboard.append([InlineKeyboardButton(f"👤 {display_name}", callback_data=f"send_rss_to_user_{user_id}_{item_index}")])
+                user_count += 1
+            
+            # Add predefined channel option
+            keyboard.append([InlineKeyboardButton("📺 Mintos Unofficial News Channel", callback_data=f"send_rss_to_channel_-1002373856504_{item_index}")])
+            
+            # Add option for custom channel
+            keyboard.append([InlineKeyboardButton("📺 Send to Custom Channel", callback_data=f"send_rss_to_custom_{item_index}")])
+            
+            # Add back button
+            keyboard.append([InlineKeyboardButton("« Back to RSS Items", callback_data="admin_send_rss")])
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(
+                message_text,
+                reply_markup=reply_markup,
+                parse_mode='HTML',
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Error handling RSS item selection: {e}")
+            await query.edit_message_text(
+                "⚠️ Error processing selection. Please try again.",
+                disable_web_page_preview=True
+            )
+
+    async def _handle_send_rss_items(self, query) -> None:
+        """Handle sending RSS items to selected destination"""
+        try:
+            callback_parts = query.data.split("_")
+            send_type = callback_parts[3]  # all, user, or custom
+            
+            if send_type == "all":
+                item_index = int(callback_parts[4])
+                await self._send_rss_to_all_users(query, item_index)
+            elif send_type == "user":
+                user_id = callback_parts[4]
+                item_index = int(callback_parts[5])
+                await self._send_rss_to_user(query, user_id, item_index)
+            elif send_type == "channel":
+                channel_id = callback_parts[4]
+                item_index = int(callback_parts[5])
+                await self._send_rss_to_predefined_channel(query, channel_id, item_index)
+            elif send_type == "custom":
+                item_index = int(callback_parts[4])
+                await self._send_rss_to_custom_channel(query, item_index)
+            
+        except Exception as e:
+            logger.error(f"Error handling send RSS items: {e}")
+            await query.edit_message_text(
+                "⚠️ Error sending RSS items. Please try again.",
+                disable_web_page_preview=True
+            )
+
+    async def _send_rss_to_all_users(self, query, item_index: int) -> None:
+        """Send RSS item to all users"""
+        try:
+            # Fetch RSS items
+            rss_items = await self.rss_reader.fetch_rss_feed()
+            
+            if item_index >= len(rss_items):
+                await query.edit_message_text(
+                    "⚠️ Invalid item selection.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            selected_item = rss_items[item_index]
+            
+            await query.edit_message_text(
+                "🔄 Sending RSS item to all users...",
+                disable_web_page_preview=True
+            )
+            
+            # Get all users
+            users = self.user_manager.get_all_users()
+            message = self.rss_reader.format_rss_message(selected_item)
+            
+            successful_sends = 0
+            for user_id in users:
+                try:
+                    await self.send_message(
+                        chat_id=user_id,
+                        text=message,
+                        parse_mode='HTML',
+                        disable_web_page_preview=True
+                    )
+                    successful_sends += 1
+                    await asyncio.sleep(0.1)  # Rate limiting
+                except Exception as e:
+                    logger.error(f"Error sending RSS to user {user_id}: {e}")
+                    if "bot was blocked" in str(e).lower():
+                        self.user_manager.remove_user(user_id)
+            
+            # Add back button
+            keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(
+                f"✅ <b>RSS Item Sent Successfully</b>\n\n"
+                f"Sent to {successful_sends} users.\n\n"
+                f"<b>Item:</b> {html.escape(selected_item.title)}",
+                reply_markup=reply_markup,
+                parse_mode='HTML',
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Error sending RSS to all users: {e}")
+            await query.edit_message_text(
+                "⚠️ Error sending RSS item to users.",
+                disable_web_page_preview=True
+            )
+
+    async def _send_rss_to_user(self, query, user_id: str, item_index: int) -> None:
+        """Send RSS item to specific user"""
+        try:
+            # Fetch RSS items
+            rss_items = await self.rss_reader.fetch_rss_feed()
+            
+            if item_index >= len(rss_items):
+                await query.edit_message_text(
+                    "⚠️ Invalid item selection.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            selected_item = rss_items[item_index]
+            
+            await query.edit_message_text(
+                f"🔄 Sending RSS item to user {user_id}...",
+                disable_web_page_preview=True
+            )
+            
+            message = self.rss_reader.format_rss_message(selected_item)
+            
+            try:
+                await self.send_message(
+                    chat_id=user_id,
+                    text=message,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                
+                # Add back button
+                keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await query.edit_message_text(
+                    f"✅ <b>RSS Item Sent Successfully</b>\n\n"
+                    f"Sent to user {user_id}.\n\n"
+                    f"<b>Item:</b> {html.escape(selected_item.title)}",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                
+            except Exception as e:
+                logger.error(f"Error sending RSS to user {user_id}: {e}")
+                await query.edit_message_text(
+                    f"⚠️ Error sending RSS item to user {user_id}: {str(e)}",
+                    disable_web_page_preview=True
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in send RSS to user: {e}")
+            await query.edit_message_text(
+                "⚠️ Error sending RSS item.",
+                disable_web_page_preview=True
+            )
+
+    async def _send_rss_to_custom_channel(self, query, item_index: int) -> None:
+        """Send RSS item to custom channel"""
+        try:
+            # Fetch RSS items
+            rss_items = await self.rss_reader.fetch_rss_feed()
+            
+            if item_index >= len(rss_items):
+                await query.edit_message_text(
+                    "⚠️ Invalid item selection.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            selected_item = rss_items[item_index]
+            
+            await query.edit_message_text(
+                f"📝 <b>Send RSS Item to Custom Channel</b>\n\n"
+                f"<b>Selected Item:</b> {html.escape(selected_item.title)}\n\n"
+                f"Please enter the channel ID to send this RSS item to.\n\n"
+                f"Format: -100xxxxxxxxxx\n"
+                f"Example: -1001234567890\n\n"
+                f"Reply directly to this message with the channel ID.",
+                parse_mode='HTML',
+                disable_web_page_preview=True
+            )
+            
+            # Store the item index for later use when user responds
+            # We'll need to implement a message handler for this
+            
+        except Exception as e:
+            logger.error(f"Error in send RSS to custom channel: {e}")
+            await query.edit_message_text(
+                "⚠️ Error processing request.",
+                disable_web_page_preview=True
+            )
 
 if __name__ == "__main__":
     bot = MintosBot()

@@ -1,0 +1,3 @@
+[console_scripts]
+mintos-bot = mintos_bot.run:main
+mintos-bot-dashboard = mintos_bot.main:main
