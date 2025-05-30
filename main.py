@@ -33,10 +33,15 @@ class UpdateItem:
     description: str
     year: Optional[int] = None
     status: Optional[str] = None
+    substatus: Optional[str] = None
     recovered_amount: Optional[float] = None
     remaining_amount: Optional[float] = None
+    expected_recovery_from: Optional[float] = None
+    expected_recovery_to: Optional[float] = None
     recovery_year_from: Optional[int] = None
     recovery_year_to: Optional[int] = None
+    is_recovered_amount_increased: Optional[bool] = None
+    is_remaining_amount_increased: Optional[bool] = None
 
 @dataclass
 class CompanyUpdate:
@@ -93,11 +98,16 @@ class DashboardManager:
                             date=item.get('date', ''),
                             description=item.get('description', ''),
                             year=year_data.get('year'),
-                            status=year_data.get('status', '').replace('_', ' ').title(),
+                            status=item.get('status', year_data.get('status', '')).replace('_', ' ').title(),
+                            substatus=item.get('substatus', year_data.get('substatus', '')),
                             recovered_amount=_convert_to_float(item.get('recoveredAmount')),
                             remaining_amount=_convert_to_float(item.get('remainingAmount')),
+                            expected_recovery_from=_convert_to_float(item.get('expectedRecoveryFrom')),
+                            expected_recovery_to=_convert_to_float(item.get('expectedRecoveryTo')),
                             recovery_year_from=item.get('expectedRecoveryYearFrom'),
-                            recovery_year_to=item.get('expectedRecoveryYearTo')
+                            recovery_year_to=item.get('expectedRecoveryYearTo'),
+                            is_recovered_amount_increased=item.get('isRecoveredAmountIncreased'),
+                            is_remaining_amount_increased=item.get('isRemainingAmountIncreased')
                         ))
 
                 self.updates.append(CompanyUpdate(
@@ -257,7 +267,13 @@ class DashboardManager:
                        unsafe_allow_html=True)
 
             for item in company.items:
-                with st.expander(f"📅 {item.year} - {item.status or 'No Status'}"):
+                # Enhanced status display with substatus
+                status_display = item.status or 'No Status'
+                if item.substatus and item.substatus.strip():
+                    substatus_clean = item.substatus.replace('_', ' ').title()
+                    status_display = f"{status_display} - {substatus_clean}"
+                
+                with st.expander(f"📅 {item.year} - {status_display}"):
                     st.markdown(f"<p class='update-date'>🕒 {item.date}</p>", 
                               unsafe_allow_html=True)
                     
@@ -280,26 +296,71 @@ class DashboardManager:
                     st.markdown(f"<div class='update-description'>{clean_description}</div>",
                               unsafe_allow_html=True)
 
-                    if item.recovered_amount or item.remaining_amount:
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if item.recovered_amount is not None:
-                                try:
-                                    st.metric("Recovered Amount", 
-                                            f"€{float(item.recovered_amount):,.2f}")
-                                except (ValueError, TypeError):
-                                    st.metric("Recovered Amount", "€0.00")
-                        with col2:
-                            if item.remaining_amount is not None:
-                                try:
-                                    st.metric("Remaining Amount", 
-                                            f"€{float(item.remaining_amount):,.2f}")
-                                except (ValueError, TypeError):
-                                    st.metric("Remaining Amount", "€0.00")
-
-                    if item.recovery_year_from and item.recovery_year_to:
-                        st.info(f"Expected Recovery Timeline: "
-                               f"{item.recovery_year_from} - {item.recovery_year_to}")
+                    # Enhanced recovery information display
+                    has_financial_data = (item.recovered_amount is not None or 
+                                        item.remaining_amount is not None or
+                                        item.expected_recovery_from is not None or 
+                                        item.expected_recovery_to is not None)
+                    
+                    if has_financial_data:
+                        st.markdown("### 💰 Recovery Information")
+                        
+                        # Main amounts
+                        if item.recovered_amount is not None or item.remaining_amount is not None:
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if item.recovered_amount is not None:
+                                    delta = None
+                                    if item.is_recovered_amount_increased is True:
+                                        delta = "↗️ Increased"
+                                    elif item.is_recovered_amount_increased is False:
+                                        delta = "↘️ Decreased"
+                                    
+                                    try:
+                                        amount_str = f"€{float(item.recovered_amount):,.2f}"
+                                        st.metric("Recovered Amount", amount_str, delta=delta)
+                                    except (ValueError, TypeError):
+                                        st.metric("Recovered Amount", "€0.00", delta=delta)
+                            
+                            with col2:
+                                if item.remaining_amount is not None:
+                                    delta = None
+                                    if item.is_remaining_amount_increased is True:
+                                        delta = "↗️ Increased"
+                                    elif item.is_remaining_amount_increased is False:
+                                        delta = "↘️ Decreased"
+                                    
+                                    try:
+                                        amount_str = f"€{float(item.remaining_amount):,.2f}"
+                                        st.metric("Remaining Amount", amount_str, delta=delta)
+                                    except (ValueError, TypeError):
+                                        st.metric("Remaining Amount", "€0.00", delta=delta)
+                        
+                        # Recovery percentages
+                        if item.expected_recovery_from is not None or item.expected_recovery_to is not None:
+                            st.markdown("**Expected Recovery Rate:**")
+                            recovery_info = []
+                            
+                            if item.expected_recovery_from is not None and item.expected_recovery_to is not None:
+                                recovery_info.append(f"{item.expected_recovery_from:.1f}% - {item.expected_recovery_to:.1f}%")
+                            elif item.expected_recovery_to is not None:
+                                recovery_info.append(f"Up to {item.expected_recovery_to:.1f}%")
+                            elif item.expected_recovery_from is not None:
+                                recovery_info.append(f"From {item.expected_recovery_from:.1f}%")
+                            
+                            if recovery_info:
+                                st.info(" | ".join(recovery_info))
+                        
+                        # Recovery timeline
+                        if item.recovery_year_from and item.recovery_year_to:
+                            st.markdown("**Expected Recovery Timeline:**")
+                            if item.recovery_year_from == item.recovery_year_to:
+                                st.info(f"Expected by {item.recovery_year_to}")
+                            else:
+                                st.info(f"{item.recovery_year_from} - {item.recovery_year_to}")
+                        elif item.recovery_year_to:
+                            st.markdown("**Expected Recovery Timeline:**")
+                            st.info(f"Expected by {item.recovery_year_to}")
 
                     st.markdown("---")
                     
