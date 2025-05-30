@@ -2648,16 +2648,24 @@ class MintosBot:
                 await asyncio.sleep(5 * 60)
 
     async def scheduled_campaign_updates(self) -> None:
-        """Handle campaign checks every 5 minutes with 4-hour delay for non-admin users"""
+        """Handle campaign checks every 10 minutes on weekdays between 6 AM and 8 PM with 4-hour delay for non-admin users"""
         while True:
             try:
-                await asyncio.sleep(5 * 60)  # Check every 5 minutes
+                await asyncio.sleep(10 * 60)  # Check every 10 minutes
                 
-                logger.info("Running scheduled campaign check")
-                await self.check_campaigns()
+                # Check if we should run the campaign check (weekdays only, 6 AM to 8 PM)
+                now = datetime.now()
+                weekday = now.weekday()  # 0=Monday, 6=Sunday
+                hour = now.hour
                 
-                # Also check for ready pending campaigns
-                await self.process_pending_campaigns()
+                if weekday < 5 and 6 <= hour < 20:  # Monday-Friday, 6 AM to 8 PM
+                    logger.info("Running scheduled campaign check")
+                    await self.check_campaigns()
+                    
+                    # Also check for ready pending campaigns
+                    await self.process_pending_campaigns()
+                else:
+                    logger.debug(f"Skipping campaign check - outside scheduled hours (weekday: {weekday}, hour: {hour})")
                 
             except asyncio.CancelledError:
                 logger.info("Scheduled campaign updates cancelled")
