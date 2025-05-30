@@ -864,8 +864,8 @@ class MintosBot:
                     await query.edit_message_text("⚠️ Access denied. Only admin can use this feature.", disable_web_page_preview=True)
                     return
                 
-                # Show RSS items selection
-                await self._show_rss_items_selection(query)
+                # Show RSS feed selection first
+                await self._show_rss_feed_selection(query)
                 return
                 
             elif query.data == "admin_exit":
@@ -1035,6 +1035,12 @@ class MintosBot:
                     reply_markup=reply_markup,
                     parse_mode='HTML'
                 )
+                return
+                
+            elif query.data.startswith("rss_feed_select_"):
+                # Handle RSS feed selection
+                feed_source = query.data.replace("rss_feed_select_", "")
+                await self._show_rss_items_for_feed(query, feed_source)
                 return
                 
             elif query.data.startswith("rss_item_select_"):
@@ -3047,41 +3053,43 @@ class MintosBot:
             parse_mode='HTML'
         )
 
-    async def _show_rss_items_selection(self, query) -> None:
-        """Show available RSS items for selection"""
+    async def _show_rss_feed_selection(self, query) -> None:
+        """Show RSS feed selection for admin"""
         try:
-            # Force fetch all RSS items for admin (bypass timing restrictions)
+            # Force fetch all RSS items to get feed counts
             rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
             
             if not rss_items:
                 await query.edit_message_text(
                     "📰 <b>No RSS Items Available</b>\n\n"
-                    "No RSS items found in the current feed.",
+                    "No RSS items found in any feed.",
                     parse_mode='HTML',
                     disable_web_page_preview=True
                 )
                 return
             
-            # Show first few items with selection buttons
-            items_per_page = 5
-            total_items = len(rss_items)
+            # Count items by feed source
+            feed_counts = {}
+            for item in rss_items:
+                feed_source = item.feed_source
+                feed_counts[feed_source] = feed_counts.get(feed_source, 0) + 1
             
-            message_text = f"📰 <b>Select RSS Items to Send</b>\n\n"
-            message_text += f"Found {total_items} RSS items. Select items to send:\n\n"
+            message_text = "📰 <b>Select RSS Feed</b>\n\n"
+            message_text += "Choose which RSS feed to browse:\n\n"
             
             keyboard = []
             
-            # Show first 5 items
-            for i, item in enumerate(rss_items[:items_per_page]):
-                # Truncate title for button display
-                truncated_title = item.title[:40] + "..." if len(item.title) > 40 else item.title
-                button_text = f"📄 {truncated_title}"
-                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"rss_item_select_{i}")])
+            # Add buttons for each feed with item counts
+            feed_names = {
+                'nasdaq': '📈 NASDAQ Baltic',
+                'mintos': '🏦 Mintos News', 
+                'ffnews': '📰 FF News'
+            }
             
-            # Add navigation and control buttons
-            nav_buttons = []
-            if total_items > items_per_page:
-                nav_buttons.append(InlineKeyboardButton("Show More", callback_data="rss_show_more_0"))
+            for feed_source, count in feed_counts.items():
+                feed_name = feed_names.get(feed_source, feed_source.title())
+                button_text = f"{feed_name} ({count} items)"
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"rss_feed_select_{feed_source}")])
             
             keyboard.append([InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")])
             
@@ -3094,7 +3102,72 @@ class MintosBot:
             )
             
         except Exception as e:
-            logger.error(f"Error showing RSS items selection: {e}")
+            logger.error(f"Error showing RSS feed selection: {e}")
+            await query.edit_message_text(
+                "⚠️ Error loading RSS feeds. Please try again.",
+                disable_web_page_preview=True
+            )
+
+    async def _show_rss_items_for_feed(self, query, feed_source: str) -> None:
+        """Show RSS items for a specific feed"""
+        try:
+            # Force fetch all RSS items for admin (bypass timing restrictions)
+            all_rss_items = await self.rss_reader.fetch_all_rss_feeds_force()
+            
+            # Filter items by feed source
+            rss_items = [item for item in all_rss_items if item.feed_source == feed_source]
+            
+            if not rss_items:
+                await query.edit_message_text(
+                    f"📰 <b>No Items in {feed_source.title()} Feed</b>\n\n"
+                    f"No RSS items found in the {feed_source} feed.",
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                return
+            
+            # Show first few items with selection buttons
+            items_per_page = 5
+            total_items = len(rss_items)
+            
+            feed_names = {
+                'nasdaq': '📈 NASDAQ Baltic',
+                'mintos': '🏦 Mintos News', 
+                'ffnews': '📰 FF News'
+            }
+            feed_name = feed_names.get(feed_source, feed_source.title())
+            
+            message_text = f"📰 <b>{feed_name} - Select Items</b>\n\n"
+            message_text += f"Found {total_items} items. Select items to send:\n\n"
+            
+            keyboard = []
+            
+            # Show first 5 items
+            for i, item in enumerate(rss_items[:items_per_page]):
+                # Truncate title for button display
+                truncated_title = item.title[:40] + "..." if len(item.title) > 40 else item.title
+                button_text = f"📄 {truncated_title}"
+                # Store the original index in all_rss_items for proper item selection
+                original_index = all_rss_items.index(item)
+                keyboard.append([InlineKeyboardButton(button_text, callback_data=f"rss_item_select_{original_index}")])
+            
+            # Add navigation and control buttons
+            nav_buttons = []
+            if total_items > items_per_page:
+                nav_buttons.append(InlineKeyboardButton("Show More", callback_data=f"rss_show_more_{feed_source}_0"))
+            
+            keyboard.append([InlineKeyboardButton("« Back to Feed Selection", callback_data="admin_send_rss")])
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(
+                message_text,
+                reply_markup=reply_markup,
+                parse_mode='HTML',
+                disable_web_page_preview=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Error showing RSS items for {feed_source}: {e}")
             await query.edit_message_text(
                 "⚠️ Error loading RSS items. Please try again.",
                 disable_web_page_preview=True
