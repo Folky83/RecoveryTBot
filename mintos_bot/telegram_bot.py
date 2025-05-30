@@ -637,7 +637,8 @@ class MintosBot:
                     keyboard = []
                     for i, user_id in enumerate(users, 1):
                         username = self.user_manager.get_user_info(user_id) or "Unknown"
-                        button_text = f"{i}. {username} ({user_id})"
+                        display_name = f"@{username}" if username != "Unknown" else f"User {user_id}"
+                        button_text = f"{i}. {display_name}"
                         
                         # Add date parameter to callback data if specified
                         if target_date:
@@ -646,6 +647,13 @@ class MintosBot:
                             callback_data = f"trigger_today_{user_id}"
                             
                         keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+                    
+                    # Add predefined channel option
+                    if target_date:
+                        mintos_callback = f"trigger_today_-1002373856504_{target_date}"
+                    else:
+                        mintos_callback = "trigger_today_-1002373856504"
+                    keyboard.append([InlineKeyboardButton("📺 Mintos Unofficial News Channel", callback_data=mintos_callback)])
                     
                     # Add custom channel button
                     if target_date:
@@ -3059,6 +3067,63 @@ class MintosBot:
                 
         except Exception as e:
             logger.error(f"Error in send RSS to user: {e}")
+            await query.edit_message_text(
+                "⚠️ Error sending RSS item.",
+                disable_web_page_preview=True
+            )
+
+    async def _send_rss_to_predefined_channel(self, query, channel_id: str, item_index: int) -> None:
+        """Send RSS item to predefined channel"""
+        try:
+            # Fetch RSS items
+            rss_items = await self.rss_reader.fetch_rss_feed()
+            
+            if item_index >= len(rss_items):
+                await query.edit_message_text(
+                    "⚠️ Invalid item selection.",
+                    disable_web_page_preview=True
+                )
+                return
+            
+            selected_item = rss_items[item_index]
+            
+            await query.edit_message_text(
+                f"🔄 Sending RSS item to Mintos Unofficial News Channel...",
+                disable_web_page_preview=True
+            )
+            
+            message = self.rss_reader.format_rss_message(selected_item)
+            
+            try:
+                await self.send_message(
+                    chat_id=channel_id,
+                    text=message,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                
+                # Add back button
+                keyboard = [[InlineKeyboardButton("« Back to Admin Panel", callback_data="admin_back")]]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await query.edit_message_text(
+                    f"✅ <b>RSS Item Sent Successfully</b>\n\n"
+                    f"Sent to Mintos Unofficial News Channel.\n\n"
+                    f"<b>Item:</b> {html.escape(selected_item.title)}",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                )
+                
+            except Exception as e:
+                logger.error(f"Error sending RSS to channel {channel_id}: {e}")
+                await query.edit_message_text(
+                    f"⚠️ Error sending RSS item to channel: {str(e)}",
+                    disable_web_page_preview=True
+                )
+                
+        except Exception as e:
+            logger.error(f"Error in send RSS to predefined channel: {e}")
             await query.edit_message_text(
                 "⚠️ Error sending RSS item.",
                 disable_web_page_preview=True
