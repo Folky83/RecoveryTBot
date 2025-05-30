@@ -129,7 +129,18 @@ class UserManager:
     def set_feed_preference(self, chat_id, feed_source, enabled):
         """Set RSS notifications preference for a specific feed"""
         chat_id = str(chat_id)
+        
+        # Initialize or handle legacy format
         if chat_id not in self.rss_preferences:
+            self.rss_preferences[chat_id] = {}
+        elif isinstance(self.rss_preferences[chat_id], bool):
+            # Convert legacy boolean format to dictionary
+            legacy_value = self.rss_preferences[chat_id]
+            feeds = ['nasdaq', 'mintos', 'ffnews']
+            self.rss_preferences[chat_id] = {feed: legacy_value for feed in feeds}
+        
+        # Ensure it's a dictionary before setting
+        if not isinstance(self.rss_preferences[chat_id], dict):
             self.rss_preferences[chat_id] = {}
         
         self.rss_preferences[chat_id][feed_source] = enabled

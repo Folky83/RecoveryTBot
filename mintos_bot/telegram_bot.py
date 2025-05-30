@@ -2662,7 +2662,7 @@ class MintosBot:
             # Group items by feed source and send to appropriate users
             items_by_feed = {}
             for item in new_items:
-                feed_source = item.source
+                feed_source = item.feed_source
                 if feed_source not in items_by_feed:
                     items_by_feed[feed_source] = []
                 items_by_feed[feed_source].append(item)

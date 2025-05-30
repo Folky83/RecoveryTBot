@@ -1,3 +1,7 @@
 {
-  "114691530": true
+  "114691530": {
+    "nasdaq": true,
+    "mintos": false,
+    "ffnews": false
+  }
 }
