@@ -1,0 +1,39 @@
+2025-06-06 12:13:06,744 - httpx - INFO - HTTP Request: POST https://api.telegram.org/botAAHMyYs3_hxWBA-u66pLEgNKobyrGE1pHn8/getMe "HTTP/1.1 404 Not Found"
+2025-06-06 12:13:06,745 - mintos_bot.telegram_bot - ERROR - Failed to connect to Telegram: Not Found
+2025-06-06 12:13:06,745 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-06-06 12:13:06,745 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 328, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-06-06 12:13:06,746 - mintos_bot.telegram_bot - INFO - Retrying (attempt 3/3)...
+2025-06-06 12:13:11,755 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-06-06 12:13:11,847 - httpx - INFO - HTTP Request: POST https://api.telegram.org/botAAHMyYs3_hxWBA-u66pLEgNKobyrGE1pHn8/deleteWebhook "HTTP/1.1 404 Not Found"
+2025-06-06 12:13:11,849 - mintos_bot.telegram_bot - ERROR - Error during application cleanup: Not Found
+2025-06-06 12:13:11,850 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-06-06 12:13:11,850 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-06-06 12:13:11,870 - httpx - INFO - HTTP Request: POST https://api.telegram.org/botAAHMyYs3_hxWBA-u66pLEgNKobyrGE1pHn8/deleteWebhook "HTTP/1.1 404 Not Found"
+2025-06-06 12:13:11,872 - mintos_bot.telegram_bot - ERROR - Error during application cleanup: Not Found
+2025-06-06 12:13:11,873 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-06-06 12:13:13,881 - mintos_bot.telegram_bot - INFO - Starting bot initialization...
+2025-06-06 12:13:13,882 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-06-06 12:13:13,901 - httpx - INFO - HTTP Request: POST https://api.telegram.org/botAAHMyYs3_hxWBA-u66pLEgNKobyrGE1pHn8/deleteWebhook "HTTP/1.1 404 Not Found"
+2025-06-06 12:13:13,902 - mintos_bot.telegram_bot - ERROR - Error during application cleanup: Not Found
+2025-06-06 12:13:13,902 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+2025-06-06 12:13:15,911 - mintos_bot.telegram_bot - INFO - Creating application instance...
+2025-06-06 12:13:16,595 - httpx - INFO - HTTP Request: POST https://api.telegram.org/botAAHMyYs3_hxWBA-u66pLEgNKobyrGE1pHn8/getMe "HTTP/1.1 404 Not Found"
+2025-06-06 12:13:16,596 - mintos_bot.telegram_bot - ERROR - Failed to connect to Telegram: Not Found
+2025-06-06 12:13:16,596 - mintos_bot.telegram_bot - ERROR - Bot initialization failed
+2025-06-06 12:13:16,596 - mintos_bot.telegram_bot - ERROR - Runtime error: Bot initialization failed
+Traceback (most recent call last):
+  File "C:\Users\Gebruiker\AppData\Roaming\Python\Python313\site-packages\mintos_bot\telegram_bot.py", line 328, in run
+    raise RuntimeError("Bot initialization failed")
+RuntimeError: Bot initialization failed
+2025-06-06 12:13:16,597 - mintos_bot.telegram_bot - ERROR - Max retries reached
+2025-06-06 12:13:16,597 - mintos_bot.telegram_bot - INFO - Starting cleanup process...
+2025-06-06 12:13:16,614 - httpx - INFO - HTTP Request: POST https://api.telegram.org/botAAHMyYs3_hxWBA-u66pLEgNKobyrGE1pHn8/deleteWebhook "HTTP/1.1 404 Not Found"
+2025-06-06 12:13:16,615 - mintos_bot.telegram_bot - ERROR - Error during application cleanup: Not Found
+2025-06-06 12:13:16,615 - mintos_bot.telegram_bot - INFO - Cleanup completed successfully
+Error starting bot: Bot initialization failed
+
+C:\Users\Gebruiker>
