@@ -3025,8 +3025,17 @@ class MintosBot:
             for pending_item in ready_campaigns:
                 campaign = pending_item['campaign']
                 campaign_id = campaign.get('id')
+                campaign_type = campaign.get('type')
                 
                 if not campaign_id:
+                    continue
+                
+                # Apply the same filtering logic as in check_campaigns
+                # Filter out referral (type 1) and special promotion (type 4) campaigns
+                if campaign_type in [1, 4]:
+                    logger.info(f"Skipping pending campaign {campaign_id} (type {campaign_type}) - filtered out as referral/special promotion")
+                    # Remove from pending list without sending
+                    self.data_manager.remove_pending_campaign(campaign_id)
                     continue
                     
                 # Send to non-admin users
