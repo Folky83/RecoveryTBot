@@ -53,8 +53,13 @@ class MintosBot:
     _rss_task: Optional[asyncio.Task] = None
 
     def __new__(cls) -> 'MintosBot':
-        if cls._instance is None:
+        # Reset singleton if token changed or not initialized
+        current_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        if (cls._instance is None or 
+            not hasattr(cls._instance, 'token') or 
+            getattr(cls._instance, 'token', None) != current_token):
             cls._instance = super().__new__(cls)
+            cls._initialized = False  # Force reinitialization
         return cls._instance
 
     async def __aenter__(self) -> 'MintosBot':
@@ -67,10 +72,13 @@ class MintosBot:
     def __init__(self) -> None:
         if not self._initialized:
             logger.info("Initializing Mintos Bot...")
-            if not TELEGRAM_TOKEN:
+            # Read token directly from environment variable at runtime
+            token = os.getenv('TELEGRAM_BOT_TOKEN')
+            if not token:
                 raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
 
-            self.token = TELEGRAM_TOKEN  # Store token as instance variable
+            self.token = token  # Store token as instance variable
+            logger.info(f"Bot initialized with token: {token[:10]}...")  # Log first 10 chars for debugging
             self.application: Optional[Application] = None
             self.data_manager = DataManager()
             self.mintos_client = MintosClient()
