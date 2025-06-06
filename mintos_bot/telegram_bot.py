@@ -7,7 +7,7 @@ import hashlib
 import os
 from typing import Optional, List, Dict, Any, Union, cast, TypedDict
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from telegram.error import TelegramError, Conflict, Forbidden, BadRequest, RetryAfter
 import math
 
@@ -205,7 +205,8 @@ class MintosBot:
             CommandHandler("users", self.users_command), #Added
             CommandHandler("admin", self.admin_command), #Added admin command
             CommandHandler("refresh", self.refresh_command), # Admin only - moved to admin section
-            CallbackQueryHandler(self.handle_callback)
+            CallbackQueryHandler(self.handle_callback),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message)
         ]
 
         for handler in handlers:
@@ -2786,6 +2787,70 @@ class MintosBot:
         await update.message.reply_text(help_text)
         # Delete the command message
         await update.message.delete()
+
+    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle text messages for date input"""
+        if not update.message or not update.effective_user:
+            return
+            
+        text = update.message.text
+        user_id = update.effective_user.id
+        
+        # Check if this is a date input (YYYY-MM-DD format)
+        import re
+        date_pattern = r'^\d{4}-\d{2}-\d{2}$'
+        
+        if re.match(date_pattern, text):
+            # Check if user is admin (only admins can use custom dates)
+            if not await self.is_admin(user_id):
+                await update.message.reply_text("⚠️ Only admin can use custom date selection.")
+                return
+                
+            # Validate the date
+            try:
+                from datetime import datetime
+                datetime.strptime(text, '%Y-%m-%d')
+                
+                # Get all registered users for the admin trigger
+                users = self.user_manager.get_all_users()
+                
+                if not users:
+                    await update.message.reply_text("No registered users found.")
+                    return
+                
+                # Create buttons for each user
+                keyboard = []
+                for i, user_id_str in enumerate(users, 1):
+                    username = self.user_manager.get_user_info(user_id_str) or "Unknown"
+                    display_name = f"@{username}" if username != "Unknown" else f"User {user_id_str}"
+                    button_text = f"{i}. {display_name}"
+                    callback_data = f"trigger_today_{user_id_str}_{text}"
+                    keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+                
+                # Add predefined channel option
+                keyboard.append([InlineKeyboardButton("📺 Mintos Unofficial News Channel", callback_data=f"trigger_today_-1002373856504_{text}")])
+                
+                # Add custom channel button
+                keyboard.append([InlineKeyboardButton("✏️ Enter custom channel ID", callback_data=f"trigger_today_custom_{text}")])
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                await update.message.reply_text(
+                    f"🔄 <b>Send updates for {text}</b>\n\n"
+                    f"Select a channel to send updates for {text} to:",
+                    reply_markup=reply_markup,
+                    parse_mode='HTML'
+                )
+                
+            except ValueError:
+                await update.message.reply_text("⚠️ Invalid date format. Please use YYYY-MM-DD format (e.g., 2025-04-19).")
+        else:
+            # Check if this might be a channel ID (starts with @ or is numeric)
+            if text.startswith('@') or text.lstrip('-').isdigit():
+                # This might be channel ID input - for now, just acknowledge
+                await update.message.reply_text("📝 Channel ID received. Please use the admin panel for sending updates.")
+            else:
+                # Unknown text input
+                await update.message.reply_text("ℹ️ Please use commands starting with / or use the inline buttons.")
 
     async def is_admin(self, user_id: int) -> bool:
         """Check if user is admin"""
