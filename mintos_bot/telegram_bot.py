@@ -637,6 +637,11 @@ class MintosBot:
                 
                 # Continue with user selection using either today's date or the specified date
                 elif query.data == "admin_trigger_today_select" or target_date:
+                    # If "Today's Updates" was selected, set today's date
+                    if query.data == "admin_trigger_today_select":
+                        import time
+                        target_date = time.strftime("%Y-%m-%d")
+                    
                     # Get all registered users
                     users = self.user_manager.get_all_users()
                     

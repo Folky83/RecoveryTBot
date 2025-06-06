@@ -1115,6 +1115,22 @@
                 "substatus": null,
                 "items": [
                     {
+                        "date": "2025-06-06",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>The bank has released part of the Avafin payments and requested additional information for the remaining payments, which was provided in due time. We expect the bank to release the remaining payments soon.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
+                    {
                         "date": "2025-05-30",
                         "recoveredAmount": null,
                         "remainingAmount": null,
@@ -5379,6 +5395,22 @@
                 "status": "temporary_payment_disruption",
                 "substatus": null,
                 "items": [
+                    {
+                        "date": "2025-06-06",
+                        "recoveredAmount": null,
+                        "remainingAmount": null,
+                        "expectedRecoveryFrom": null,
+                        "expectedRecoveryTo": "100.0",
+                        "expectedRecoveryYearFrom": null,
+                        "expectedRecoveryYearTo": 2025,
+                        "status": "temporary_payment_disruption",
+                        "substatus": null,
+                        "description": "<p>Dinerito Xtra is expected to make the next payment by 12 June 2025.</p>",
+                        "isRecoveredAmountIncreased": null,
+                        "isRemainingAmountIncreased": null,
+                        "isExpectedRecoveryToIncreased": null,
+                        "isExpectedRecoveryYearToIncreased": null
+                    },
                     {
                         "date": "2025-05-30",
                         "recoveredAmount": null,
