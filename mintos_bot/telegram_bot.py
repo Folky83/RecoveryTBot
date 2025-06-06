@@ -1679,10 +1679,10 @@ class MintosBot:
                     logger.info("Campaigns marked as sent during startup")
                     return
 
-                # Filter out Special Promotion (type 4) campaigns and unsent campaigns
+                # Filter out unwanted campaign types (referral and special promotions) and unsent campaigns
                 unsent_campaigns = [
                     campaign for campaign in added_campaigns 
-                    if not self.data_manager.is_campaign_sent(campaign) and campaign.get('type') != 4
+                    if not self.data_manager.is_campaign_sent(campaign) and campaign.get('type') not in [1, 4]
                 ]
                 logger.info(f"Found {len(unsent_campaigns)} unsent campaigns")
 

@@ -384,16 +384,15 @@ class DashboardManager:
         # Format the date as ISO format for comparison
         now_str = now.strftime("%Y-%m-%dT%H:%M:%S")
         
-        # Filter out "Special Promotion" campaigns (based on type)
-        # and only show active campaigns
+        # Filter out unwanted campaign types
         # Common campaign types:
-        # - Type 1: Referral programs
+        # - Type 1: Referral programs (hidden)
         # - Type 2: Cashback campaigns
         # - Type 4: Special promotions (hidden)
         active_campaigns = [c for c in self.campaigns 
-                           if c.valid_from <= now_str <= c.valid_to and c.type != 4]
+                           if c.valid_from <= now_str <= c.valid_to and c.type not in [1, 4]]
         
-        st.write(f"Showing {len(active_campaigns)} active campaigns (excluding special promotions) out of {len(self.campaigns)} total campaigns")
+        st.write(f"Showing {len(active_campaigns)} active campaigns (excluding referral and special promotions) out of {len(self.campaigns)} total campaigns")
         
         # Display each campaign in a card-like expander
         for campaign in active_campaigns:
